@@ -225,7 +225,7 @@ function triggerAutoZoom(msgEl, isOut) {
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
 
-  const zoomIntensity = previewState.zoomScale || 1.22;
+  const zoomIntensity = previewState.zoomScale || 1.20;
 
   // Center of active message bubble relative to container
   const bubbleCenterY = msgEl.offsetTop + msgEl.offsetHeight / 2;
