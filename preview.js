@@ -316,28 +316,33 @@ window.addEventListener('DOMContentLoaded', () => {
   previewState = loadState();
 
   const chatArea = document.getElementById('wa-chat-area');
-  const bgPattern = document.getElementById('wa-bg-pattern');
-  if (previewState && chatArea && bgPattern) {
+  if (previewState && chatArea) {
     const bgType = previewState.bgType || 'default';
+    chatArea.style.backgroundAttachment = 'local';
     if (bgType === 'default') {
       chatArea.style.backgroundColor = '#111B21';
-      bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
-      bgPattern.style.opacity = '0.04';
-      bgPattern.style.backgroundSize = '400px';
+      chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
+      chatArea.style.backgroundRepeat = 'repeat';
+      chatArea.style.backgroundSize = '400px';
+      chatArea.style.backgroundPosition = 'center top';
     } else if (bgType === 'color') {
       chatArea.style.backgroundColor = previewState.bgColor || '#111B21';
-      bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
-      bgPattern.style.opacity = '0.04';
-      bgPattern.style.backgroundSize = '400px';
+      chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
+      chatArea.style.backgroundRepeat = 'repeat';
+      chatArea.style.backgroundSize = '400px';
+      chatArea.style.backgroundPosition = 'center top';
     } else if (bgType === 'image') {
       chatArea.style.backgroundColor = '#111B21';
       if (previewState.bgImage) {
-        bgPattern.style.backgroundImage = `url('${previewState.bgImage}')`;
-        bgPattern.style.opacity = '1';
-        bgPattern.style.backgroundSize = 'cover';
+        chatArea.style.backgroundImage = `url('${previewState.bgImage}')`;
+        chatArea.style.backgroundRepeat = 'repeat';
+        chatArea.style.backgroundSize = 'auto';
+        chatArea.style.backgroundPosition = 'center top';
       } else {
-        bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
-        bgPattern.style.opacity = '0.04';
+        chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
+        chatArea.style.backgroundRepeat = 'repeat';
+        chatArea.style.backgroundSize = '400px';
+        chatArea.style.backgroundPosition = 'center top';
       }
     }
   }

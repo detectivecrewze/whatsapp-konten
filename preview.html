@@ -79,15 +79,16 @@
       animation: tdot 1.2s ease-in-out infinite;
     }
 
-    /* ── WA BG pattern ── */
-    #wa-bg-pattern {
-      position: absolute; inset: 0;
-      pointer-events: none; z-index: 0;
-      opacity: 0.04;
+    /* ── WA BG pattern ── (hidden – bg applied directly to wa-chat-area) */
+    #wa-bg-pattern { display: none; }
+
+    /* ── Chat area background scrolls with content ── */
+    #wa-chat-area {
       background-image: url('assets/wa-pattern.svg');
       background-repeat: repeat;
       background-size: 400px;
-      background-position: center;
+      background-position: center top;
+      background-attachment: local;
     }
 
     /* ── Message slide-in animation ── */
@@ -253,8 +254,8 @@
        style="position:relative; height:690px; overflow-y:auto; overflow-x:hidden;
               background-color:#111B21; padding:4px 8px 10px;">
 
-    <!-- BG pattern -->
-    <div id="wa-bg-pattern"></div>
+    <!-- BG pattern (hidden – bg applied directly on wa-chat-area via JS) -->
+    <div id="wa-bg-pattern" style="display:none;"></div>
 
     <!-- Date separator -->
     <div style="position:relative; z-index:1; display:flex; justify-content:center;
