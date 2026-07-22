@@ -679,6 +679,7 @@ function syncBaseFields() {
   
   const chatArea = document.getElementById('wa-chat-area');
   if (chatArea) {
+    chatArea.style.backgroundAttachment = 'local';
     if (state.bgType === 'default') {
       chatArea.style.backgroundColor = '#111B21';
       chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
