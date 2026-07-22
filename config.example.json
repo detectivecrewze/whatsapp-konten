@@ -1,0 +1,32 @@
+{
+  "_comment": "Contoh config untuk capture.py — edit sesuai kebutuhan",
+  "name": "Sayang 💙",
+  "pfp": "assets/pfp.jpg",
+  "scale": 2,
+  "output": "./output",
+  "messages": [
+    {
+      "direction": "incoming",
+      "type": "image",
+      "content": "assets/meme.jpg",
+      "_note": "Gambar/GIF incoming dari penerima"
+    },
+    {
+      "direction": "outgoing",
+      "type": "text",
+      "content": "Heyy, I got something for you 🎁",
+      "_note": "Pesan teks outgoing"
+    },
+    {
+      "direction": "outgoing",
+      "type": "text",
+      "content": "Scan the QR below to redeem your gift ✨"
+    },
+    {
+      "direction": "outgoing",
+      "type": "qr",
+      "content": "assets/qr_code.png",
+      "_note": "QR code gift — harus outgoing"
+    }
+  ]
+}
