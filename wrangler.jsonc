@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wa-templates-worker",
+  "main": "worker.js",
+  "compatibility_date": "2024-01-01",
+  "kv_namespaces": [
+    {
+      "binding": "WA_TEMPLATES_KV",
+      "id": "38a369eeb9824454a91f49c535dd9e42"
+    }
+  ]
+}

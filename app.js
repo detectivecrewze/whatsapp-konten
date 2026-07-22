@@ -1263,7 +1263,7 @@ function getSavedTemplates() {
 }
 
 // Configure your Cloudflare Worker URL here
-const WORKER_URL = window.WORKER_URL || '';
+const WORKER_URL = window.WORKER_URL || 'https://wa-templates-worker.aldoramadhan16.workers.dev/templates';
 
 let _cloudTemplates = {};
 
