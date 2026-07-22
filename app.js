@@ -678,27 +678,28 @@ function syncBaseFields() {
   }
   
   const chatArea = document.getElementById('wa-chat-area');
-  const bgPattern = document.getElementById('wa-bg-pattern');
-  if (chatArea && bgPattern) {
+  if (chatArea) {
     if (state.bgType === 'default') {
       chatArea.style.backgroundColor = '#111B21';
-      bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
-      bgPattern.style.opacity = '0.04';
-      bgPattern.style.backgroundSize = '400px';
+      chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
+      chatArea.style.backgroundRepeat = 'repeat';
+      chatArea.style.backgroundSize = '400px';
     } else if (state.bgType === 'color') {
       chatArea.style.backgroundColor = state.bgColor;
-      bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
-      bgPattern.style.opacity = '0.04'; // Keep doodle over custom color
-      bgPattern.style.backgroundSize = '400px';
+      chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
+      chatArea.style.backgroundRepeat = 'repeat';
+      chatArea.style.backgroundSize = '400px';
     } else if (state.bgType === 'image') {
-      chatArea.style.backgroundColor = '#111B21'; // fallback
+      chatArea.style.backgroundColor = '#111B21';
       if (state.bgImage) {
-        bgPattern.style.backgroundImage = `url('${state.bgImage}')`;
-        bgPattern.style.opacity = '1';
-        bgPattern.style.backgroundSize = 'cover';
+        chatArea.style.backgroundImage = `url('${state.bgImage}')`;
+        chatArea.style.backgroundRepeat = 'no-repeat';
+        chatArea.style.backgroundSize = 'cover';
+        chatArea.style.backgroundPosition = 'center top';
       } else {
-        bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
-        bgPattern.style.opacity = '0.04';
+        chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
+        chatArea.style.backgroundRepeat = 'repeat';
+        chatArea.style.backgroundSize = '400px';
       }
     }
   }
