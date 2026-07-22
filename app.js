@@ -1224,52 +1224,22 @@ function getSavedTemplates() {
   }
 }
 
+// Configure your Cloudflare Worker URL here
+const WORKER_URL = window.WORKER_URL || '';
+
 let _cloudTemplates = {};
 
-function getCloudConfig() {
-  const key = localStorage.getItem('wa_cloud_key') || '';
-  const bin = localStorage.getItem('wa_cloud_bin') || '';
-  return { key, bin };
-}
-
-function openCloudConfigModal() {
-  const { key, bin } = getCloudConfig();
-  document.getElementById('inp-cloud-key').value = key;
-  document.getElementById('inp-cloud-bin').value = bin;
-  document.getElementById('cloud-modal').classList.remove('hidden');
-}
-
-function closeCloudConfigModal() {
-  document.getElementById('cloud-modal').classList.add('hidden');
-}
-
-async function saveCloudConfig() {
-  const key = document.getElementById('inp-cloud-key').value.trim();
-  const bin = document.getElementById('inp-cloud-bin').value.trim();
-
-  localStorage.setItem('wa_cloud_key', key);
-  localStorage.setItem('wa_cloud_bin', bin);
-  closeCloudConfigModal();
-
-  if (key && bin) {
-    await fetchCloudTemplates();
-  }
-}
-
 async function fetchCloudTemplates() {
-  const { key, bin } = getCloudConfig();
-  if (!key || !bin) return;
+  if (!WORKER_URL) return;
 
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${bin}/latest`, {
-      headers: { 'X-Master-Key': key }
-    });
+    const res = await fetch(WORKER_URL);
     if (!res.ok) throw new Error('Cloud fetch failed');
     const json = await res.json();
-    _cloudTemplates = json.record?.templates || {};
+    _cloudTemplates = json.templates || {};
     renderTemplateDropdown(document.getElementById('tpl-select')?.value || 'auto');
   } catch (e) {
-    console.warn('Failed to fetch Cloud templates:', e);
+    console.warn('Failed to fetch Cloud templates from Worker:', e);
   }
 }
 
@@ -1425,10 +1395,8 @@ async function saveCurrentTemplate(isCloud = false) {
   const payload = getProjectPayload();
 
   if (isCloud) {
-    const { key, bin } = getCloudConfig();
-    if (!key || !bin) {
-      alert('⚠️ Silakan klik ikon ⚙️ untuk memasukkan Master Key dan Bin ID JSONbin.io milikmu terlebih dahulu!');
-      openCloudConfigModal();
+    if (!WORKER_URL) {
+      alert('⚠️ Silakan masukkan URL Cloudflare Worker milikmu pada variabel WORKER_URL di app.js terlebih dahulu!');
       return;
     }
 
@@ -1441,12 +1409,9 @@ async function saveCurrentTemplate(isCloud = false) {
     };
 
     try {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${bin}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': key
-        },
+      const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ templates: _cloudTemplates })
       });
       if (!res.ok) throw new Error('Cloud save failed');
@@ -1454,7 +1419,7 @@ async function saveCurrentTemplate(isCloud = false) {
       renderTemplateDropdown(`cloud_${cloudId}`);
       showAutoSaveBadge();
     } catch (e) {
-      alert('⚠️ Gagal menyimpan ke Cloud. Periksa Master Key & Bin ID kamu.');
+      alert('⚠️ Gagal menyimpan ke Cloud Worker. Periksa URL Worker di app.js');
     }
   } else {
     const id = currentVal.startsWith('local_') ? currentVal.replace('local_', '') : `tpl_${Date.now()}`;
@@ -1500,15 +1465,11 @@ async function deleteCurrentTemplate() {
     if (confirm(`Hapus template Cloud "${_cloudTemplates[id].name}" dari Team Cloud?`)) {
       delete _cloudTemplates[id];
 
-      const { key, bin } = getCloudConfig();
-      if (key && bin) {
+      if (WORKER_URL) {
         try {
-          await fetch(`https://api.jsonbin.io/v3/b/${bin}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Master-Key': key
-            },
+          await fetch(WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ templates: _cloudTemplates })
           });
         } catch (e) {
