@@ -215,9 +215,9 @@ let currentBaseScale = 1;
 function resetZoom() {
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
-  messagesContainer.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.9, 0.25, 1)';
+  messagesContainer.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
   messagesContainer.style.transformOrigin = 'center center';
-  messagesContainer.style.transform = 'translate(0px, 0px) scale(1)';
+  messagesContainer.style.transform = 'scale(1)';
 }
 
 function triggerAutoZoom(msgEl, isOut) {
@@ -229,24 +229,11 @@ function triggerAutoZoom(msgEl, isOut) {
 
   // Center of active message bubble relative to container
   const bubbleCenterY = msgEl.offsetTop + msgEl.offsetHeight / 2;
-  const originX = isOut ? '90%' : '10%';
+  const originX = isOut ? '85%' : '15%';
 
-  messagesContainer.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1), transform-origin 0.5s cubic-bezier(0.2, 0.9, 0.3, 1)';
-  
-  if (zoomIntensity >= 1.25) {
-    // For Extreme/Super Zoom: Calculate exact Y offset so the active bubble is centered vertically in chat view
-    const chatArea = document.getElementById('wa-chat-area');
-    const viewCenterY = chatArea ? (chatArea.clientHeight / 2) : 340;
-    const translateY = (viewCenterY - bubbleCenterY) * (zoomIntensity - 1);
-    const translateX = isOut ? -15 : 15;
-
-    messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
-    messagesContainer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomIntensity})`;
-  } else {
-    // Standard Zoom
-    messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
-    messagesContainer.style.transform = `scale(${zoomIntensity})`;
-  }
+  messagesContainer.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), transform-origin 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
+  messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
+  messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
 async function startAnimation() {
@@ -284,14 +271,12 @@ async function startAnimation() {
 
   // Animate frame by frame
   for (let f = 0; f < totalF; f++) {
-    const isOut   = messages[f].direction === 'outgoing';
-    const isMedia = messages[f].type === 'image' || messages[f].type === 'qr';
+    const isOut = messages[f].direction === 'outgoing';
 
-    // If autoZoom is enabled and this is not the first message, zoom out with a relaxed breathing pause
+    // If autoZoom is enabled and this is not the first message, zoom out with smooth breathing pause
     if (autoZoom && f > 0) {
       resetZoom();
-      // Longer zoom-out duration (650ms for photos/media, 500ms for text)
-      await sleep(isMedia ? 650 : 500);
+      await sleep(300);
     }
 
     // Typing indicator / Reply delay before incoming replies
@@ -308,10 +293,6 @@ async function startAnimation() {
 
     // Reveal this message with slide-in animation
     applyFrame(f + 1);
-
-    if (isMedia) {
-      await sleep(150); // Small natural breath before camera punch-in to media
-    }
     
     // Auto-Zoom Punch-In Camera Effect to new message
     const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
