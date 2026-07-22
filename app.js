@@ -663,6 +663,19 @@ function syncBaseFields() {
   
   const timeEl = document.getElementById('wa-time');
   if (timeEl) timeEl.textContent = state.time;
+
+  const cPfp     = document.getElementById('wa-pfp');
+  const fallback = document.getElementById('wa-pfp-fallback');
+  if (cPfp) {
+    if (state.pfp) {
+      cPfp.src = state.pfp;
+      cPfp.style.display = 'block';
+      if (fallback) fallback.style.display = 'none';
+    } else {
+      cPfp.style.display = 'none';
+      if (fallback) fallback.style.display = 'flex';
+    }
+  }
   
   const chatArea = document.getElementById('wa-chat-area');
   const bgPattern = document.getElementById('wa-bg-pattern');
@@ -1352,19 +1365,31 @@ function applyProjectPayload(data) {
   const inpBgColor = document.getElementById('inp-bg-color');
   if (inpBgColor) inpBgColor.value = state.bgColor;
 
-  // PFP UI
+  // PFP UI (Dashboard & Canvas Header)
   const pfpWrap  = document.getElementById('pfp-preview-wrap');
   const pfpImg   = document.getElementById('pfp-preview');
   const pfpName  = document.getElementById('pfp-preview-name');
   const pfpLabel = document.getElementById('pfp-label');
+  const cPfp     = document.getElementById('wa-pfp');
+  const fallback = document.getElementById('wa-pfp-fallback');
+
   if (state.pfp) {
     if (pfpImg) pfpImg.src = state.pfp;
     if (pfpName) pfpName.textContent = 'Uploaded Image';
     if (pfpWrap) pfpWrap.style.display = 'flex';
     if (pfpLabel) pfpLabel.textContent = 'Change image…';
+
+    if (cPfp) {
+      cPfp.src = state.pfp;
+      cPfp.style.display = 'block';
+    }
+    if (fallback) fallback.style.display = 'none';
   } else {
     if (pfpWrap) pfpWrap.style.display = 'none';
     if (pfpLabel) pfpLabel.textContent = 'Upload image…';
+
+    if (cPfp) cPfp.style.display = 'none';
+    if (fallback) fallback.style.display = 'flex';
   }
 
   // Background UI toggles
