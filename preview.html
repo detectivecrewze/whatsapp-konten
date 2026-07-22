@@ -90,12 +90,19 @@
     }
 
     /* ── Message slide-in animation ── */
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-15px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
-    .msg-enter {
-      animation: slideIn 0.3s ease forwards;
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(15px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .msg-enter-in {
+      animation: slideInLeft 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    }
+    .msg-enter-out {
+      animation: slideInRight 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
     }
 
     /* ── Replay button ── */

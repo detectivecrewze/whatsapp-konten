@@ -214,7 +214,8 @@ async function startAnimation() {
   // Animate frame by frame
   for (let f = 0; f < totalF; f++) {
     // Typing indicator before each message (except first)
-    if (useTyping && f > 0) {
+    // ONLY show if the NEXT message is from the other person ('in')
+    if (useTyping && f > 0 && messages[f].type === 'in') {
       showTyping();
       await sleep(1400);
       hideTyping();
@@ -225,8 +226,10 @@ async function startAnimation() {
     applyFrame(f + 1);
     const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
     if (msgEl) {
-      msgEl.classList.add('msg-enter');
-      setTimeout(() => msgEl.classList.remove('msg-enter'), 400);
+      const isOut = messages[f].type === 'out';
+      const animClass = isOut ? 'msg-enter-out' : 'msg-enter-in';
+      msgEl.classList.add(animClass);
+      setTimeout(() => msgEl.classList.remove(animClass), 400);
     }
 
     // Hold
