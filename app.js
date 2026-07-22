@@ -1264,7 +1264,7 @@ function getSavedTemplates() {
 
 // Configure your Cloudflare Worker URL & Secret Passcode here
 const WORKER_URL    = window.WORKER_URL || 'https://wa-templates-worker.aldoramadhan16.workers.dev/templates';
-const TEAM_PASSCODE = window.TEAM_PASSCODE || 'wa_team_secret_2026';
+const TEAM_PASSCODE = window.TEAM_PASSCODE || 'loves2026';
 
 let _cloudTemplates = {};
 
