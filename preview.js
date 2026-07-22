@@ -318,7 +318,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const chatArea = document.getElementById('wa-chat-area');
   if (previewState && chatArea) {
     const bgType = previewState.bgType || 'default';
-    chatArea.style.backgroundAttachment = 'local';
+    chatArea.style.backgroundAttachment = 'scroll';
     if (bgType === 'default') {
       chatArea.style.backgroundColor = '#111B21';
       chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
