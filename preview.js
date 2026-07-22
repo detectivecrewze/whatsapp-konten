@@ -19,10 +19,7 @@ function escHtml(str) {
 }
 
 function msgTime(index) {
-  const base = 9 * 60 + 41 + index;
-  const h = Math.floor(base / 60);
-  const m = base % 60;
-  return `${h}:${m.toString().padStart(2, '0')}`;
+  return (previewState && previewState.time) ? previewState.time : '16:12';
 }
 
 function svgReadTicks() {
@@ -87,15 +84,25 @@ function createBubble(msg, idx) {
                        color:#00A884;font-size:10px;font-weight:700;padding:2px 5px;
                        border-radius:4px;letter-spacing:0.5px;">GIF</div>`
         : '';
+        
+      const imgPadding = msg.caption ? 'padding: 4px; padding-bottom: 0;' : 'padding: 0;';
+      const borderRadiusImg = msg.caption ? 'border-radius: 8px;' : '';
+        
       html = `
         <div style="background:${bg}; border-radius:${br}; max-width:260px;
-                    overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
+                    overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.3); ${imgPadding}">
           <div style="position:relative;">
             <img src="${msg.dataUrl}"
                  style="display:block; max-width:260px; max-height:300px;
-                        width:100%; object-fit:contain;" />
+                        width:100%; object-fit:contain; ${borderRadiusImg}" />
             ${gifLabel}
           </div>
+          ${msg.caption ? `
+          <div style="padding: 4px 6px 2px;">
+            <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
+                      word-break:break-word; white-space:pre-wrap;">${escHtml(msg.caption)}</p>
+          </div>
+          ` : ''}
           <div style="display:flex; justify-content:flex-end; align-items:center;
                       gap:3px; padding:3px 8px 6px;">
             <span style="font-size:11px; color:${isOut ? 'rgba(233,237,239,0.55)' : '#8696A0'};">${time}</span>
@@ -175,12 +182,34 @@ function hideTyping() {
 /* ── Clock ─────────────────────────────────────────────────── */
 function updateClock() {
   const el = document.getElementById('wa-time');
-  if (!el) return;
-  const now = new Date();
-  el.textContent = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+  if (!el || !previewState) return;
+  el.textContent = previewState.time || '16:12';
 }
 
 /* ── Main animation ──────────────────────────────────────── */
+const notificationSound = new Audio('assets/notification.mp3');
+const outSound = new Audio('assets/sfx-out.mp3');
+
+function initAnimation() {
+  document.getElementById('btn-start').style.display = 'none';
+  document.getElementById('countdown-num').style.display = 'block';
+  document.getElementById('countdown-label').style.display = 'block';
+  
+  // "Warm up" audio to bypass browser policy
+  Promise.all([
+    notificationSound.play().then(() => {
+      notificationSound.pause();
+      notificationSound.currentTime = 0;
+    }).catch(e => console.log('Audio init blocked:', e)),
+    outSound.play().then(() => {
+      outSound.pause();
+      outSound.currentTime = 0;
+    }).catch(e => console.log('Audio init blocked:', e))
+  ]).finally(() => {
+    startAnimation();
+  });
+}
+
 async function startAnimation() {
   if (!previewState) return;
 
@@ -224,6 +253,19 @@ async function startAnimation() {
 
     // Reveal this message with slide-in animation
     applyFrame(f + 1);
+    
+    // Play sound
+    const useSoundIn = previewState.useSoundIn !== false;
+    const useSoundOut = previewState.useSoundOut !== false;
+    
+    if (messages[f].direction === 'incoming' && useSoundIn) {
+      notificationSound.currentTime = 0;
+      notificationSound.play().catch(e => console.log('Audio play blocked:', e));
+    } else if (messages[f].direction === 'outgoing' && useSoundOut) {
+      outSound.currentTime = 0;
+      outSound.play().catch(e => console.log('Audio play blocked:', e));
+    }
+
     const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
     if (msgEl) {
       const isOut = messages[f].direction === 'outgoing';
@@ -273,6 +315,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
   previewState = loadState();
 
+  const chatArea = document.getElementById('wa-chat-area');
+  const bgPattern = document.getElementById('wa-bg-pattern');
+  if (previewState && chatArea && bgPattern) {
+    const bgType = previewState.bgType || 'default';
+    if (bgType === 'default') {
+      chatArea.style.backgroundColor = '#111B21';
+      bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
+      bgPattern.style.opacity = '0.04';
+      bgPattern.style.backgroundSize = '400px';
+    } else if (bgType === 'color') {
+      chatArea.style.backgroundColor = previewState.bgColor || '#111B21';
+      bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
+      bgPattern.style.opacity = '0.04';
+      bgPattern.style.backgroundSize = '400px';
+    } else if (bgType === 'image') {
+      chatArea.style.backgroundColor = '#111B21';
+      if (previewState.bgImage) {
+        bgPattern.style.backgroundImage = `url('${previewState.bgImage}')`;
+        bgPattern.style.opacity = '1';
+        bgPattern.style.backgroundSize = 'cover';
+      } else {
+        bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
+        bgPattern.style.opacity = '0.04';
+      }
+    }
+  }
+
   if (!previewState || !previewState.messages || previewState.messages.length === 0) {
     document.getElementById('countdown-overlay').classList.add('hidden');
     document.getElementById('wa-canvas').innerHTML +=
@@ -308,7 +377,4 @@ window.addEventListener('DOMContentLoaded', () => {
     const el = createBubble(msg, idx);
     if (el) container.appendChild(el);
   });
-
-  // Start
-  startAnimation();
 });

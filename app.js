@@ -20,6 +20,10 @@ const state = {
   pfp:      null,   // data URL
   messages: [],     // array of message objects (see addMessage)
   scale:    2,
+  time:     '16:12', // Custom time
+  bgType:   'default', // 'default', 'color', 'image'
+  bgColor:  '#111B21',
+  bgImage:  null,
 };
 
 // Auto-increment ID for messages
@@ -40,12 +44,9 @@ function escHtml(str) {
     .replace(/\n/g, '<br>');
 }
 
-/** Generate HH:MM for the Nth message (base 9:41 + index minutes) */
+/** Return custom time for messages */
 function msgTime(index) {
-  const base = 9 * 60 + 41 + index;
-  const h = Math.floor(base / 60);
-  const m = base % 60;
-  return `${h}:${m.toString().padStart(2, '0')}`;
+  return state.time || '16:12';
 }
 
 /** Sleep helper for sequenced captures */
@@ -198,7 +199,8 @@ function dashboardItemHtml(msg, idx) {
     </div>
 
     <!-- IMAGE / GIF -->
-    <div class="${imgHide}">
+    <div class="${imgHide} space-y-2">
+      <!-- File upload -->
       <label class="flex items-center gap-2 bg-gray-700 border border-gray-600 border-dashed
                     rounded-lg px-3 py-2 cursor-pointer hover:border-wa-accent transition group">
         <svg class="w-4 h-4 text-gray-400 flex-shrink-0 group-hover:text-wa-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,6 +213,22 @@ function dashboardItemHtml(msg, idx) {
         <input type="file" accept="image/*,.gif" class="hidden"
                onchange="handleMsgFile('${msg.id}', this)" />
       </label>
+      
+      <!-- GIF Link Input -->
+      <input type="text" placeholder="Or paste direct GIF link (.gif)..."
+             value="${msg.gifUrl || ''}"
+             oninput="setMsgGifUrl('${msg.id}', this.value)"
+             class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5
+                    text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+      
+      <!-- Caption Input -->
+      <textarea rows="1" placeholder="Caption (optional)..."
+                oninput="setMsgCaption('${msg.id}', this.value)"
+                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5
+                       text-xs text-white placeholder-gray-500 resize-none
+                       focus:outline-none focus:ring-1 focus:ring-wa-accent"
+      >${escHtml(msg.caption ?? '')}</textarea>
+
       ${thumbnailHtml}
     </div>
 
@@ -316,16 +334,25 @@ function createCanvasBubble(msg, idx) {
                       color:#00A884;font-size:10px;font-weight:700;padding:2px 5px;
                       border-radius:4px;letter-spacing:0.5px;">GIF</div>`
         : '';
+        
+      const imgPadding = msg.caption ? 'padding: 4px; padding-bottom: 0;' : 'padding: 0;';
+      const borderRadiusImg = msg.caption ? 'border-radius: 8px;' : '';
+        
       bubbleHtml = `
         <div style="background:${bg}; border-radius:${br}; max-width:260px;
-                    overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
+                    overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.3); ${imgPadding}">
           <div style="position:relative;">
             <img src="${msg.dataUrl}"
                  style="display:block; max-width:260px; max-height:300px;
-                        width:100%; object-fit:contain;"
-                 ${msg.isGif ? '' : ''} />
+                        width:100%; object-fit:contain; ${borderRadiusImg}" />
             ${gifLabel}
           </div>
+          ${msg.caption ? `
+          <div style="padding: 4px 6px 2px;">
+            <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
+                      word-break:break-word; white-space:pre-wrap;">${escHtml(msg.caption)}</p>
+          </div>
+          ` : ''}
           <div style="display:flex; justify-content:flex-end; align-items:center;
                       gap:3px; padding:3px 8px 6px;">
             <span style="font-size:11px; color:${isOut ? 'rgba(233,237,239,0.55)' : '#8696A0'};">${time}</span>
@@ -410,6 +437,8 @@ function addMessage() {
     direction: 'outgoing',
     type:      'text',
     text:      '',
+    caption:   '',
+    gifUrl:    '',
     dataUrl:   null,
     fileName:  '',
     isGif:     false,
@@ -465,9 +494,29 @@ function setMsgText(id, text) {
   const msg = state.messages.find(m => m.id === id);
   if (!msg) return;
   msg.text = text;
-  // Live canvas update (lightweight — just update text node)
-  const el = document.querySelector(`[data-canvas-msg="${id}"] p`);
-  if (el) el.innerHTML = escHtml(text);
+  renderCanvas();
+}
+
+/** Update caption content */
+function setMsgCaption(id, text) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.caption = text;
+  renderCanvas();
+}
+
+/** Update direct GIF URL */
+function setMsgGifUrl(id, url) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.gifUrl = url;
+  
+  // Directly load it as dataUrl if it's a URL
+  msg.dataUrl = url;
+  msg.isGif = url.toLowerCase().includes('.gif');
+  msg.fileName = 'Direct Link';
+  
+  renderCanvas();
 }
 
 /** Handle file upload for image/gif/qr messages */
@@ -566,13 +615,71 @@ function previewFrame(frameIndex) {
 function syncBaseFields() {
   state.name  = document.getElementById('inp-name').value;
   state.scale = parseInt(document.getElementById('inp-scale').value, 10);
+  state.time  = document.getElementById('inp-time').value || '16:12';
 
   const nameEl = document.getElementById('wa-name');
   if (nameEl) nameEl.textContent = state.name || 'Contact Name';
+  
+  const timeEl = document.getElementById('wa-time');
+  if (timeEl) timeEl.textContent = state.time;
+  
+  const chatArea = document.getElementById('wa-chat-area');
+  const bgPattern = document.getElementById('wa-bg-pattern');
+  if (chatArea && bgPattern) {
+    if (state.bgType === 'default') {
+      chatArea.style.backgroundColor = '#111B21';
+      bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
+      bgPattern.style.opacity = '0.04';
+      bgPattern.style.backgroundSize = '400px';
+    } else if (state.bgType === 'color') {
+      chatArea.style.backgroundColor = state.bgColor;
+      bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
+      bgPattern.style.opacity = '0.04'; // Keep doodle over custom color
+      bgPattern.style.backgroundSize = '400px';
+    } else if (state.bgType === 'image') {
+      chatArea.style.backgroundColor = '#111B21'; // fallback
+      if (state.bgImage) {
+        bgPattern.style.backgroundImage = `url('${state.bgImage}')`;
+        bgPattern.style.opacity = '1';
+        bgPattern.style.backgroundSize = 'cover';
+      } else {
+        bgPattern.style.backgroundImage = "url('assets/wa-pattern.svg')";
+        bgPattern.style.opacity = '0.04';
+      }
+    }
+  }
+  
+  renderCanvas(); // Re-render canvas to update time inside bubbles
 }
 
 const syncName = debounce(() => syncBaseFields(), 200);
 document.getElementById('inp-name').addEventListener('input', syncName);
+document.getElementById('inp-time').addEventListener('input', syncName);
+
+// Background Handlers
+document.getElementById('inp-bg-type').addEventListener('change', (e) => {
+  state.bgType = e.target.value;
+  document.getElementById('inp-bg-color').classList.toggle('hidden', state.bgType !== 'color');
+  document.getElementById('lbl-bg-image').classList.toggle('hidden', state.bgType !== 'image');
+  syncBaseFields();
+});
+
+document.getElementById('inp-bg-color').addEventListener('input', (e) => {
+  state.bgColor = e.target.value;
+  syncBaseFields();
+});
+
+document.getElementById('inp-bg-image').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    state.bgImage = await fileToDataUrl(file);
+    document.getElementById('bg-image-name').textContent = file.name;
+    syncBaseFields();
+  } catch (err) {
+    console.error('Failed to load bg image:', err);
+  }
+});
 
 /* ============================================================
    12. CAPTURE ENGINE — html2canvas
@@ -917,6 +1024,8 @@ async function generateVideo() {
    ============================================================ */
 
 let _previewTimer = null;
+const notificationSound = new Audio('assets/notification.mp3');
+const outSound = new Audio('assets/sfx-out.mp3');
 
 function playPreview() {
   const btn = document.getElementById('btn-play');
@@ -964,12 +1073,35 @@ function playPreview() {
       applyFrame(state.messages.length + 1);
       return;
     }
+    
+    const useSoundIn = document.getElementById('inp-sound-in')?.checked ?? true;
+    const useSoundOut = document.getElementById('inp-sound-out')?.checked ?? false;
+    const playSoundIfIncoming = (idx) => {
+      const msg = state.messages[idx - 1];
+      if (msg) {
+        if (msg.direction === 'incoming' && useSoundIn) {
+          notificationSound.currentTime = 0;
+          notificationSound.play().catch(e => console.log('Audio play blocked:', e));
+        } else if (msg.direction === 'outgoing' && useSoundOut) {
+          outSound.currentTime = 0;
+          outSound.play().catch(e => console.log('Audio play blocked:', e));
+        }
+      }
+    };
+
     if (useTyping && frame >= 1 && frame <= state.messages.length) {
       showTyping();
-      setTimeout(() => { hideTyping(); applyFrame(frame); }, 800);
+      setTimeout(() => { 
+        hideTyping(); 
+        applyFrame(frame); 
+        playSoundIfIncoming(frame);
+      }, 800);
     } else {
       hideTyping();
       applyFrame(frame);
+      if (frame >= 1 && frame <= state.messages.length) {
+        playSoundIfIncoming(frame);
+      }
     }
   }, holdMs);
 }
@@ -992,14 +1124,22 @@ function openCleanPreview() {
 
   const holdMs    = parseInt(document.getElementById('inp-hold-duration')?.value || '2000', 10);
   const useTyping = document.getElementById('inp-typing')?.checked ?? true;
+  const useSoundIn  = document.getElementById('inp-sound-in')?.checked ?? true;
+  const useSoundOut = document.getElementById('inp-sound-out')?.checked ?? false;
 
   // Serialize state to localStorage
   const payload = {
     name:      state.name,
     pfp:       state.pfp,
     messages:  state.messages,
+    time:      state.time,
+    bgType:    state.bgType,
+    bgColor:   state.bgColor,
+    bgImage:   state.bgImage,
     holdMs,
     useTyping,
+    useSoundIn,
+    useSoundOut,
   };
 
   try {

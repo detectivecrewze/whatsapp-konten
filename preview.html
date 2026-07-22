@@ -87,6 +87,7 @@
       background-image: url('assets/wa-pattern.svg');
       background-repeat: repeat;
       background-size: 400px;
+      background-position: center;
     }
 
     /* ── Message slide-in animation ── */
@@ -140,8 +141,12 @@
 
 <!-- Countdown overlay -->
 <div id="countdown-overlay">
-  <div id="countdown-num">3</div>
-  <div id="countdown-label">Starting animation…</div>
+  <button id="btn-start" onclick="initAnimation()" 
+          style="background:#00A884; color:white; border:none; padding:12px 24px; border-radius:30px; font-size:16px; font-weight:600; cursor:pointer; font-family:inherit; box-shadow:0 8px 24px rgba(0,168,132,0.4);">
+    ▶ Start Animation
+  </button>
+  <div id="countdown-num" style="display:none;">3</div>
+  <div id="countdown-label" style="display:none;">Starting animation…</div>
 </div>
 
 <!-- Replay button -->
@@ -245,7 +250,7 @@
 
   <!-- CHAT AREA -->
   <div id="wa-chat-area"
-       style="position:relative; height:690px; overflow-y:auto;
+       style="position:relative; height:690px; overflow-y:auto; overflow-x:hidden;
               background-color:#111B21; padding:4px 8px 10px;">
 
     <!-- BG pattern -->
