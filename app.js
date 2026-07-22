@@ -72,11 +72,49 @@ function svgReadTicks() {
 /* ============================================================
    4. FILE → DATA URL
    ============================================================ */
-function fileToDataUrl(file) {
+function fileToDataUrl(file, maxDim = 1000) {
   return new Promise((resolve, reject) => {
+    // Preserve animated GIFs as raw data URL
+    if (file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif')) {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const img = new Image();
     const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
+
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
     reader.onerror = reject;
+
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Compress to web-friendly JPEG (0.85 quality)
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+
     reader.readAsDataURL(file);
   });
 }
