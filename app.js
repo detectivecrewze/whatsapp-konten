@@ -104,6 +104,7 @@ function renderDashboard() {
 
   updateFrameButtons();
   renderCanvas();
+  triggerAutoSave();
 }
 
 /**
@@ -568,6 +569,8 @@ async function handlePfpUpload(input) {
     cPfp.style.display = 'block';
     if (fallback) fallback.style.display = 'none';
   }
+
+  triggerAutoSave();
 }
 
 /* ============================================================
@@ -1153,9 +1156,312 @@ function openCleanPreview() {
 }
 
 /* ============================================================
-   18. INIT
+   18. AUTO-SAVE & PRESET TEMPLATE MANAGEMENT
+   ============================================================ */
+
+let _autoSaveTimer = null;
+let _isRestoringState = false;
+
+function triggerAutoSave() {
+  if (_isRestoringState) return;
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => {
+    saveDraftToLocalStorage();
+  }, 400);
+}
+
+function getProjectPayload() {
+  const holdMs       = parseInt(document.getElementById('inp-hold-duration')?.value || '2000', 10);
+  const useTyping    = document.getElementById('inp-typing')?.checked ?? true;
+  const useSoundIn   = document.getElementById('inp-sound-in')?.checked ?? true;
+  const useSoundOut  = document.getElementById('inp-sound-out')?.checked ?? false;
+
+  return {
+    name:        state.name,
+    pfp:         state.pfp,
+    messages:    state.messages,
+    scale:       state.scale,
+    time:        state.time,
+    bgType:      state.bgType,
+    bgColor:     state.bgColor,
+    bgImage:     state.bgImage,
+    holdMs,
+    useTyping,
+    useSoundIn,
+    useSoundOut,
+    updatedAt:   Date.now()
+  };
+}
+
+function saveDraftToLocalStorage() {
+  try {
+    const payload = getProjectPayload();
+    localStorage.setItem('wa_autosave_draft', JSON.stringify(payload));
+    showAutoSaveBadge();
+  } catch (e) {
+    console.warn('Auto-save failed:', e);
+  }
+}
+
+function showAutoSaveBadge() {
+  const badge = document.getElementById('save-status-badge');
+  if (!badge) return;
+  badge.classList.remove('opacity-0');
+  badge.classList.add('opacity-100');
+  setTimeout(() => {
+    badge.classList.remove('opacity-100');
+    badge.classList.add('opacity-0');
+  }, 1500);
+}
+
+const TPL_KEY = 'wa_saved_templates';
+
+function getSavedTemplates() {
+  try {
+    return JSON.parse(localStorage.getItem(TPL_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function renderTemplateDropdown(selectedId = 'auto') {
+  const select = document.getElementById('tpl-select');
+  if (!select) return;
+
+  const templates = getSavedTemplates();
+  let html = `<option value="auto" ${selectedId === 'auto' ? 'selected' : ''}>Draft (Auto-saved)</option>`;
+
+  Object.keys(templates).forEach(id => {
+    const tpl = templates[id];
+    const isSelected = selectedId === id ? 'selected' : '';
+    html += `<option value="${tpl.id}" ${isSelected}>📁 ${escHtml(tpl.name)}</option>`;
+  });
+
+  select.innerHTML = html;
+
+  const label = document.getElementById('active-tpl-label');
+  if (label) {
+    if (selectedId === 'auto') {
+      label.textContent = 'Editing: Draft';
+    } else if (templates[selectedId]) {
+      label.textContent = `Editing: ${templates[selectedId].name}`;
+    }
+  }
+}
+
+function applyProjectPayload(data) {
+  _isRestoringState = true;
+
+  state.name     = data.name || '';
+  state.pfp      = data.pfp || null;
+  state.messages = Array.isArray(data.messages) ? data.messages : [];
+  state.scale    = data.scale || 2;
+  state.time     = data.time || '16:12';
+  state.bgType   = data.bgType || 'default';
+  state.bgColor  = data.bgColor || '#111B21';
+  state.bgImage  = data.bgImage || null;
+
+  // Max msg counter ID sync
+  _msgIdCounter = state.messages.reduce((max, m) => {
+    const num = parseInt((m.id || '').replace('msg_', ''), 10);
+    return !isNaN(num) && num > max ? num : max;
+  }, 0);
+
+  // Restore DOM controls
+  const inpName = document.getElementById('inp-name');
+  if (inpName) inpName.value = state.name;
+
+  const inpTime = document.getElementById('inp-time');
+  if (inpTime) inpTime.value = state.time;
+
+  const inpScale = document.getElementById('inp-scale');
+  if (inpScale) inpScale.value = state.scale;
+
+  const inpBgType = document.getElementById('inp-bg-type');
+  if (inpBgType) inpBgType.value = state.bgType;
+
+  const inpBgColor = document.getElementById('inp-bg-color');
+  if (inpBgColor) inpBgColor.value = state.bgColor;
+
+  // PFP UI
+  const pfpWrap  = document.getElementById('pfp-preview-wrap');
+  const pfpImg   = document.getElementById('pfp-preview');
+  const pfpName  = document.getElementById('pfp-preview-name');
+  const pfpLabel = document.getElementById('pfp-label');
+  if (state.pfp) {
+    if (pfpImg) pfpImg.src = state.pfp;
+    if (pfpName) pfpName.textContent = 'Uploaded Image';
+    if (pfpWrap) pfpWrap.style.display = 'flex';
+    if (pfpLabel) pfpLabel.textContent = 'Change image…';
+  } else {
+    if (pfpWrap) pfpWrap.style.display = 'none';
+    if (pfpLabel) pfpLabel.textContent = 'Upload image…';
+  }
+
+  // Background UI toggles
+  document.getElementById('inp-bg-color')?.classList.toggle('hidden', state.bgType !== 'color');
+  document.getElementById('lbl-bg-image')?.classList.toggle('hidden', state.bgType !== 'image');
+  const bgImgName = document.getElementById('bg-image-name');
+  if (bgImgName) bgImgName.textContent = state.bgImage ? 'Image Loaded' : 'Upload custom image…';
+
+  // Video options UI
+  if (data.holdMs !== undefined && document.getElementById('inp-hold-duration')) {
+    document.getElementById('inp-hold-duration').value = data.holdMs;
+  }
+  if (data.useTyping !== undefined && document.getElementById('inp-typing')) {
+    document.getElementById('inp-typing').checked = data.useTyping;
+  }
+  if (data.useSoundIn !== undefined && document.getElementById('inp-sound-in')) {
+    document.getElementById('inp-sound-in').checked = data.useSoundIn;
+  }
+  if (data.useSoundOut !== undefined && document.getElementById('inp-sound-out')) {
+    document.getElementById('inp-sound-out').checked = data.useSoundOut;
+  }
+
+  syncBaseFields();
+  renderDashboard();
+
+  _isRestoringState = false;
+}
+
+function handleSelectTemplate(val) {
+  if (val === 'auto') {
+    loadDraftFromLocalStorage();
+    renderTemplateDropdown('auto');
+    return;
+  }
+
+  const templates = getSavedTemplates();
+  if (templates[val]) {
+    applyProjectPayload(templates[val].data);
+    renderTemplateDropdown(val);
+  }
+}
+
+function saveCurrentTemplate() {
+  const currentVal = document.getElementById('tpl-select')?.value || 'auto';
+  const templates  = getSavedTemplates();
+
+  let defaultName = 'My WA Preset';
+  if (currentVal !== 'auto' && templates[currentVal]) {
+    defaultName = templates[currentVal].name;
+  }
+
+  const tplName = prompt('Nama template / preset ini:', defaultName);
+  if (!tplName || !tplName.trim()) return;
+
+  const id = (currentVal !== 'auto' && templates[currentVal]) ? currentVal : `tpl_${Date.now()}`;
+  templates[id] = {
+    id,
+    name: tplName.trim(),
+    updatedAt: Date.now(),
+    data: getProjectPayload()
+  };
+
+  try {
+    localStorage.setItem(TPL_KEY, JSON.stringify(templates));
+    renderTemplateDropdown(id);
+    showAutoSaveBadge();
+  } catch (e) {
+    alert('⚠️ Gagal menyimpan template. Penyimpanan browser mungkin penuh jika gambar terlalu besar.');
+  }
+}
+
+function deleteCurrentTemplate() {
+  const currentVal = document.getElementById('tpl-select')?.value;
+  if (!currentVal || currentVal === 'auto') {
+    alert('⚠️ Template Draft (Auto-saved) tidak dapat dihapus. Klik "+ New Blank Project" jika ingin mengosongkan.');
+    return;
+  }
+
+  const templates = getSavedTemplates();
+  if (!templates[currentVal]) return;
+
+  if (confirm(`Yakin ingin menghapus template "${templates[currentVal].name}"?`)) {
+    delete templates[currentVal];
+    localStorage.setItem(TPL_KEY, JSON.stringify(templates));
+    loadDraftFromLocalStorage();
+    renderTemplateDropdown('auto');
+  }
+}
+
+function createNewProject() {
+  if (confirm('Buat project baru yang kosong? (Draft saat ini akan di-reset)')) {
+    applyProjectPayload({
+      name: '',
+      pfp: null,
+      messages: [],
+      scale: 2,
+      time: '16:12',
+      bgType: 'default',
+      bgColor: '#111B21',
+      bgImage: null
+    });
+    localStorage.removeItem('wa_autosave_draft');
+    renderTemplateDropdown('auto');
+  }
+}
+
+function loadDraftFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem('wa_autosave_draft');
+    if (raw) {
+      const data = JSON.parse(raw);
+      applyProjectPayload(data);
+      return true;
+    }
+  } catch (e) {
+    console.error('Failed to load auto-saved draft:', e);
+  }
+  return false;
+}
+
+function exportTemplateJson() {
+  const payload = getProjectPayload();
+  const jsonStr = JSON.stringify(payload, null, 2);
+  const blob    = new Blob([jsonStr], { type: 'application/json' });
+  const nameSlug = (state.name.trim() || 'wa_template').toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const filename = `${nameSlug}_template.json`;
+
+  if (window.saveAs) {
+    window.saveAs(blob, filename);
+  } else {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  }
+}
+
+function importTemplateJson(input) {
+  if (!input.files?.[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || typeof data !== 'object') throw new Error('Invalid format');
+      applyProjectPayload(data);
+      alert(`✅ Template "${file.name}" berhasil di-import!`);
+    } catch (err) {
+      alert('⚠️ Gagal memuat file template JSON. Pastikan file berformat .json yang valid.');
+    }
+  };
+
+  reader.readAsText(file);
+  input.value = '';
+}
+
+/* ============================================================
+   19. INIT
    ============================================================ */
 
 window.addEventListener('DOMContentLoaded', () => {
-  renderDashboard();
+  renderTemplateDropdown('auto');
+  const loaded = loadDraftFromLocalStorage();
+  if (!loaded) {
+    renderDashboard();
+  }
 });
+
