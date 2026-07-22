@@ -284,10 +284,15 @@ async function startAnimation() {
   for (let f = 0; f < totalF; f++) {
     const isOut = messages[f].direction === 'outgoing';
 
+    // If autoZoom is enabled and this is not the first message, zoom out briefly first
+    if (autoZoom && f > 0) {
+      resetZoom();
+      await sleep(350); // Smooth zoom-out breathing animation transition
+    }
+
     // Typing indicator before each message (except first)
     // ONLY show if the NEXT message is from the other person ('incoming')
     if (useTyping && f > 0 && messages[f].direction === 'incoming') {
-      if (autoZoom) resetZoom();
       showTyping();
       await sleep(1400);
       hideTyping();
@@ -297,7 +302,7 @@ async function startAnimation() {
     // Reveal this message with slide-in animation
     applyFrame(f + 1);
     
-    // Auto-Zoom Punch-In Camera Effect
+    // Auto-Zoom Punch-In Camera Effect to new message
     const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
     if (autoZoom && msgEl) {
       triggerAutoZoom(msgEl, isOut);
