@@ -226,13 +226,26 @@ function triggerAutoZoom(msgEl, isOut) {
 
   const zoomIntensity = previewState.zoomScale || 1.08;
 
-  // Zoom center relative to active message bubble
+  // Center of active message bubble relative to container
   const bubbleCenterY = msgEl.offsetTop + msgEl.offsetHeight / 2;
-  const originX = isOut ? '85%' : '15%';
+  const originX = isOut ? '90%' : '10%';
 
-  messagesContainer.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform-origin 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-  messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
-  messagesContainer.style.transform = `scale(${zoomIntensity})`;
+  messagesContainer.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), transform-origin 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
+  
+  if (zoomIntensity >= 1.25) {
+    // For Extreme/Super Zoom: Calculate exact Y offset so the active bubble is centered vertically in chat view
+    const chatArea = document.getElementById('wa-chat-area');
+    const viewCenterY = chatArea ? (chatArea.clientHeight / 2) : 340;
+    const translateY = (viewCenterY - bubbleCenterY) * (zoomIntensity - 1);
+    const translateX = isOut ? -15 : 15;
+
+    messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
+    messagesContainer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomIntensity})`;
+  } else {
+    // Standard Zoom
+    messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
+    messagesContainer.style.transform = `scale(${zoomIntensity})`;
+  }
 }
 
 async function startAnimation() {
