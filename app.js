@@ -1187,12 +1187,13 @@ function openCleanPreview() {
     return;
   }
 
-  const holdMs    = parseInt(document.getElementById('inp-hold-duration')?.value || '2000', 10);
-  const useTyping = document.getElementById('inp-typing')?.checked ?? true;
-  const useSoundIn  = document.getElementById('inp-sound-in')?.checked ?? true;
-  const useSoundOut = document.getElementById('inp-sound-out')?.checked ?? false;
-  const autoZoom   = document.getElementById('inp-auto-zoom')?.checked ?? false;
-  const zoomScale  = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.12');
+  const holdMs     = parseInt(document.getElementById('inp-hold-duration')?.value || '2000', 10);
+  const replyDelay = parseInt(document.getElementById('inp-reply-delay')?.value || '1400', 10);
+  const useTyping  = document.getElementById('inp-typing')?.checked ?? true;
+  const useSoundIn   = document.getElementById('inp-sound-in')?.checked ?? true;
+  const useSoundOut  = document.getElementById('inp-sound-out')?.checked ?? false;
+  const autoZoom    = document.getElementById('inp-auto-zoom')?.checked ?? false;
+  const zoomScale   = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.12');
 
   // Serialize state to localStorage
   const payload = {
@@ -1204,6 +1205,7 @@ function openCleanPreview() {
     bgColor:   state.bgColor,
     bgImage:   state.bgImage,
     holdMs,
+    replyDelay,
     useTyping,
     useSoundIn,
     useSoundOut,

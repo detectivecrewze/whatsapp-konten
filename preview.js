@@ -251,11 +251,12 @@ function triggerAutoZoom(msgEl, isOut) {
 async function startAnimation() {
   if (!previewState) return;
 
-  const messages  = previewState.messages || [];
-  const holdMs    = previewState.holdMs   || 2000;
-  const useTyping = previewState.useTyping !== false;
-  const autoZoom  = previewState.autoZoom === true;
-  const totalF    = messages.length;
+  const messages   = previewState.messages || [];
+  const holdMs     = previewState.holdMs   || 2000;
+  const replyDelay = previewState.replyDelay || 1400;
+  const useTyping  = previewState.useTyping !== false;
+  const autoZoom   = previewState.autoZoom === true;
+  const totalF     = messages.length;
 
   const replayBtn = document.getElementById('btn-replay');
   if (replayBtn) replayBtn.style.display = 'none';
@@ -290,13 +291,16 @@ async function startAnimation() {
       await sleep(350); // Smooth zoom-out breathing animation transition
     }
 
-    // Typing indicator before each message (except first)
-    // ONLY show if the NEXT message is from the other person ('incoming')
-    if (useTyping && f > 0 && messages[f].direction === 'incoming') {
-      showTyping();
-      await sleep(1400);
-      hideTyping();
-      await sleep(120);
+    // Typing indicator / Reply delay before incoming replies
+    if (f > 0 && messages[f].direction === 'incoming') {
+      if (useTyping) {
+        showTyping();
+        await sleep(replyDelay);
+        hideTyping();
+        await sleep(120);
+      } else {
+        await sleep(replyDelay);
+      }
     }
 
     // Reveal this message with slide-in animation

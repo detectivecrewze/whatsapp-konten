@@ -238,6 +238,15 @@
                    class="w-full accent-wa-accent cursor-pointer"
                    oninput="document.getElementById('hold-val').textContent=(this.value/1000).toFixed(1)+'s'" />
           </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">
+              Reply / Typing Delay:
+              <span id="reply-delay-val" class="text-wa-accent font-semibold">1.4s</span>
+            </label>
+            <input id="inp-reply-delay" type="range" min="400" max="5000" step="200" value="1400"
+                   class="w-full accent-wa-accent cursor-pointer"
+                   oninput="document.getElementById('reply-delay-val').textContent=(this.value/1000).toFixed(1)+'s'" />
+          </div>
           <div class="flex items-center gap-2">
             <input id="inp-typing" type="checkbox" checked class="accent-wa-accent w-4 h-4 cursor-pointer" />
             <label for="inp-typing" class="text-xs text-gray-400 cursor-pointer">Show typing indicator between messages</label>
