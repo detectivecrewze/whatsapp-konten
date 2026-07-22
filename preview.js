@@ -215,7 +215,8 @@ let currentBaseScale = 1;
 function resetZoom() {
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
-  messagesContainer.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
+  const zoomSpeed = previewState ? (previewState.zoomSpeed || 0.45) : 0.45;
+  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
   messagesContainer.style.transformOrigin = 'center center';
   messagesContainer.style.transform = 'scale(1)';
 }
@@ -226,12 +227,13 @@ function triggerAutoZoom(msgEl, isOut) {
   if (!messagesContainer) return;
 
   const zoomIntensity = previewState.zoomScale || 1.20;
+  const zoomSpeed     = previewState.zoomSpeed || 0.45;
 
   // Center of active message bubble relative to container
   const bubbleCenterY = msgEl.offsetTop + msgEl.offsetHeight / 2;
   const originX = isOut ? '85%' : '15%';
 
-  messagesContainer.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), transform-origin 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
+  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
   messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
@@ -276,7 +278,8 @@ async function startAnimation() {
     // If autoZoom is enabled and this is not the first message, zoom out completely first
     if (autoZoom && f > 0) {
       resetZoom();
-      await sleep(450); // Wait for full 0.45s zoom-out transition to complete before revealing next message
+      const zoomSleep = Math.round((previewState.zoomSpeed || 0.45) * 1000);
+      await sleep(zoomSleep); // Wait for full custom zoom-out transition to complete
     }
 
     // Typing indicator / Reply delay before incoming replies

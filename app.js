@@ -1193,7 +1193,8 @@ function openCleanPreview() {
   const useSoundIn   = document.getElementById('inp-sound-in')?.checked ?? true;
   const useSoundOut  = document.getElementById('inp-sound-out')?.checked ?? false;
   const autoZoom    = document.getElementById('inp-auto-zoom')?.checked ?? false;
-  const zoomScale  = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.20');
+  const zoomScale   = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.20');
+  const zoomSpeed   = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
 
   // Serialize state to localStorage
   const payload = {
@@ -1211,6 +1212,7 @@ function openCleanPreview() {
     useSoundOut,
     autoZoom,
     zoomScale,
+    zoomSpeed,
   };
 
   try {

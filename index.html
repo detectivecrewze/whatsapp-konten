@@ -268,15 +268,26 @@
                 <span class="text-[10px] bg-wa-accent/20 text-wa-accent px-1.5 py-0.5 rounded font-mono">EXPERIMENTAL</span>
               </label>
             </div>
-            <div id="wrap-zoom-scale" class="hidden pl-6 space-y-1">
-              <label class="block text-[11px] text-gray-400">Zoom Intensity:</label>
-              <select id="inp-zoom-scale" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
-                <option value="1.05">Subtle (1.05× — Smooth & Gentle)</option>
-                <option value="1.12">Medium (1.12× — Standard Reel)</option>
-                <option value="1.20" selected>Punchy Zoom (1.20× — Recommended)</option>
-                <option value="1.35">Super Zoom (1.35× — Close-up Detail)</option>
-                <option value="1.50">Extreme Zoom (1.50× — Deep Focus)</option>
-              </select>
+            <div id="wrap-zoom-scale" class="hidden pl-6 space-y-2">
+              <div>
+                <label class="block text-[11px] text-gray-400 mb-1">Zoom Intensity:</label>
+                <select id="inp-zoom-scale" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
+                  <option value="1.05">Subtle (1.05× — Smooth & Gentle)</option>
+                  <option value="1.12">Medium (1.12× — Standard Reel)</option>
+                  <option value="1.20" selected>Punchy Zoom (1.20× — Recommended)</option>
+                  <option value="1.35">Super Zoom (1.35× — Close-up Detail)</option>
+                  <option value="1.50">Extreme Zoom (1.50× — Deep Focus)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] text-gray-400 mb-1">
+                  Zoom Speed / Smoothness:
+                  <span id="zoom-speed-val" class="text-wa-accent font-semibold">0.45s</span>
+                </label>
+                <input id="inp-zoom-speed" type="range" min="0.20" max="1.00" step="0.05" value="0.45"
+                       class="w-full accent-wa-accent cursor-pointer"
+                       oninput="document.getElementById('zoom-speed-val').textContent=parseFloat(this.value).toFixed(2)+'s'" />
+              </div>
             </div>
           </div>
         </div>
