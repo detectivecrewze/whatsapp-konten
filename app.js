@@ -695,8 +695,8 @@ function syncBaseFields() {
       chatTarget.style.backgroundColor = '#111B21';
       if (state.bgImage) {
         chatTarget.style.backgroundImage = `url('${state.bgImage}')`;
-        chatTarget.style.backgroundRepeat = 'repeat';
-        chatTarget.style.backgroundSize = 'auto';
+        chatTarget.style.backgroundRepeat = 'no-repeat';
+        chatTarget.style.backgroundSize = 'cover';
         chatTarget.style.backgroundPosition = 'center top';
       } else {
         chatTarget.style.backgroundImage = "url('assets/wa-pattern.svg')";

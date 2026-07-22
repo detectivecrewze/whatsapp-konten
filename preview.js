@@ -213,27 +213,26 @@ function initAnimation() {
 let currentBaseScale = 1;
 
 function resetZoom() {
-  const canvas = document.getElementById('wa-canvas');
-  if (!canvas) return;
-  canvas.style.transformOrigin = 'top left';
-  canvas.style.transform = `scale(${currentBaseScale})`;
+  const messagesContainer = document.getElementById('wa-messages');
+  if (!messagesContainer) return;
+  messagesContainer.style.transformOrigin = 'center center';
+  messagesContainer.style.transform = 'scale(1)';
 }
 
 function triggerAutoZoom(msgEl, isOut) {
   if (!previewState || !previewState.autoZoom || !msgEl) return;
-  const canvas = document.getElementById('wa-canvas');
-  const area = document.getElementById('wa-chat-area');
-  if (!canvas || !area) return;
+  const messagesContainer = document.getElementById('wa-messages');
+  if (!messagesContainer) return;
 
-  const zoomIntensity = previewState.zoomScale || 1.12;
+  const zoomIntensity = previewState.zoomScale || 1.08;
 
-  // Header height ~62px + status bar ~46px = 108px top offset
-  const bubbleCenterY = 108 + (msgEl.offsetTop + msgEl.offsetHeight / 2 - area.scrollTop);
-  const originY = Math.max(100, Math.min(740, bubbleCenterY));
-  const originX = isOut ? 285 : 105; // Punch-in towards active bubble side
+  // Zoom center relative to active message bubble
+  const bubbleCenterY = msgEl.offsetTop + msgEl.offsetHeight / 2;
+  const originX = isOut ? '85%' : '15%';
 
-  canvas.style.transformOrigin = `${originX}px ${originY}px`;
-  canvas.style.transform = `scale(${currentBaseScale * zoomIntensity})`;
+  messagesContainer.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform-origin 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+  messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
+  messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
 async function startAnimation() {
@@ -366,8 +365,8 @@ window.addEventListener('DOMContentLoaded', () => {
       chatArea.style.backgroundColor = '#111B21';
       if (previewState.bgImage) {
         chatArea.style.backgroundImage = `url('${previewState.bgImage}')`;
-        chatArea.style.backgroundRepeat = 'repeat';
-        chatArea.style.backgroundSize = 'auto';
+        chatArea.style.backgroundRepeat = 'no-repeat';
+        chatArea.style.backgroundSize = 'cover';
         chatArea.style.backgroundPosition = 'center top';
       } else {
         chatArea.style.backgroundImage = "url('assets/wa-pattern.svg')";
