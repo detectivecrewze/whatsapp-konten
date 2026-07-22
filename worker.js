@@ -8,11 +8,22 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Team-Passcode',
     };
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
+    }
+
+    // Security Check: Verify Team Passcode from Cloudflare Environment Secret (env.TEAM_SECRET)
+    const passcode = request.headers.get('X-Team-Passcode') || new URL(request.url).searchParams.get('passcode');
+    const validSecret = env.TEAM_SECRET;
+
+    if (!validSecret || !passcode || passcode !== validSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or missing Team Passcode' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     const url = new URL(request.url);

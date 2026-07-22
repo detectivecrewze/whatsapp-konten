@@ -1262,8 +1262,9 @@ function getSavedTemplates() {
   }
 }
 
-// Configure your Cloudflare Worker URL here
-const WORKER_URL = window.WORKER_URL || 'https://wa-templates-worker.aldoramadhan16.workers.dev/templates';
+// Configure your Cloudflare Worker URL & Secret Passcode here
+const WORKER_URL    = window.WORKER_URL || 'https://wa-templates-worker.aldoramadhan16.workers.dev/templates';
+const TEAM_PASSCODE = window.TEAM_PASSCODE || 'wa_team_secret_2026';
 
 let _cloudTemplates = {};
 
@@ -1271,7 +1272,9 @@ async function fetchCloudTemplates() {
   if (!WORKER_URL) return;
 
   try {
-    const res = await fetch(WORKER_URL);
+    const res = await fetch(WORKER_URL, {
+      headers: { 'X-Team-Passcode': TEAM_PASSCODE }
+    });
     if (!res.ok) throw new Error('Cloud fetch failed');
     const json = await res.json();
     _cloudTemplates = json.templates || {};
@@ -1449,7 +1452,10 @@ async function saveCurrentTemplate(isCloud = false) {
     try {
       const res = await fetch(WORKER_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Team-Passcode': TEAM_PASSCODE
+        },
         body: JSON.stringify({ templates: _cloudTemplates })
       });
       if (!res.ok) throw new Error('Cloud save failed');
@@ -1507,7 +1513,10 @@ async function deleteCurrentTemplate() {
         try {
           await fetch(WORKER_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Team-Passcode': TEAM_PASSCODE
+            },
             body: JSON.stringify({ templates: _cloudTemplates })
           });
         } catch (e) {
