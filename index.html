@@ -81,25 +81,35 @@
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-            <span>💾 Presets & Auto-Save</span>
+            <span>💾 Presets & Team Cloud</span>
           </p>
-          <span id="save-status-badge" class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full transition opacity-0">
-            Auto-saved ✓
-          </span>
+          <div class="flex items-center gap-1.5">
+            <span id="save-status-badge" class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full transition opacity-0">
+              Auto-saved ✓
+            </span>
+            <button onclick="openCloudConfigModal()" title="JSONbin Cloud Settings for Team"
+                    class="text-xs text-gray-400 hover:text-wa-accent bg-gray-800 p-1.5 rounded-lg border border-gray-700 transition">
+              ⚙️
+            </button>
+          </div>
         </div>
 
         <!-- Select Template -->
-        <div class="flex gap-2">
+        <div class="flex gap-1.5">
           <select id="tpl-select" onchange="handleSelectTemplate(this.value)"
-                  class="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-wa-accent">
+                  class="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-wa-accent">
             <option value="auto">Draft (Auto-saved)</option>
           </select>
-          <button onclick="saveCurrentTemplate()" title="Save as Template"
-                  class="px-3 py-2 bg-wa-accent hover:bg-[#009272] text-white text-xs font-medium rounded-xl transition flex items-center gap-1 whitespace-nowrap shadow-sm">
-            Save
+          <button onclick="saveCurrentTemplate(false)" title="Save Local Preset"
+                  class="px-2.5 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium rounded-xl border border-gray-700 transition flex items-center gap-1 whitespace-nowrap">
+            💾 Local
+          </button>
+          <button onclick="saveCurrentTemplate(true)" title="Save & Sync to Team Cloud"
+                  class="px-2.5 py-2 bg-wa-accent hover:bg-[#009272] text-white text-xs font-medium rounded-xl transition flex items-center gap-1 whitespace-nowrap shadow-sm">
+            ☁️ Cloud
           </button>
           <button onclick="deleteCurrentTemplate()" title="Delete Template"
-                  class="px-2.5 py-2 bg-gray-800 hover:bg-red-900/50 text-gray-400 hover:text-red-300 border border-gray-700 rounded-xl transition text-xs">
+                  class="px-2 py-2 bg-gray-800 hover:bg-red-900/50 text-gray-400 hover:text-red-300 border border-gray-700 rounded-xl transition text-xs">
             🗑️
           </button>
         </div>
@@ -112,11 +122,11 @@
           <div class="flex items-center gap-1.5">
             <button onclick="exportTemplateJson()" title="Export JSON File to Share with Team"
                     class="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-[11px] font-medium border border-gray-700 transition flex items-center gap-1">
-              📤 Export JSON
+              📤 Export
             </button>
             <label title="Import JSON File from Teammate"
                    class="px-2 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-[11px] font-medium border border-gray-700 transition flex items-center gap-1 cursor-pointer">
-              📥 Import JSON
+              📥 Import
               <input type="file" accept=".json" class="hidden" onchange="importTemplateJson(this)" />
             </label>
           </div>
@@ -493,6 +503,43 @@
     </div><!-- end right col -->
   </div><!-- end grid -->
 </div><!-- end dashboard -->
+
+<!-- JSONbin Cloud Config Modal -->
+<div id="cloud-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+      <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <span>☁️ JSONbin.io Team Cloud Config</span>
+      </h3>
+      <button onclick="closeCloudConfigModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
+    </div>
+    
+    <p class="text-xs text-gray-400 leading-relaxed">
+      Masukkan <b>Master Key</b> dan <b>Bin ID</b> dari akun JSONbin.io milikmu agar 3 anggota tim bisa saling sync template percakapan secara online!
+    </p>
+
+    <div class="space-y-3 text-xs">
+      <div>
+        <label class="block text-gray-300 mb-1 font-medium">X-MASTER-KEY (API Key)</label>
+        <input id="inp-cloud-key" type="password" placeholder="$2a$10$..."
+               class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white font-mono placeholder-gray-600 focus:ring-2 focus:ring-wa-accent focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="block text-gray-300 mb-1 font-medium">BIN ID</label>
+        <input id="inp-cloud-bin" type="text" placeholder="e.g. 65f1234abcd..."
+               class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white font-mono placeholder-gray-600 focus:ring-2 focus:ring-wa-accent focus:outline-none" />
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2 border-t border-gray-800">
+      <button onclick="closeCloudConfigModal()" class="px-3 py-1.5 text-xs text-gray-400 hover:text-white transition">Batal</button>
+      <button onclick="saveCloudConfig()" class="px-4 py-1.5 bg-wa-accent hover:bg-[#009272] text-white text-xs font-medium rounded-xl transition shadow-sm">
+        Simpan & Sync
+      </button>
+    </div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>

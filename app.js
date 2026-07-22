@@ -1224,29 +1224,87 @@ function getSavedTemplates() {
   }
 }
 
+let _cloudTemplates = {};
+
+function getCloudConfig() {
+  const key = localStorage.getItem('wa_cloud_key') || '';
+  const bin = localStorage.getItem('wa_cloud_bin') || '';
+  return { key, bin };
+}
+
+function openCloudConfigModal() {
+  const { key, bin } = getCloudConfig();
+  document.getElementById('inp-cloud-key').value = key;
+  document.getElementById('inp-cloud-bin').value = bin;
+  document.getElementById('cloud-modal').classList.remove('hidden');
+}
+
+function closeCloudConfigModal() {
+  document.getElementById('cloud-modal').classList.add('hidden');
+}
+
+async function saveCloudConfig() {
+  const key = document.getElementById('inp-cloud-key').value.trim();
+  const bin = document.getElementById('inp-cloud-bin').value.trim();
+
+  localStorage.setItem('wa_cloud_key', key);
+  localStorage.setItem('wa_cloud_bin', bin);
+  closeCloudConfigModal();
+
+  if (key && bin) {
+    await fetchCloudTemplates();
+  }
+}
+
+async function fetchCloudTemplates() {
+  const { key, bin } = getCloudConfig();
+  if (!key || !bin) return;
+
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${bin}/latest`, {
+      headers: { 'X-Master-Key': key }
+    });
+    if (!res.ok) throw new Error('Cloud fetch failed');
+    const json = await res.json();
+    _cloudTemplates = json.record?.templates || {};
+    renderTemplateDropdown(document.getElementById('tpl-select')?.value || 'auto');
+  } catch (e) {
+    console.warn('Failed to fetch Cloud templates:', e);
+  }
+}
+
 function renderTemplateDropdown(selectedId = 'auto') {
   const select = document.getElementById('tpl-select');
   if (!select) return;
 
-  const templates = getSavedTemplates();
+  const localTemplates = getSavedTemplates();
   let html = `<option value="auto" ${selectedId === 'auto' ? 'selected' : ''}>Draft (Auto-saved)</option>`;
 
-  Object.keys(templates).forEach(id => {
-    const tpl = templates[id];
-    const isSelected = selectedId === id ? 'selected' : '';
-    html += `<option value="${tpl.id}" ${isSelected}>📁 ${escHtml(tpl.name)}</option>`;
-  });
+  // Local templates
+  const localKeys = Object.keys(localTemplates);
+  if (localKeys.length) {
+    html += `<optgroup label="💾 Local Presets">`;
+    localKeys.forEach(id => {
+      const tpl = localTemplates[id];
+      const isSelected = selectedId === `local_${id}` ? 'selected' : '';
+      html += `<option value="local_${tpl.id}" ${isSelected}>📁 ${escHtml(tpl.name)}</option>`;
+    });
+    html += `</optgroup>`;
+  }
+
+  // Cloud templates
+  const cloudKeys = Object.keys(_cloudTemplates);
+  if (cloudKeys.length) {
+    html += `<optgroup label="☁️ Team Cloud Presets">`;
+    cloudKeys.forEach(id => {
+      const tpl = _cloudTemplates[id];
+      const isSelected = selectedId === `cloud_${id}` ? 'selected' : '';
+      html += `<option value="cloud_${tpl.id}" ${isSelected}>🌐 ${escHtml(tpl.name)}</option>`;
+    });
+    html += `</optgroup>`;
+  }
 
   select.innerHTML = html;
-
-  const label = document.getElementById('active-tpl-label');
-  if (label) {
-    if (selectedId === 'auto') {
-      label.textContent = 'Editing: Draft';
-    } else if (templates[selectedId]) {
-      label.textContent = `Editing: ${templates[selectedId].name}`;
-    }
-  }
 }
 
 function applyProjectPayload(data) {
@@ -1331,57 +1389,136 @@ function handleSelectTemplate(val) {
     return;
   }
 
-  const templates = getSavedTemplates();
-  if (templates[val]) {
-    applyProjectPayload(templates[val].data);
-    renderTemplateDropdown(val);
+  if (val.startsWith('local_')) {
+    const id = val.replace('local_', '');
+    const templates = getSavedTemplates();
+    if (templates[id]) {
+      applyProjectPayload(templates[id].data);
+      renderTemplateDropdown(val);
+    }
+  } else if (val.startsWith('cloud_')) {
+    const id = val.replace('cloud_', '');
+    if (_cloudTemplates[id]) {
+      applyProjectPayload(_cloudTemplates[id].data);
+      renderTemplateDropdown(val);
+    }
   }
 }
 
-function saveCurrentTemplate() {
+async function saveCurrentTemplate(isCloud = false) {
   const currentVal = document.getElementById('tpl-select')?.value || 'auto';
-  const templates  = getSavedTemplates();
+  const localTemplates = getSavedTemplates();
 
   let defaultName = 'My WA Preset';
-  if (currentVal !== 'auto' && templates[currentVal]) {
-    defaultName = templates[currentVal].name;
+  if (currentVal.startsWith('local_')) {
+    const id = currentVal.replace('local_', '');
+    if (localTemplates[id]) defaultName = localTemplates[id].name;
+  } else if (currentVal.startsWith('cloud_')) {
+    const id = currentVal.replace('cloud_', '');
+    if (_cloudTemplates[id]) defaultName = _cloudTemplates[id].name;
   }
 
-  const tplName = prompt('Nama template / preset ini:', defaultName);
+  const targetLabel = isCloud ? '☁️ Team Cloud' : '💾 Local';
+  const tplName = prompt(`Simpan Template ke [${targetLabel}]:`, defaultName);
   if (!tplName || !tplName.trim()) return;
 
-  const id = (currentVal !== 'auto' && templates[currentVal]) ? currentVal : `tpl_${Date.now()}`;
-  templates[id] = {
-    id,
-    name: tplName.trim(),
-    updatedAt: Date.now(),
-    data: getProjectPayload()
-  };
+  const payload = getProjectPayload();
 
-  try {
-    localStorage.setItem(TPL_KEY, JSON.stringify(templates));
-    renderTemplateDropdown(id);
-    showAutoSaveBadge();
-  } catch (e) {
-    alert('⚠️ Gagal menyimpan template. Penyimpanan browser mungkin penuh jika gambar terlalu besar.');
+  if (isCloud) {
+    const { key, bin } = getCloudConfig();
+    if (!key || !bin) {
+      alert('⚠️ Silakan klik ikon ⚙️ untuk memasukkan Master Key dan Bin ID JSONbin.io milikmu terlebih dahulu!');
+      openCloudConfigModal();
+      return;
+    }
+
+    const cloudId = `cloud_${Date.now()}`;
+    _cloudTemplates[cloudId] = {
+      id: cloudId,
+      name: tplName.trim(),
+      updatedAt: Date.now(),
+      data: payload
+    };
+
+    try {
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${bin}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': key
+        },
+        body: JSON.stringify({ templates: _cloudTemplates })
+      });
+      if (!res.ok) throw new Error('Cloud save failed');
+      alert(`✅ Template "${tplName.trim()}" berhasil tersimpan ke Team Cloud!`);
+      renderTemplateDropdown(`cloud_${cloudId}`);
+      showAutoSaveBadge();
+    } catch (e) {
+      alert('⚠️ Gagal menyimpan ke Cloud. Periksa Master Key & Bin ID kamu.');
+    }
+  } else {
+    const id = currentVal.startsWith('local_') ? currentVal.replace('local_', '') : `tpl_${Date.now()}`;
+    localTemplates[id] = {
+      id,
+      name: tplName.trim(),
+      updatedAt: Date.now(),
+      data: payload
+    };
+
+    try {
+      localStorage.setItem(TPL_KEY, JSON.stringify(localTemplates));
+      renderTemplateDropdown(`local_${id}`);
+      showAutoSaveBadge();
+    } catch (e) {
+      alert('⚠️ Gagal menyimpan template lokal. Penyimpanan browser mungkin penuh jika gambar terlalu besar.');
+    }
   }
 }
 
-function deleteCurrentTemplate() {
+async function deleteCurrentTemplate() {
   const currentVal = document.getElementById('tpl-select')?.value;
   if (!currentVal || currentVal === 'auto') {
-    alert('⚠️ Template Draft (Auto-saved) tidak dapat dihapus. Klik "+ New Blank Project" jika ingin mengosongkan.');
+    alert('⚠️ Template Draft (Auto-saved) tidak dapat dihapus.');
     return;
   }
 
-  const templates = getSavedTemplates();
-  if (!templates[currentVal]) return;
+  if (currentVal.startsWith('local_')) {
+    const id = currentVal.replace('local_', '');
+    const templates = getSavedTemplates();
+    if (!templates[id]) return;
 
-  if (confirm(`Yakin ingin menghapus template "${templates[currentVal].name}"?`)) {
-    delete templates[currentVal];
-    localStorage.setItem(TPL_KEY, JSON.stringify(templates));
-    loadDraftFromLocalStorage();
-    renderTemplateDropdown('auto');
+    if (confirm(`Hapus template lokal "${templates[id].name}"?`)) {
+      delete templates[id];
+      localStorage.setItem(TPL_KEY, JSON.stringify(templates));
+      loadDraftFromLocalStorage();
+      renderTemplateDropdown('auto');
+    }
+  } else if (currentVal.startsWith('cloud_')) {
+    const id = currentVal.replace('cloud_', '');
+    if (!_cloudTemplates[id]) return;
+
+    if (confirm(`Hapus template Cloud "${_cloudTemplates[id].name}" dari Team Cloud?`)) {
+      delete _cloudTemplates[id];
+
+      const { key, bin } = getCloudConfig();
+      if (key && bin) {
+        try {
+          await fetch(`https://api.jsonbin.io/v3/b/${bin}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': key
+            },
+            body: JSON.stringify({ templates: _cloudTemplates })
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      loadDraftFromLocalStorage();
+      renderTemplateDropdown('auto');
+    }
   }
 }
 
@@ -1457,8 +1594,9 @@ function importTemplateJson(input) {
    19. INIT
    ============================================================ */
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   renderTemplateDropdown('auto');
+  await fetchCloudTemplates();
   const loaded = loadDraftFromLocalStorage();
   if (!loaded) {
     renderDashboard();
