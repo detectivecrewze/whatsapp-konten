@@ -739,6 +739,13 @@ document.getElementById('inp-bg-image').addEventListener('change', async (e) => 
   }
 });
 
+const inpAutoZoom = document.getElementById('inp-auto-zoom');
+if (inpAutoZoom) {
+  inpAutoZoom.addEventListener('change', (e) => {
+    document.getElementById('wrap-zoom-scale')?.classList.toggle('hidden', !e.target.checked);
+  });
+}
+
 /* ============================================================
    12. CAPTURE ENGINE — html2canvas
    ============================================================ */
@@ -1184,6 +1191,8 @@ function openCleanPreview() {
   const useTyping = document.getElementById('inp-typing')?.checked ?? true;
   const useSoundIn  = document.getElementById('inp-sound-in')?.checked ?? true;
   const useSoundOut = document.getElementById('inp-sound-out')?.checked ?? false;
+  const autoZoom   = document.getElementById('inp-auto-zoom')?.checked ?? false;
+  const zoomScale  = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.12');
 
   // Serialize state to localStorage
   const payload = {
@@ -1198,6 +1207,8 @@ function openCleanPreview() {
     useTyping,
     useSoundIn,
     useSoundOut,
+    autoZoom,
+    zoomScale,
   };
 
   try {

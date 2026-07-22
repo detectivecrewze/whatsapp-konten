@@ -250,6 +250,24 @@
             <input id="inp-sound-out" type="checkbox" class="accent-wa-accent w-4 h-4 cursor-pointer" />
             <label for="inp-sound-out" class="text-xs text-gray-400 cursor-pointer">Enable Sound (Outgoing Msg)</label>
           </div>
+          <!-- Auto-Zoom Option -->
+          <div class="pt-2 border-t border-gray-800/60">
+            <div class="flex items-center gap-2 mb-1.5">
+              <input id="inp-auto-zoom" type="checkbox" class="accent-wa-accent w-4 h-4 cursor-pointer" />
+              <label for="inp-auto-zoom" class="text-xs text-gray-300 font-semibold cursor-pointer flex items-center gap-1.5">
+                <span>🔍 Auto-Zoom Camera Effect</span>
+                <span class="text-[10px] bg-wa-accent/20 text-wa-accent px-1.5 py-0.5 rounded font-mono">EXPERIMENTAL</span>
+              </label>
+            </div>
+            <div id="wrap-zoom-scale" class="hidden pl-6 space-y-1">
+              <label class="block text-[11px] text-gray-400">Zoom Intensity:</label>
+              <select id="inp-zoom-scale" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
+                <option value="1.06">Subtle (1.06×)</option>
+                <option value="1.12" selected>Medium (1.12× - Recommended)</option>
+                <option value="1.18">Dramatic (1.18×)</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- 🎬 OPEN CLEAN PREVIEW (main CTA for screen recording) -->

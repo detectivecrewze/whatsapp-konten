@@ -210,18 +210,46 @@ function initAnimation() {
   });
 }
 
+let currentBaseScale = 1;
+
+function resetZoom() {
+  const canvas = document.getElementById('wa-canvas');
+  if (!canvas) return;
+  canvas.style.transformOrigin = 'top left';
+  canvas.style.transform = `scale(${currentBaseScale})`;
+}
+
+function triggerAutoZoom(msgEl, isOut) {
+  if (!previewState || !previewState.autoZoom || !msgEl) return;
+  const canvas = document.getElementById('wa-canvas');
+  const area = document.getElementById('wa-chat-area');
+  if (!canvas || !area) return;
+
+  const zoomIntensity = previewState.zoomScale || 1.12;
+
+  // Header height ~62px + status bar ~46px = 108px top offset
+  const bubbleCenterY = 108 + (msgEl.offsetTop + msgEl.offsetHeight / 2 - area.scrollTop);
+  const originY = Math.max(100, Math.min(740, bubbleCenterY));
+  const originX = isOut ? 285 : 105; // Punch-in towards active bubble side
+
+  canvas.style.transformOrigin = `${originX}px ${originY}px`;
+  canvas.style.transform = `scale(${currentBaseScale * zoomIntensity})`;
+}
+
 async function startAnimation() {
   if (!previewState) return;
 
   const messages  = previewState.messages || [];
   const holdMs    = previewState.holdMs   || 2000;
   const useTyping = previewState.useTyping !== false;
+  const autoZoom  = previewState.autoZoom === true;
   const totalF    = messages.length;
 
   const replayBtn = document.getElementById('btn-replay');
   if (replayBtn) replayBtn.style.display = 'none';
 
-  // Reset: hide all messages
+  // Reset: hide all messages & reset zoom
+  resetZoom();
   applyFrame(0);
   hideTyping();
 
@@ -242,9 +270,12 @@ async function startAnimation() {
 
   // Animate frame by frame
   for (let f = 0; f < totalF; f++) {
+    const isOut = messages[f].direction === 'outgoing';
+
     // Typing indicator before each message (except first)
     // ONLY show if the NEXT message is from the other person ('incoming')
     if (useTyping && f > 0 && messages[f].direction === 'incoming') {
+      if (autoZoom) resetZoom();
       showTyping();
       await sleep(1400);
       hideTyping();
@@ -254,6 +285,12 @@ async function startAnimation() {
     // Reveal this message with slide-in animation
     applyFrame(f + 1);
     
+    // Auto-Zoom Punch-In Camera Effect
+    const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
+    if (autoZoom && msgEl) {
+      triggerAutoZoom(msgEl, isOut);
+    }
+
     // Play sound
     const useSoundIn = previewState.useSoundIn !== false;
     const useSoundOut = previewState.useSoundOut !== false;
@@ -266,9 +303,7 @@ async function startAnimation() {
       outSound.play().catch(e => console.log('Audio play blocked:', e));
     }
 
-    const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
     if (msgEl) {
-      const isOut = messages[f].direction === 'outgoing';
       const animClass = isOut ? 'msg-enter-out' : 'msg-enter-in';
       msgEl.classList.add(animClass);
       setTimeout(() => msgEl.classList.remove(animClass), 400);
@@ -278,7 +313,9 @@ async function startAnimation() {
     await sleep(holdMs);
   }
 
-  // End
+  // End: reset camera zoom to full view
+  if (autoZoom) resetZoom();
+
   if (replayBtn) {
     replayBtn.style.display = 'flex';
   }
@@ -291,18 +328,12 @@ function fitToScreen() {
   if (!wrapper || !canvas) return;
   
   const vh = window.innerHeight;
-  canvas.style.transformOrigin = 'top left';
+  currentBaseScale = (vh < 884) ? (vh / 884) : 1;
 
-  if (vh < 884) {
-    const scale = vh / 884;
-    canvas.style.transform = `scale(${scale})`;
-    wrapper.style.width = `${390 * scale}px`;
-    wrapper.style.height = `${844 * scale}px`;
-  } else {
-    canvas.style.transform = `scale(1)`;
-    wrapper.style.width = `390px`;
-    wrapper.style.height = `844px`;
-  }
+  canvas.style.transformOrigin = 'top left';
+  canvas.style.transform = `scale(${currentBaseScale})`;
+  wrapper.style.width = `${390 * currentBaseScale}px`;
+  wrapper.style.height = `${844 * currentBaseScale}px`;
 }
 
 window.addEventListener('resize', fitToScreen);
