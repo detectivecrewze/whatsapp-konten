@@ -273,10 +273,10 @@ async function startAnimation() {
   for (let f = 0; f < totalF; f++) {
     const isOut = messages[f].direction === 'outgoing';
 
-    // If autoZoom is enabled and this is not the first message, zoom out with smooth breathing pause
+    // If autoZoom is enabled and this is not the first message, zoom out completely first
     if (autoZoom && f > 0) {
       resetZoom();
-      await sleep(300);
+      await sleep(450); // Wait for full 0.45s zoom-out transition to complete before revealing next message
     }
 
     // Typing indicator / Reply delay before incoming replies
