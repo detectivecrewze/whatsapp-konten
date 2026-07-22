@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>For You, Always — WhatsApp Asset Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -80,7 +80,7 @@
         <div>
           <label class="block text-xs text-gray-400 mb-1.5">Contact Name</label>
           <input id="inp-name" type="text" placeholder="e.g. Sayang 💙"
-            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white
+            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
                    placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
         </div>
 
@@ -105,7 +105,7 @@
         <div>
           <label class="block text-xs text-gray-400 mb-1.5">Clock Time</label>
           <input id="inp-time" type="time" value="16:12"
-            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white
+            class="w-full appearance-none block max-w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
                    focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
         </div>
 
@@ -113,7 +113,7 @@
         <div class="space-y-2">
           <label class="block text-xs text-gray-400 mb-1.5">Chat Background</label>
           <select id="inp-bg-type"
-                  class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white
+                  class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
                          focus:outline-none focus:ring-2 focus:ring-wa-accent transition">
             <option value="default">Default Dark</option>
             <option value="color">Custom Color</option>

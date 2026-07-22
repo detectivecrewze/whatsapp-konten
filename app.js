@@ -165,7 +165,7 @@ function dashboardItemHtml(msg, idx) {
       <!-- Type selector -->
       <select onchange="setMsgType('${msg.id}', this.value)"
               class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5
-                     text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
+                     text-base md:text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
         <option value="text"  ${isText ? 'selected' : ''}>✏️ Text</option>
         <option value="image" ${isImg  ? 'selected' : ''}>🖼 Image / GIF</option>
         ${qrOption}
@@ -193,7 +193,7 @@ function dashboardItemHtml(msg, idx) {
                 placeholder="Type your message…"
                 oninput="setMsgText('${msg.id}', this.value)"
                 class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2
-                       text-xs text-white placeholder-gray-500 resize-none
+                       text-base md:text-xs text-white placeholder-gray-500 resize-none
                        focus:outline-none focus:ring-1 focus:ring-wa-accent"
       >${escHtml(msg.text ?? '')}</textarea>
     </div>
@@ -219,13 +219,13 @@ function dashboardItemHtml(msg, idx) {
              value="${msg.gifUrl || ''}"
              oninput="setMsgGifUrl('${msg.id}', this.value)"
              class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5
-                    text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+                    text-base md:text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
       
       <!-- Caption Input -->
       <textarea rows="1" placeholder="Caption (optional)..."
                 oninput="setMsgCaption('${msg.id}', this.value)"
                 class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5
-                       text-xs text-white placeholder-gray-500 resize-none
+                       text-base md:text-xs text-white placeholder-gray-500 resize-none
                        focus:outline-none focus:ring-1 focus:ring-wa-accent"
       >${escHtml(msg.caption ?? '')}</textarea>
 
