@@ -34,6 +34,11 @@
   </script>
   <link rel="stylesheet" href="style.css" />
   <style>
+    /* Fix for iOS Safari time input text alignment */
+    input[type="time"]::-webkit-datetime-edit {
+      justify-content: flex-start;
+      text-align: left;
+    }
     /* Typing dots for video animation */
     @keyframes tdot {
       0%,60%,100% { transform:translateY(0); opacity:.35; }
@@ -105,7 +110,7 @@
         <div>
           <label class="block text-xs text-gray-400 mb-1.5">Clock Time</label>
           <input id="inp-time" type="time" value="16:12"
-            class="w-full appearance-none block max-w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
+            class="w-full appearance-none block max-w-full text-left bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
                    focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
         </div>
 
