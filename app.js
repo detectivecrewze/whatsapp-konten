@@ -1559,6 +1559,7 @@ function applyProjectPayload(data) {
 }
 
 function handleSelectTemplate(val) {
+  _isNewBlankProject = false;
   if (val === 'auto') {
     loadDraftFromLocalStorage();
     renderTemplateDropdown('auto');
@@ -1592,7 +1593,7 @@ async function saveAsNewTemplate() {
   const payload = getProjectPayload();
   const cleanId = `${Date.now()}`;
 
-  // 1. Always save locally to localStorage so it works 100% offline
+  // 1. Save to Local Storage (works 100% offline)
   const localTemplates = getSavedTemplates();
   localTemplates[cleanId] = {
     id: cleanId,
@@ -1607,7 +1608,7 @@ async function saveAsNewTemplate() {
     console.warn('Local storage save issue:', e);
   }
 
-  // 2. Also sync to Cloud Worker if available
+  // 2. Sync to Cloud Worker (if available)
   if (WORKER_URL && TEAM_PASSCODE) {
     _cloudTemplates[cleanId] = {
       id: cleanId,
@@ -1631,20 +1632,19 @@ async function saveAsNewTemplate() {
   }
 
   _isNewBlankProject = false;
-  renderTemplateDropdown(`local_${cleanId}`);
+  renderTemplateDropdown(`cloud_${cleanId}`);
   showToast(`💾 Preset "${trimmedName}" berhasil dibuat!`);
 }
 
 async function saveCurrentTemplate() {
   const currentVal = document.getElementById('tpl-select')?.value || 'auto';
   
-  if (currentVal === 'auto' || _isNewBlankProject) {
+  if (currentVal === 'auto') {
     return saveAsNewTemplate();
   }
 
+  _isNewBlankProject = false;
   const payload = getProjectPayload();
-  const isLocal = currentVal.startsWith('local_');
-  const isCloud = currentVal.startsWith('cloud_');
   const cleanId = currentVal.replace(/^(local_|cloud_)/, '');
 
   let tplName = state.name || 'Preset';
@@ -1655,16 +1655,6 @@ async function saveCurrentTemplate() {
     tplName = localTemplates[cleanId].name;
     localTemplates[cleanId].data = payload;
     localTemplates[cleanId].updatedAt = Date.now();
-    try {
-      localStorage.setItem(TPL_KEY, JSON.stringify(localTemplates));
-    } catch (e) {}
-  } else {
-    localTemplates[cleanId] = {
-      id: cleanId,
-      name: tplName,
-      updatedAt: Date.now(),
-      data: payload
-    };
     try {
       localStorage.setItem(TPL_KEY, JSON.stringify(localTemplates));
     } catch (e) {}
