@@ -439,10 +439,17 @@ async function startAnimation() {
     // Hold (custom hold per message/notification if set)
     const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
     await sleep(frameHoldMs);
+
+    // Zoom OUT back to full screen view after message hold, before next frame/typing starts
+    if (shouldZoomThisMsg && f < totalF - 1) {
+      resetZoom();
+      const zoomOutDelay = Math.min(350, Math.round((previewState.zoomSpeed || 0.45) * 1000 * 0.7));
+      await sleep(zoomOutDelay);
+    }
   }
 
   // End: reset camera zoom to full view
-  if (autoZoom) resetZoom();
+  resetZoom();
 
   if (replayBtn) {
     replayBtn.style.display = 'flex';
