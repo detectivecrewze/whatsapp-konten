@@ -63,6 +63,15 @@ function escHtml(str) {
     .replace(/\n/g, '<br>');
 }
 
+/**
+ * Strip ElevenLabs Audio Emotion Tags from visible text.
+ * Tags like [scared], [whispers], [nervous] are used only for TTS — never shown visually.
+ */
+function stripAudioTags(str) {
+  if (!str) return '';
+  return str.replace(/\[[^\]]{1,40}\]/g, '').replace(/^\s+/, '').trim();
+}
+
 /** Return custom time for messages */
 function msgTime(index) {
   if (typeof index === 'number' && state.messages[index] && state.messages[index].time) {
@@ -571,7 +580,7 @@ function createCanvasBubble(msg, idx) {
     const bg = isOut ? '#005C4B' : '#202C33';
     const br = isOut ? '12px 0 12px 12px' : '0 12px 12px 12px';
     const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
-    const visualText = typeof stripAudioTags === 'function' ? stripAudioTags(msg.text || '') : (msg.text || '');
+    const visualText = stripAudioTags(msg.text || '');
 
     bubbleHtml = `
       <div style="background:${bg}; border-radius:${br}; max-width:270px;
