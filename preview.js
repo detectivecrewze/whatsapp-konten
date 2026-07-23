@@ -334,6 +334,44 @@ function triggerAutoZoom(msgEl, isOut, customScaleOverride) {
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
+async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB', apiKey = '') {
+  if (!rawText) return null;
+  const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+  if (!cleanText) return null;
+
+  const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+  const targetVoice = (!voiceId || voiceId === 'google-mp3') ? 'pNInz6obpgDQGcFmaJgB' : voiceId;
+
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${targetVoice}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': keyToUse,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: cleanText,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.50,
+          similarity_boost: 0.75
+        }
+      })
+    });
+
+    if (!res.ok) {
+      console.warn('ElevenLabs API response not ok:', res.status, 'Falling back to Google TTS');
+      return fetchGoogleTtsBlobUrl(cleanText);
+    }
+
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  } catch (err) {
+    console.warn('ElevenLabs API fetch failed:', err);
+    return fetchGoogleTtsBlobUrl(cleanText);
+  }
+}
+
 async function fetchGoogleTtsBlobUrl(rawText) {
   if (!rawText) return null;
   const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
@@ -469,16 +507,28 @@ async function startAnimation() {
   const lblEl   = document.getElementById('countdown-label');
   overlay.classList.remove('hidden');
 
-  // Pre-fetch Google TTS Audio Blobs in parallel if TTS enabled
+  // Pre-fetch ElevenLabs / Google TTS Audio Blobs in parallel if TTS enabled
   const ttsAudioMap = {};
   if (enableTts) {
-    lblEl.textContent = 'Mengunduh Suara Google TTS… 🎙️';
+    lblEl.textContent = 'Mengunduh Suara ElevenLabs AI… 🎙️✨';
+    const apiKey = previewState.elevenKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+
     await Promise.all(messages.map(async (msg, idx) => {
       const textToSpeak = msg.type === 'notification'
         ? `${msg.senderName || 'Notifikasi'}: ${msg.text || ''}`
         : (msg.text || msg.caption || '');
+
       if (textToSpeak) {
-        ttsAudioMap[idx] = await fetchGoogleTtsBlobUrl(textToSpeak);
+        const isOut = msg.direction === 'outgoing';
+        const defaultInVoice = 'EXAVITQu4vr4xnSDxMaL'; // Bella Female
+        const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam Male
+        const voiceId = isOut ? (previewState.ttsVoiceOut || defaultOutVoice) : (previewState.ttsVoiceIn || defaultInVoice);
+
+        if (voiceId === 'google-mp3') {
+          ttsAudioMap[idx] = await fetchGoogleTtsBlobUrl(textToSpeak);
+        } else {
+          ttsAudioMap[idx] = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
+        }
       }
     }));
   }

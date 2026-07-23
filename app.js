@@ -1502,6 +1502,13 @@ function updateZoomSpeedValue(val) {
   triggerAutoSave();
 }
 
+function saveElevenKey(keyVal) {
+  if (keyVal) {
+    localStorage.setItem('wa_eleven_api_key', keyVal.trim());
+  }
+  triggerAutoSave();
+}
+
 function toggleTtsEnable(checked) {
   const wrap = document.getElementById('wrap-tts-options');
   if (wrap) wrap.style.display = checked ? 'block' : 'none';
@@ -2360,8 +2367,9 @@ function getProjectPayload() {
     zoomScale:       zoomScale,
     zoomSpeed:       zoomSpeed,
     enableTts:       document.getElementById('chk-enable-tts')?.checked === true,
-    ttsVoiceIn:      document.getElementById('sel-tts-voice-in')?.value || 'google-mp3',
-    ttsVoiceOut:     document.getElementById('sel-tts-voice-out')?.value || 'google-mp3',
+    elevenKey:       document.getElementById('inp-eleven-key')?.value || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20',
+    ttsVoiceIn:      document.getElementById('sel-tts-voice-in')?.value || 'EXAVITQu4vr4xnSDxMaL',
+    ttsVoiceOut:     document.getElementById('sel-tts-voice-out')?.value || 'pNInz6obpgDQGcFmaJgB',
     ttsSpeed:        parseFloat(document.getElementById('inp-tts-speed')?.value || '1.00'),
     updatedAt:       Date.now()
   };
