@@ -1312,13 +1312,97 @@ function getSavedTemplates() {
 }
 
 // Configure your Cloudflare Worker URL & Secret Passcode here
-const WORKER_URL    = window.WORKER_URL || 'https://wa-templates-worker.aldoramadhan16.workers.dev/templates';
-const TEAM_PASSCODE = window.TEAM_PASSCODE || 'loves2026';
+const WORKER_URL  = window.WORKER_URL || 'https://wa-templates-worker.aldoramadhan16.workers.dev/templates';
+let TEAM_PASSCODE = localStorage.getItem('wa_team_passcode') || window.TEAM_PASSCODE || '';
+
+function showPasscodeModal() {
+  const modal = document.getElementById('passcode-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    const inp = document.getElementById('inp-passcode');
+    if (inp) setTimeout(() => inp.focus(), 150);
+  }
+}
+
+function hidePasscodeModal() {
+  const modal = document.getElementById('passcode-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+function togglePasscodeVisibility() {
+  const inp = document.getElementById('inp-passcode');
+  if (inp) {
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+}
+
+async function verifyPasscodeWithWorker(code) {
+  if (!WORKER_URL || !code) return false;
+  try {
+    const res = await fetch(WORKER_URL, {
+      headers: { 'X-Team-Passcode': code }
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function handleUnlockApp(e) {
+  if (e) e.preventDefault();
+  const inp = document.getElementById('inp-passcode');
+  const err = document.getElementById('passcode-error');
+  const btn = document.getElementById('btn-unlock');
+  if (!inp) return;
+
+  const entered = inp.value.trim();
+  if (!entered) return;
+
+  btn.disabled = true;
+  btn.classList.add('opacity-50');
+  if (err) err.classList.add('hidden');
+
+  const isValid = await verifyPasscodeWithWorker(entered);
+
+  btn.disabled = false;
+  btn.classList.remove('opacity-50');
+
+  if (isValid) {
+    localStorage.setItem('wa_team_passcode', entered);
+    TEAM_PASSCODE = entered;
+    hidePasscodeModal();
+    await fetchCloudTemplates();
+    await checkUrlParams();
+    showToast('🔓 App Unlocked!');
+  } else {
+    if (err) {
+      err.textContent = '⚠️ Passcode Salah! Akses ditolak.';
+      err.classList.remove('hidden');
+    }
+    const card = document.getElementById('passcode-card');
+    if (card) {
+      card.classList.add('animate-shake');
+      setTimeout(() => card.classList.remove('animate-shake'), 500);
+    }
+  }
+}
+
+function lockAppSession() {
+  localStorage.removeItem('wa_team_passcode');
+  TEAM_PASSCODE = '';
+  showPasscodeModal();
+  const inp = document.getElementById('inp-passcode');
+  if (inp) inp.value = '';
+}
 
 let _cloudTemplates = {};
 
 async function fetchCloudTemplates() {
-  if (!WORKER_URL) return;
+  if (!WORKER_URL || !TEAM_PASSCODE) return;
 
   try {
     const res = await fetch(WORKER_URL, {
@@ -1774,15 +1858,27 @@ async function checkUrlParams() {
 
 window.addEventListener('DOMContentLoaded', async () => {
   renderTemplateDropdown('auto');
-  await fetchCloudTemplates();
 
-  // Check URL parameters for share links first
-  const loadedFromUrl = await checkUrlParams();
-  if (!loadedFromUrl) {
-    const loaded = loadDraftFromLocalStorage();
-    if (!loaded) {
-      renderDashboard();
+  const savedPasscode = localStorage.getItem('wa_team_passcode');
+
+  if (savedPasscode) {
+    const valid = await verifyPasscodeWithWorker(savedPasscode);
+    if (valid) {
+      TEAM_PASSCODE = savedPasscode;
+      hidePasscodeModal();
+      await fetchCloudTemplates();
+      const loadedFromUrl = await checkUrlParams();
+      if (!loadedFromUrl) {
+        const loaded = loadDraftFromLocalStorage();
+        if (!loaded) renderDashboard();
+      }
+      return;
     }
   }
+
+  // Show Passcode Gate Modal if not authenticated
+  showPasscodeModal();
+  const loaded = loadDraftFromLocalStorage();
+  if (!loaded) renderDashboard();
 });
 
