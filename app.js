@@ -12,6 +12,21 @@
 
 'use strict';
 
+/** Toggle Section Accordion (collapsible cards with arrow indicator) */
+function toggleSectionAccordion(contentId, iconId) {
+  const content = document.getElementById(contentId);
+  const icon = document.getElementById(iconId);
+  if (!content) return;
+  const isHidden = content.classList.contains('hidden');
+  if (isHidden) {
+    content.classList.remove('hidden');
+    if (icon) icon.style.transform = 'rotate(180deg)';
+  } else {
+    content.classList.add('hidden');
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  }
+}
+
 /* ============================================================
    1. STATE
    ============================================================ */
