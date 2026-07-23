@@ -292,15 +292,19 @@ function triggerAutoZoom(msgEl, isOut) {
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
 
-  const zoomIntensity = previewState.zoomScale || 1.20;
-  const zoomSpeed     = previewState.zoomSpeed || 0.45;
+  // Force layout reflow so dimensions are accurate
+  void msgEl.offsetHeight;
 
-  // Center of active message bubble relative to container
-  const bubbleCenterY = msgEl.offsetTop + msgEl.offsetHeight / 2;
-  const originX = isOut ? '85%' : '15%';
+  const containerRect = messagesContainer.getBoundingClientRect();
+  const msgRect       = msgEl.getBoundingClientRect();
+  const bubbleCenterY = (msgRect.top - containerRect.top) + (msgRect.height / 2);
+  const originX       = isOut ? '85%' : '15%';
+
+  const zoomIntensity = (previewState && previewState.zoomScale) ? previewState.zoomScale : 1.30;
+  const zoomSpeed     = (previewState && previewState.zoomSpeed) ? previewState.zoomSpeed : 0.45;
 
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
+  messagesContainer.style.transformOrigin = `${originX} ${Math.round(bubbleCenterY)}px`;
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 

@@ -1355,14 +1355,18 @@ function triggerAutoZoomEditor(msgEl, isOut) {
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
 
-  const zoomIntensity = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.20');
+  void msgEl.offsetHeight; // force layout reflow
+
+  const containerRect = messagesContainer.getBoundingClientRect();
+  const msgRect       = msgEl.getBoundingClientRect();
+  const bubbleCenterY = (msgRect.top - containerRect.top) + (msgRect.height / 2);
+  const originX       = isOut ? '85%' : '15%';
+
+  const zoomIntensity = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.30');
   const zoomSpeed     = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
 
-  const bubbleCenterY = msgEl.offsetTop + msgEl.offsetHeight / 2;
-  const originX = isOut ? '85%' : '15%';
-
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
+  messagesContainer.style.transformOrigin = `${originX} ${Math.round(bubbleCenterY)}px`;
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
