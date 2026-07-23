@@ -64,7 +64,6 @@ export default {
           });
         }
         
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         const systemInstruction = `Kamu adalah penulis naskah konten drama & komedi WhatsApp viral profesional untuk TikTok/Reels/Shorts.
 Hasilkan JSON valid dengan format persis berikut:
 {
@@ -87,15 +86,32 @@ Syarat Wajib Naskah:
 5. BAHASA: Gunakan bahasa gaul anak muda Indonesia yang sangat santai, natural, dan ekspresif.
 6. Respon HANYA string JSON murni tanpa pembungkus markdown.`;
 
-        const geminiRes = await fetch(geminiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              { role: 'user', parts: [{ text: `${systemInstruction}\n\nIde Cerita: ${prompt}` }] }
-            ]
-          })
-        });
+        const modelNames = ['gemini-2.0-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+        let geminiRes = null;
+        for (const m of modelNames) {
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
+          try {
+            const res = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [
+                  { role: 'user', parts: [{ text: `${systemInstruction}\n\nIde Cerita: ${prompt}` }] }
+                ]
+              })
+            });
+            if (res.ok) {
+              geminiRes = res;
+              break;
+            }
+          } catch (e) {
+            console.warn(`Model ${m} failed, trying next...`);
+          }
+        }
+
+        if (!geminiRes) {
+          throw new Error('Semua endpoint Gemini AI gagal dihubungi.');
+        }
 
         const geminiJson = await geminiRes.json();
         const rawText = geminiJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
