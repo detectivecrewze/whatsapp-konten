@@ -102,35 +102,35 @@
 <!-- ================================================================
      DASHBOARD
      ================================================================ -->
-<div id="dashboard" class="min-h-screen p-5 lg:p-8">
+<div id="dashboard" class="min-h-screen p-3 sm:p-5 lg:p-8 max-w-full overflow-x-hidden">
 
   <!-- Header bar -->
-  <div class="max-w-6xl mx-auto mb-6 flex items-center justify-between">
-    <div class="flex items-center gap-3">
+  <div class="max-w-6xl mx-auto mb-5 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2.5 min-w-0">
       <div class="w-8 h-8 rounded-full bg-wa-accent flex items-center justify-center flex-shrink-0">
         <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
         </svg>
       </div>
-      <div>
-        <h1 class="text-xl font-bold text-white leading-none">For You, Always</h1>
-        <p class="text-xs text-gray-500 mt-0.5">WhatsApp Dark Mode Asset Generator</p>
+      <div class="min-w-0">
+        <h1 class="text-lg sm:text-xl font-bold text-white leading-tight truncate">For You, Always</h1>
+        <p class="text-[11px] sm:text-xs text-gray-500 truncate">WhatsApp Dark Mode Asset Generator</p>
       </div>
     </div>
     <button onclick="lockAppSession()" title="Lock App Session"
-            class="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+            class="px-2.5 py-1.5 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 rounded-xl text-xs font-medium transition flex items-center gap-1 flex-shrink-0">
       🔒 Lock
     </button>
   </div>
 
   <!-- Main 2-col grid -->
-  <div class="max-w-6xl mx-auto grid lg:grid-cols-5 gap-5 items-start">
+  <div class="max-w-6xl mx-auto grid lg:grid-cols-5 gap-4 items-start">
 
     <!-- ── LEFT: Control Panel ── -->
-    <div class="lg:col-span-2 space-y-4">
+    <div class="lg:col-span-2 space-y-4 min-w-0 w-full">
 
       <!-- Presets & Auto-Save -->
-      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 space-y-3">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
         <div class="flex items-center justify-between">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
             <span>💾 Presets & Team Cloud</span>
@@ -141,31 +141,33 @@
         </div>
 
         <!-- Select Template -->
-        <div class="flex gap-1.5 flex-wrap sm:flex-nowrap">
+        <div class="flex flex-col sm:flex-row gap-2">
           <select id="tpl-select" onchange="handleSelectTemplate(this.value)"
-                  class="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-wa-accent">
+                  class="w-full sm:flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-wa-accent">
             <option value="auto">Draft (Auto-saved)</option>
           </select>
-          <button onclick="saveCurrentTemplate()" title="Update Current Preset"
-                  class="px-2.5 py-2 bg-wa-accent hover:bg-[#009272] text-white text-xs font-medium rounded-xl transition flex items-center gap-1 whitespace-nowrap shadow-sm">
-            💾 Save
-          </button>
-          <button onclick="saveAsNewTemplate()" title="Simpan Sebagai Preset Baru"
-                  class="px-2.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 text-xs font-medium rounded-xl transition flex items-center gap-1 whitespace-nowrap">
-            ➕ Save As New
-          </button>
-          <button onclick="deleteCurrentTemplate()" title="Delete Template"
-                  class="px-2 py-2 bg-gray-800 hover:bg-red-900/50 text-gray-400 hover:text-red-300 border border-gray-700 rounded-xl transition text-xs">
-            🗑️
-          </button>
+          <div class="flex items-center gap-1.5 justify-center sm:justify-start w-full sm:w-auto">
+            <button onclick="saveCurrentTemplate()" title="Update Current Preset"
+                    class="flex-1 sm:flex-none px-3 py-2 bg-wa-accent hover:bg-[#009272] text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1 whitespace-nowrap shadow-sm">
+              💾 Save
+            </button>
+            <button onclick="saveAsNewTemplate()" title="Simpan Sebagai Preset Baru"
+                    class="flex-1 sm:flex-none px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 text-xs font-medium rounded-xl transition flex items-center justify-center gap-1 whitespace-nowrap">
+              ➕ Save As New
+            </button>
+            <button onclick="deleteCurrentTemplate()" title="Delete Template"
+                    class="px-2.5 py-2 bg-gray-800 hover:bg-red-900/50 text-gray-400 hover:text-red-300 border border-gray-700 rounded-xl transition text-xs">
+              🗑️
+            </button>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between pt-2 text-xs text-gray-400 border-t border-gray-800/80 gap-2">
+        <div class="flex flex-wrap items-center justify-center sm:justify-between pt-2 text-xs text-gray-400 border-t border-gray-800/80 gap-2">
           <button onclick="createNewProject()" class="text-wa-accent hover:underline flex items-center gap-1 font-medium">
             + New Blank
           </button>
 
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 flex-wrap justify-center">
             <button onclick="copyShareLink('preview')" title="Copy Direct Shareable Link for Client Review"
                     class="px-2.5 py-1 bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 border border-indigo-700/50 rounded-lg text-[11px] font-semibold transition flex items-center gap-1 shadow-sm">
               🔗 Share Link
@@ -184,8 +186,8 @@
       </div>
 
       <!-- Generator Naskah Viral (Auto Script) -->
-      <div class="bg-gradient-to-r from-purple-950/40 via-gray-900 to-indigo-950/40 border border-purple-800/40 rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
+      <div class="bg-gradient-to-r from-purple-950/40 via-gray-900 to-indigo-950/40 border border-purple-800/40 rounded-2xl p-3.5 sm:p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
             <span class="text-base">🎭</span>
             <div>
@@ -198,58 +200,58 @@
           </span>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
           <button onclick="loadScriptPreset('drama_labrak')" 
-                  class="p-2.5 bg-gray-800/80 hover:bg-purple-900/40 border border-gray-700/80 hover:border-purple-500/50 rounded-xl transition text-left group flex items-start gap-2">
-            <span class="text-lg group-hover:scale-110 transition-transform">💔</span>
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-purple-900/40 border border-gray-700/80 hover:border-purple-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">💔</span>
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-white group-hover:text-purple-300 truncate">Drama Selingkuh</p>
-              <p class="text-[10px] text-gray-400 truncate">Labrak cafe & bukti foto</p>
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-purple-300 truncate">Drama Selingkuh</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Labrak cafe & bukti foto</p>
             </div>
           </button>
 
           <button onclick="loadScriptPreset('olshop_cod')" 
-                  class="p-2.5 bg-gray-800/80 hover:bg-emerald-900/40 border border-gray-700/80 hover:border-emerald-500/50 rounded-xl transition text-left group flex items-start gap-2">
-            <span class="text-lg group-hover:scale-110 transition-transform">🛍️</span>
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-emerald-900/40 border border-gray-700/80 hover:border-emerald-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">🛍️</span>
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-white group-hover:text-emerald-300 truncate">Olshop & COD</p>
-              <p class="text-[10px] text-gray-400 truncate">Paket nyasar & komplain</p>
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-emerald-300 truncate">Olshop & COD</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Paket nyasar & komplain</p>
             </div>
           </button>
 
           <button onclick="loadScriptPreset('nagih_hutang')" 
-                  class="p-2.5 bg-gray-800/80 hover:bg-amber-900/40 border border-gray-700/80 hover:border-amber-500/50 rounded-xl transition text-left group flex items-start gap-2">
-            <span class="text-lg group-hover:scale-110 transition-transform">💸</span>
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-amber-900/40 border border-gray-700/80 hover:border-amber-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">💸</span>
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-white group-hover:text-amber-300 truncate">Nagih Hutang</p>
-              <p class="text-[10px] text-gray-400 truncate">Alasan cicilan & centang dua</p>
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-amber-300 truncate">Nagih Hutang</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Alasan cicilan & centang dua</p>
             </div>
           </button>
 
           <button onclick="loadScriptPreset('bucin_romantis')" 
-                  class="p-2.5 bg-gray-800/80 hover:bg-pink-900/40 border border-gray-700/80 hover:border-pink-500/50 rounded-xl transition text-left group flex items-start gap-2">
-            <span class="text-lg group-hover:scale-110 transition-transform">❤️</span>
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-pink-900/40 border border-gray-700/80 hover:border-pink-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">❤️</span>
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-white group-hover:text-pink-300 truncate">Bucin Romantis</p>
-              <p class="text-[10px] text-gray-400 truncate">Kejutan kado & voice note</p>
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-pink-300 truncate">Bucin Romantis</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Kejutan kado & voice note</p>
             </div>
           </button>
 
           <button onclick="loadScriptPreset('horor_misteri')" 
-                  class="p-2.5 bg-gray-800/80 hover:bg-red-900/40 border border-gray-700/80 hover:border-red-500/50 rounded-xl transition text-left group flex items-start gap-2">
-            <span class="text-lg group-hover:scale-110 transition-transform">👻</span>
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-red-900/40 border border-gray-700/80 hover:border-red-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">👻</span>
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-white group-hover:text-red-300 truncate">Horor & Malam</p>
-              <p class="text-[10px] text-gray-400 truncate">Suara di luar pintu kamar</p>
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-red-300 truncate">Horor & Malam</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Suara di luar pintu kamar</p>
             </div>
           </button>
 
           <button onclick="loadScriptPreset('prank_parkir')" 
-                  class="p-2.5 bg-gray-800/80 hover:bg-blue-900/40 border border-gray-700/80 hover:border-blue-500/50 rounded-xl transition text-left group flex items-start gap-2">
-            <span class="text-lg group-hover:scale-110 transition-transform">🤣</span>
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-blue-900/40 border border-gray-700/80 hover:border-blue-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">🤣</span>
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-white group-hover:text-blue-300 truncate">Prank Parkir</p>
-              <p class="text-[10px] text-gray-400 truncate">Pinjam 50rb darurat</p>
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-blue-300 truncate">Prank Parkir</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Pinjam 50rb darurat</p>
             </div>
           </button>
         </div>
