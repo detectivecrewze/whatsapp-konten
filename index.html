@@ -556,33 +556,46 @@
             <label for="inp-sound-out" class="text-xs text-gray-400 cursor-pointer">Enable Sound (Outgoing Msg)</label>
           </div>
           <!-- Auto-Zoom Option -->
-          <div class="pt-2 border-t border-gray-800/60">
-            <div class="flex items-center gap-2 mb-1.5">
-              <input id="inp-auto-zoom" type="checkbox" class="accent-wa-accent w-4 h-4 cursor-pointer" />
-              <label for="inp-auto-zoom" class="text-xs text-gray-300 font-semibold cursor-pointer flex items-center gap-1.5">
-                <span>🔍 Auto-Zoom Camera Effect</span>
-                <span class="text-[10px] bg-wa-accent/20 text-wa-accent px-1.5 py-0.5 rounded font-mono">EXPERIMENTAL</span>
+          <div class="pt-3 border-t border-gray-800/80 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <label for="inp-auto-zoom" class="text-xs text-gray-200 font-bold flex items-center gap-1.5 cursor-pointer">
+                <input id="inp-auto-zoom" type="checkbox" checked class="accent-wa-accent w-4 h-4 cursor-pointer" />
+                <span>🎥 Auto-Zoom Camera Effect</span>
               </label>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono font-semibold">CAMERA ACTIVE</span>
             </div>
-            <div id="wrap-zoom-scale" class="hidden pl-6 space-y-2">
+
+            <div id="wrap-zoom-scale" class="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 space-y-3">
+              <!-- Zoom Scale Slider -->
               <div>
-                <label class="block text-[11px] text-gray-400 mb-1">Zoom Intensity:</label>
-                <select id="inp-zoom-scale" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
-                  <option value="1.05">Subtle (1.05× — Smooth & Gentle)</option>
-                  <option value="1.12">Medium (1.12× — Standard Reel)</option>
-                  <option value="1.20" selected>Punchy Zoom (1.20× — Recommended)</option>
-                  <option value="1.35">Super Zoom (1.35× — Close-up Detail)</option>
-                  <option value="1.50">Extreme Zoom (1.50× — Deep Focus)</option>
-                </select>
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="text-gray-300 font-medium">🔍 Skala Zoom Kamera (Scale):</span>
+                  <span id="zoom-scale-val" class="text-wa-accent font-mono font-bold bg-wa-accent/15 px-2 py-0.5 rounded border border-wa-accent/30">1.35×</span>
+                </div>
+                <input id="inp-zoom-scale" type="range" min="1.10" max="2.50" step="0.05" value="1.35"
+                       class="w-full accent-wa-accent cursor-pointer h-2 bg-gray-700 rounded-lg"
+                       oninput="updateZoomScaleValue(this.value)" />
+                <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-1">
+                  <span>1.10× (Sedang)</span>
+                  <span>1.50× (Dekat)</span>
+                  <span>2.50× (Ekstrem Close-up)</span>
+                </div>
               </div>
+
+              <!-- Zoom Speed Slider -->
               <div>
-                <label class="block text-[11px] text-gray-400 mb-1">
-                  Zoom Speed / Smoothness:
-                  <span id="zoom-speed-val" class="text-wa-accent font-semibold">0.45s</span>
-                </label>
-                <input id="inp-zoom-speed" type="range" min="0.20" max="1.00" step="0.05" value="0.45"
-                       class="w-full accent-wa-accent cursor-pointer"
-                       oninput="document.getElementById('zoom-speed-val').textContent=parseFloat(this.value).toFixed(2)+'s'" />
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="text-gray-300 font-medium">⚡ Kecepatan Zoom (Speed):</span>
+                  <span id="zoom-speed-val" class="text-wa-accent font-mono font-bold bg-wa-accent/15 px-2 py-0.5 rounded border border-wa-accent/30">0.45s</span>
+                </div>
+                <input id="inp-zoom-speed" type="range" min="0.15" max="1.00" step="0.05" value="0.45"
+                       class="w-full accent-wa-accent cursor-pointer h-2 bg-gray-700 rounded-lg"
+                       oninput="updateZoomSpeedValue(this.value)" />
+                <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-1">
+                  <span>0.15s (Cepat/Snap)</span>
+                  <span>0.45s (Standar)</span>
+                  <span>1.00s (Cinematic)</span>
+                </div>
               </div>
             </div>
           </div>

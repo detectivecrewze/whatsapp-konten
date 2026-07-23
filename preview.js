@@ -287,7 +287,7 @@ function resetZoom() {
   messagesContainer.style.transform = 'scale(1)';
 }
 
-function triggerAutoZoom(msgEl, isOut) {
+function triggerAutoZoom(msgEl, isOut, customScaleOverride) {
   if (!previewState || !msgEl) return;
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
@@ -300,7 +300,8 @@ function triggerAutoZoom(msgEl, isOut) {
   const bubbleCenterY = (msgRect.top - containerRect.top) + (msgRect.height / 2);
   const originX       = isOut ? '85%' : '15%';
 
-  const zoomIntensity = (previewState && previewState.zoomScale) ? previewState.zoomScale : 1.30;
+  const scaleInput    = (previewState && previewState.zoomScale) ? previewState.zoomScale : 1.35;
+  const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.35');
   const zoomSpeed     = (previewState && previewState.zoomSpeed) ? previewState.zoomSpeed : 0.45;
 
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
@@ -381,7 +382,7 @@ async function startAnimation() {
     // Auto-Zoom Punch-In Camera Effect to new message
     const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
     if (shouldZoomThisMsg && msgEl) {
-      triggerAutoZoom(msgEl, isOut);
+      triggerAutoZoom(msgEl, isOut, messages[f].customScale);
     } else {
       resetZoom();
     }

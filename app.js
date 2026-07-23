@@ -301,12 +301,25 @@ function dashboardItemHtml(msg, idx) {
                class="w-12 bg-transparent text-xs text-white placeholder-gray-500 focus:outline-none text-center font-mono font-medium" />
       </div>
 
-      <!-- Selective Zoom Toggle -->
-      <button onclick="toggleMsgZoom('${msg.id}')"
-              title="Aktifkan efek zoom khusus hanya untuk pesan ini saat animasi video"
-              class="px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 flex-shrink-0 ${msg.enableZoom ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-sm' : 'bg-gray-700/80 text-gray-400 border border-gray-600 hover:text-white'}">
-        🔍 ${msg.enableZoom ? 'Zoom ON' : 'Zoom'}
-      </button>
+      <!-- Selective Zoom Toggle & Custom Scale Selector -->
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <button onclick="toggleMsgZoom('${msg.id}')"
+                title="Aktifkan efek zoom khusus hanya untuk pesan ini saat animasi video"
+                class="px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${msg.enableZoom ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-sm' : 'bg-gray-700/80 text-gray-400 border border-gray-600 hover:text-white'}">
+          🔍 ${msg.enableZoom ? 'Zoom ON' : 'Zoom'}
+        </button>
+        ${msg.enableZoom ? `
+        <select onchange="setMsgCustomZoomScale('${msg.id}', this.value)"
+                title="Skala zoom khusus pesan ini"
+                class="bg-amber-950/80 border border-amber-500/40 rounded-lg px-1 py-1 text-[11px] text-amber-200 font-mono focus:outline-none">
+          <option value="1.15" ${msg.customScale === '1.15' ? 'selected' : ''}>1.15×</option>
+          <option value="1.30" ${(!msg.customScale || msg.customScale === '1.30') ? 'selected' : ''}>1.30×</option>
+          <option value="1.50" ${msg.customScale === '1.50' ? 'selected' : ''}>1.50×</option>
+          <option value="1.80" ${msg.customScale === '1.80' ? 'selected' : ''}>1.80×</option>
+          <option value="2.20" ${msg.customScale === '2.20' ? 'selected' : ''}>2.20×</option>
+        </select>
+        ` : ''}
+      </div>
 
       <!-- Move up -->
       <button onclick="moveMsg('${msg.id}', -1)" ${isFirst ? 'disabled' : ''}
@@ -1350,7 +1363,7 @@ function resetZoomEditor() {
   messagesContainer.style.transform = 'scale(1)';
 }
 
-function triggerAutoZoomEditor(msgEl, isOut) {
+function triggerAutoZoomEditor(msgEl, isOut, customScaleOverride) {
   if (!msgEl) return;
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
@@ -1362,12 +1375,48 @@ function triggerAutoZoomEditor(msgEl, isOut) {
   const bubbleCenterY = (msgRect.top - containerRect.top) + (msgRect.height / 2);
   const originX       = isOut ? '85%' : '15%';
 
-  const zoomIntensity = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.30');
+  const scaleInput    = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.35');
+  const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.35');
   const zoomSpeed     = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
 
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
   messagesContainer.style.transformOrigin = `${originX} ${Math.round(bubbleCenterY)}px`;
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
+}
+
+function updateZoomScaleValue(val) {
+  const formatted = parseFloat(val).toFixed(2) + '×';
+  const label = document.getElementById('zoom-scale-val');
+  if (label) label.textContent = formatted;
+  
+  // Re-preview zoom if a message is active
+  const activeZoomedMsg = state.messages.find(m => m.enableZoom);
+  if (activeZoomedMsg) {
+    const msgEl = document.querySelector(`#wa-messages > div[data-msg-id="${activeZoomedMsg.id}"]`);
+    if (msgEl) {
+      triggerAutoZoomEditor(msgEl, activeZoomedMsg.direction === 'outgoing', activeZoomedMsg.customScale);
+    }
+  }
+  triggerAutoSave();
+}
+
+function updateZoomSpeedValue(val) {
+  const formatted = parseFloat(val).toFixed(2) + 's';
+  const label = document.getElementById('zoom-speed-val');
+  if (label) label.textContent = formatted;
+  triggerAutoSave();
+}
+
+function setMsgCustomZoomScale(id, scaleVal) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.customScale = scaleVal;
+  
+  const msgEl = document.querySelector(`#wa-messages > div[data-msg-id="${id}"]`);
+  if (msgEl) {
+    triggerAutoZoomEditor(msgEl, msg.direction === 'outgoing', scaleVal);
+  }
+  triggerAutoSave();
 }
 
 /** Toggle Selective Zoom on a specific message */
@@ -1391,7 +1440,7 @@ function toggleMsgZoom(id) {
   setTimeout(() => {
     const msgEl = document.querySelector(`#wa-messages > div[data-msg-id="${id}"]`);
     if (msg.enableZoom && msgEl) {
-      triggerAutoZoomEditor(msgEl, msg.direction === 'outgoing');
+      triggerAutoZoomEditor(msgEl, msg.direction === 'outgoing', msg.customScale);
     } else {
       resetZoomEditor();
     }
