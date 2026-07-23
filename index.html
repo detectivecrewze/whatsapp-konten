@@ -725,6 +725,19 @@
                   </select>
                 </div>
 
+                <!-- Mood & Expression Intensity -->
+                <div class="space-y-1">
+                  <label class="text-[11px] text-gray-300 font-medium flex items-center justify-between">
+                    <span>🎭 Ekspresi & Emosi Suara:</span>
+                  </label>
+                  <select id="sel-tts-emotion" onchange="setTtsEmotion(this.value)"
+                          class="w-full bg-gray-900 border border-gray-700 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer">
+                    <option value="horror" selected>😱 Horror & Suspense (Bisikan, Tegang & Emosional)</option>
+                    <option value="dramatic">🎭 Sangat Ekspresif & Dramatis</option>
+                    <option value="conversational">💬 Santai / Obrolan Biasa</option>
+                  </select>
+                </div>
+
                 <!-- Speech Speed -->
                 <div>
                   <div class="flex items-center justify-between text-xs mb-1">

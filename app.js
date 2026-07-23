@@ -1525,6 +1525,11 @@ function setTtsVoiceOut(val) {
   triggerAutoSave();
 }
 
+function setTtsEmotion(val) {
+  state.ttsEmotion = val;
+  triggerAutoSave();
+}
+
 function updateTtsSpeedValue(val) {
   const formatted = parseFloat(val).toFixed(2) + '×';
   const label = document.getElementById('tts-speed-val');
@@ -2321,6 +2326,7 @@ function getProjectPayload() {
     elevenKey:       document.getElementById('inp-eleven-key')?.value || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20',
     ttsVoiceIn:      document.getElementById('sel-tts-voice-in')?.value || 'EXAVITQu4vr4xnSDxMaL',
     ttsVoiceOut:     document.getElementById('sel-tts-voice-out')?.value || 'pNInz6obpgDQGcFmaJgB',
+    ttsEmotion:      document.getElementById('sel-tts-emotion')?.value || 'horror',
     ttsSpeed:        parseFloat(document.getElementById('inp-tts-speed')?.value || '1.00'),
     updatedAt:       Date.now()
   };

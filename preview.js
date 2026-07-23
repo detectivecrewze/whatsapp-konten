@@ -341,8 +341,17 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
 
   const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
   const targetVoice = (!voiceId || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
+  const emotionMode = (previewState && previewState.ttsEmotion) ? previewState.ttsEmotion : 'horror';
 
-  console.log(`🎙️ [ElevenLabs API] Generating voice for "${cleanText.slice(0, 30)}..." | VoiceID: ${targetVoice}`);
+  // Horror & Suspense settings: Low stability (0.25) + High style exaggeration (0.50)
+  const settingsMap = {
+    horror:         { stability: 0.25, similarity_boost: 0.85, style: 0.50, use_speaker_boost: true },
+    dramatic:       { stability: 0.35, similarity_boost: 0.80, style: 0.35, use_speaker_boost: true },
+    conversational: { stability: 0.55, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true }
+  };
+  const voiceSettings = settingsMap[emotionMode] || settingsMap.horror;
+
+  console.log(`🎙️ [ElevenLabs API] Generating ${emotionMode.toUpperCase()} voice for "${cleanText.slice(0, 30)}..." | VoiceID: ${targetVoice}`);
 
   try {
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${targetVoice}`, {
@@ -354,10 +363,7 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
       body: JSON.stringify({
         text: cleanText,
         model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.45,
-          similarity_boost: 0.75
-        }
+        voice_settings: voiceSettings
       })
     });
 
