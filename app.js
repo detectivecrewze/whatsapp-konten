@@ -1781,8 +1781,35 @@ async function copyShareLink(targetType = 'preview') {
   const currentVal = document.getElementById('tpl-select')?.value || 'auto';
   let cloudId = null;
 
+  const payload = getProjectPayload();
+
   if (currentVal.startsWith('cloud_')) {
     cloudId = currentVal;
+    const cleanId = currentVal.replace('cloud_', '');
+    const tplName = _cloudTemplates[cleanId]?.name || state.name || 'My WA Preset';
+
+    // Auto-sync latest editor payload (including autoZoom, zoomScale, zoomSpeed) to Cloud Worker
+    _cloudTemplates[cleanId] = {
+      id: cleanId,
+      name: tplName,
+      updatedAt: Date.now(),
+      data: payload
+    };
+
+    if (WORKER_URL && TEAM_PASSCODE) {
+      try {
+        await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Team-Passcode': TEAM_PASSCODE
+          },
+          body: JSON.stringify({ templates: _cloudTemplates })
+        });
+      } catch (e) {
+        console.warn('Failed to sync latest preset to Cloud Worker:', e);
+      }
+    }
   } else {
     const confirmSave = confirm('Untuk membuat Share Link yang bisa di-review client via URL, preset perlu tersimpan di Team Cloud.\n\nSimpan ke Team Cloud sekarang?');
     if (!confirmSave) return;
@@ -1805,7 +1832,7 @@ async function copyShareLink(targetType = 'preview') {
 
   try {
     await navigator.clipboard.writeText(shareUrl);
-    alert(`🔗 Link Review Client Berhasil Di-copy!\n\nURL: \n${shareUrl}\n\nKirimkan link ini ke client kamu. Client tinggal membuka link tersebut untuk melihat hasilnya secara langsung!`);
+    alert(`🔗 Link Review Client Berhasil Di-copy!\n\nURL: \n${shareUrl}\n\nKirimkan link ini ke client kamu. Pengaturan Auto-Zoom, pesan, dan wallpaper terbaru sudah otomatis tersinkronisasi ke Cloud!`);
   } catch (e) {
     prompt(`Copy Share Link berikut untuk dikirim ke client:`, shareUrl);
   }
