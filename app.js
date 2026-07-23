@@ -952,8 +952,15 @@ function syncBaseFields() {
   const nameEl = document.getElementById('wa-name');
   if (nameEl) nameEl.textContent = state.name || 'Contact Name';
   
-  const timeEl = document.getElementById('wa-time');
-  if (timeEl) timeEl.textContent = state.time;
+  // Render Custom Phone Status Bar (Battery %, Sinyal, OS Style)
+  const statusBarEl = document.getElementById('wa-status-bar');
+  if (statusBarEl && typeof renderCustomStatusBarHtml === 'function') {
+    statusBarEl.innerHTML = renderCustomStatusBarHtml({
+      phoneOs: state.phoneOs,
+      clockTime: state.time,
+      batteryLevel: state.batteryLevel,
+    });
+  }
 
   const cPfp     = document.getElementById('wa-pfp');
   const fallback = document.getElementById('wa-pfp-fallback');

@@ -468,7 +468,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (typeof renderCustomStatusBarHtml === 'function') {
     const statusBarEl = document.getElementById('wa-status-bar');
     if (statusBarEl) {
-      statusBarEl.innerHTML = renderCustomStatusBarHtml(previewState);
+      statusBarEl.innerHTML = renderCustomStatusBarHtml({
+        phoneOs: previewState.phoneOs,
+        clockTime: previewState.time,
+        batteryLevel: previewState.batteryLevel,
+      });
     }
   }
 
