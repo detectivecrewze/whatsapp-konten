@@ -117,6 +117,11 @@ function createBubble(msg, idx) {
     html = renderStatusReplyBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
   }
 
+  // KARTU PRODUK KATALOG OLSHOP WA
+  else if (msg.type === 'product' && typeof renderProductCardBubble === 'function') {
+    html = renderProductCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
   // IMAGE / GIF
   else if (msg.type === 'image') {
     const bg = isOut ? '#005C4B' : '#202C33';
