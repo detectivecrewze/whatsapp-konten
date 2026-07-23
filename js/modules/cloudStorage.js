@@ -252,6 +252,25 @@ function applyProjectPayload(data) {
     if (wrapPfp) wrapPfp.style.display = 'none';
   }
 
+  state.pinnedEnabled   = !!data.pinnedEnabled;
+  state.pinnedText      = data.pinnedText || '';
+  state.showUnreadBadge = !!data.showUnreadBadge;
+  state.unreadCount     = data.unreadCount || '99+';
+
+  const chkPinned = document.getElementById('inp-pinned-enabled');
+  if (chkPinned) chkPinned.checked = state.pinnedEnabled;
+  const txtPinned = document.getElementById('inp-pinned-text');
+  if (txtPinned) txtPinned.value = state.pinnedText;
+  const wrapPinned = document.getElementById('wrap-pinned-inputs');
+  if (wrapPinned) wrapPinned.classList.toggle('hidden', !state.pinnedEnabled);
+
+  const chkUnread = document.getElementById('inp-unread-enabled');
+  if (chkUnread) chkUnread.checked = state.showUnreadBadge;
+  const cntUnread = document.getElementById('inp-unread-count');
+  if (cntUnread) cntUnread.value = state.unreadCount;
+  const wrapUnread = document.getElementById('wrap-unread-inputs');
+  if (wrapUnread) wrapUnread.classList.toggle('hidden', !state.showUnreadBadge);
+
   const selBgType = document.getElementById('inp-bg-type');
   if (selBgType) selBgType.value = state.bgType;
 

@@ -229,3 +229,48 @@ function toggleMsgZoom(id) {
 
   triggerAutoSave();
 }
+
+function setPinnedEnabled(val) {
+  state.pinnedEnabled = !!val;
+  const wrap = document.getElementById('wrap-pinned-inputs');
+  if (wrap) wrap.classList.toggle('hidden', !val);
+  if (typeof updatePinnedBannerUI === 'function') {
+    updatePinnedBannerUI(state);
+  }
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
+}
+
+function setPinnedText(text) {
+  state.pinnedText = text;
+  if (typeof updatePinnedBannerUI === 'function') {
+    updatePinnedBannerUI(state);
+  }
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
+}
+
+function toggleUnreadBadge(enabled) {
+  state.showUnreadBadge = typeof enabled === 'boolean' ? enabled : !state.showUnreadBadge;
+  if (!state.unreadCount) state.unreadCount = '99+';
+
+  const chk = document.getElementById('inp-unread-enabled');
+  if (chk) chk.checked = !!state.showUnreadBadge;
+
+  const wrap = document.getElementById('wrap-unread-inputs');
+  if (wrap) wrap.classList.toggle('hidden', !state.showUnreadBadge);
+
+  if (typeof updateUnreadBadgeUI === 'function') {
+    updateUnreadBadgeUI(state);
+  }
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
+}
+
+function setUnreadCount(count) {
+  state.unreadCount = count;
+  const inp = document.getElementById('inp-unread-count');
+  if (inp && inp.value !== count) inp.value = count;
+
+  if (typeof updateUnreadBadgeUI === 'function') {
+    updateUnreadBadgeUI(state);
+  }
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
+}

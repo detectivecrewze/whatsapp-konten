@@ -16,12 +16,20 @@ function syncBaseFields() {
   const timeInput = document.getElementById('inp-time');
   if (timeInput) state.time = timeInput.value;
 
+  const bgTypeSel = document.getElementById('inp-bg-type');
+  if (bgTypeSel) state.bgType = bgTypeSel.value;
+
+  const bgColorInp = document.getElementById('inp-bg-color');
+  if (bgColorInp) state.bgColor = bgColorInp.value;
+
   // Name & Time Canvas Elements
   const nameEl = document.getElementById('wa-name');
   if (nameEl) nameEl.textContent = state.name || 'Contact Name';
 
-  const timeEl = document.getElementById('wa-time');
-  if (timeEl) timeEl.textContent = state.time || '16:12';
+  // Live update phone OS status bar time, pinned banner, and unread badge
+  if (typeof updatePhoneOsUI === 'function') updatePhoneOsUI();
+  if (typeof updatePinnedBannerUI === 'function') updatePinnedBannerUI(state);
+  if (typeof updateUnreadBadgeUI === 'function') updateUnreadBadgeUI(state);
 
   // PFP Preview
   const pfpEl = document.getElementById('wa-pfp');
@@ -41,10 +49,10 @@ function syncBaseFields() {
   const chatTarget = document.getElementById('wa-chat-area');
   if (chatTarget) {
     if (state.bgType === 'color') {
-      chatTarget.style.backgroundColor = state.bgColor;
+      chatTarget.style.backgroundColor = state.bgColor || '#111B21';
       chatTarget.style.backgroundImage = 'none';
     } else if (state.bgType === 'default') {
-      chatTarget.style.backgroundColor = state.bgColor;
+      chatTarget.style.backgroundColor = '#111B21';
       chatTarget.style.backgroundImage = "url('assets/wa-pattern.svg')";
       chatTarget.style.backgroundRepeat = 'repeat';
       chatTarget.style.backgroundSize = '400px';
@@ -277,8 +285,63 @@ function loadScriptPreset(scriptKey) {
   }
 }
 
+function initBaseInputListeners() {
+  const inpName = document.getElementById('inp-name');
+  if (inpName) {
+    inpName.addEventListener('input', () => { syncBaseFields(); triggerAutoSave(); });
+  }
+
+  const inpTime = document.getElementById('inp-time');
+  if (inpTime) {
+    inpTime.addEventListener('input', () => { syncBaseFields(); triggerAutoSave(); });
+    inpTime.addEventListener('change', () => { syncBaseFields(); triggerAutoSave(); });
+  }
+
+  const selBgType = document.getElementById('inp-bg-type');
+  const inpBgCol  = document.getElementById('inp-bg-color');
+  const lblBgImg  = document.getElementById('lbl-bg-image');
+  const inpBgImg  = document.getElementById('inp-bg-image');
+
+  if (selBgType) {
+    selBgType.addEventListener('change', (e) => {
+      state.bgType = e.target.value;
+      if (inpBgCol) inpBgCol.classList.toggle('hidden', state.bgType !== 'color');
+      if (lblBgImg) lblBgImg.classList.toggle('hidden', state.bgType !== 'image');
+      syncBaseFields();
+      triggerAutoSave();
+    });
+  }
+
+  if (inpBgCol) {
+    inpBgCol.addEventListener('input', (e) => {
+      state.bgColor = e.target.value;
+      syncBaseFields();
+      triggerAutoSave();
+    });
+    inpBgCol.addEventListener('change', (e) => {
+      state.bgColor = e.target.value;
+      syncBaseFields();
+      triggerAutoSave();
+    });
+  }
+
+  if (inpBgImg) {
+    inpBgImg.addEventListener('change', async (e) => {
+      if (e.target.files?.[0]) {
+        const file = e.target.files[0];
+        const nameEl = document.getElementById('bg-image-name');
+        if (nameEl) nameEl.textContent = file.name;
+        state.bgImage = await fileToDataUrl(file);
+        syncBaseFields();
+        triggerAutoSave();
+      }
+    });
+  }
+}
+
 // DOM Init Bootstrap
 window.addEventListener('DOMContentLoaded', async () => {
+  initBaseInputListeners();
   if (typeof renderTemplateDropdown === 'function') renderTemplateDropdown('auto');
 
   const savedPasscode = localStorage.getItem('wa_team_passcode');
@@ -295,4 +358,5 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   const loaded = typeof loadDraftFromLocalStorage === 'function' ? loadDraftFromLocalStorage() : false;
   if (!loaded && typeof renderDashboard === 'function') renderDashboard();
+  syncBaseFields();
 });
