@@ -79,37 +79,10 @@ function createBubble(msg, idx) {
     html = renderVoiceNoteBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
   }
 
-  // NOTIFICATION PUSH BANNER
+  // NOTIFICATION PUSH BANNER (Floating overlay, hidden from message stream)
   else if (msg.type === 'notification') {
-    wrapper.style.justifyContent = 'center';
-    wrapper.style.margin = '4px 0 10px';
-
-    const notifSender = msg.senderName || 'Ex Sayang 💔';
-    const notifText = msg.text || 'Kamu masih sendirian di rumah?';
-    const notifTime = time || '23:18';
-
-    html = `
-      <div style="position:relative; width:92%; max-width:340px; background:rgba(23,29,34,0.95);
-                  border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:10px 12px;
-                  box-shadow:0 10px 25px -5px rgba(0,0,0,0.6); display:flex; align-items:center; gap:10px;">
-        <div style="width:36px; height:36px; border-radius:9px; background:#25D366; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <svg style="width:20px; height:20px; fill:white;" viewBox="0 0 24 24">
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l.277.442-.993 3.626 3.712-.974.447.273z"/>
-          </svg>
-        </div>
-        <div style="flex:1; min-width:0;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;">
-            <div style="display:flex; align-items:center; gap:4px;">
-              <span style="font-size:11px; font-weight:700; color:#25D366; letter-spacing:0.3px;">WhatsApp</span>
-              <span style="font-size:10px; color:#8696A0;">• sekarang</span>
-            </div>
-            <span style="font-size:10px; color:#8696A0;">${notifTime}</span>
-          </div>
-          <p style="font-size:12px; font-weight:700; color:#F1F5F9; margin:0; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(notifSender)}</p>
-          <p style="font-size:11px; color:#CBD5E1; margin:2px 0 0; line-height:1.3; word-break:break-word;">${escHtml(notifText)}</p>
-        </div>
-      </div>
-    `;
+    wrapper.style.display = 'none';
+    return wrapper;
   }
 
   // BUKTI TRANSFER
@@ -242,6 +215,31 @@ function loadState() {
   }
 }
 
+function updatePushNotifOverlay(msg) {
+  const overlay = document.getElementById('wa-push-notif-overlay');
+  if (!overlay) return;
+  if (msg && msg.type === 'notification') {
+    const senderEl = document.getElementById('wa-notif-overlay-sender');
+    const textEl   = document.getElementById('wa-notif-overlay-text');
+    const timeEl   = document.getElementById('wa-notif-overlay-time');
+    if (senderEl) senderEl.textContent = msg.senderName || 'Notifikasi Baru';
+    if (textEl) textEl.textContent = msg.text || '';
+    if (timeEl) timeEl.textContent = msg.time || (previewState ? previewState.time : '20:00');
+
+    overlay.style.display = 'block';
+    requestAnimationFrame(() => {
+      overlay.style.transform = 'translateY(0)';
+      overlay.style.opacity = '1';
+    });
+  } else {
+    overlay.style.transform = 'translateY(-25px)';
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      if (overlay.style.opacity === '0') overlay.style.display = 'none';
+    }, 350);
+  }
+}
+
 function applyFrame(n) {
   document.querySelectorAll('#wa-messages > div[data-frame-index]').forEach(el => {
     const idx = parseInt(el.getAttribute('data-frame-index'), 10);
@@ -251,6 +249,9 @@ function applyFrame(n) {
       el.style.display = 'none';
     }
   });
+
+  const currentMsg = (n > 0 && previewState && previewState.messages) ? previewState.messages[n - 1] : null;
+  updatePushNotifOverlay(currentMsg);
 
   // Trigger VN animation if newly revealed message is a Voice Note
   if (n > 0 && previewState && previewState.messages && previewState.messages[n - 1]?.type === 'voice') {
@@ -435,8 +436,9 @@ async function startAnimation() {
       setTimeout(() => msgEl.classList.remove(animClass), 400);
     }
 
-    // Hold
-    await sleep(holdMs);
+    // Hold (custom hold per message/notification if set)
+    const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
+    await sleep(frameHoldMs);
   }
 
   // End: reset camera zoom to full view

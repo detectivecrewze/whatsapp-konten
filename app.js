@@ -501,6 +501,31 @@ function dashboardItemHtml(msg, idx) {
    Builds message DOM elements inside #wa-messages from state.
    ============================================================ */
 
+function updatePushNotifOverlay(msg) {
+  const overlay = document.getElementById('wa-push-notif-overlay');
+  if (!overlay) return;
+  if (msg && msg.type === 'notification') {
+    const senderEl = document.getElementById('wa-notif-overlay-sender');
+    const textEl   = document.getElementById('wa-notif-overlay-text');
+    const timeEl   = document.getElementById('wa-notif-overlay-time');
+    if (senderEl) senderEl.textContent = msg.senderName || 'Notifikasi Baru';
+    if (textEl) textEl.textContent = msg.text || '';
+    if (timeEl) timeEl.textContent = msg.time || state.time || '20:00';
+
+    overlay.style.display = 'block';
+    requestAnimationFrame(() => {
+      overlay.style.transform = 'translateY(0)';
+      overlay.style.opacity = '1';
+    });
+  } else {
+    overlay.style.transform = 'translateY(-25px)';
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      if (overlay.style.opacity === '0') overlay.style.display = 'none';
+    }, 350);
+  }
+}
+
 function renderCanvas() {
   const container = document.getElementById('wa-messages');
   if (!container) return;
@@ -513,12 +538,17 @@ function renderCanvas() {
       container.appendChild(el);
     }
   });
+
+  // Hide notification banner overlay by default when full canvas renders
+  updatePushNotifOverlay(null);
 }
 
 /**
  * Create the DOM element for a single message bubble.
  */
 function createCanvasBubble(msg, idx) {
+  if (msg.type === 'notification') return null; // Do not append push notification as a chat bubble
+
   const time    = msgTime(idx);
   const isOut   = msg.direction === 'outgoing';
 
@@ -552,40 +582,6 @@ function createCanvasBubble(msg, idx) {
                     gap:3px; margin-top:4px;">
           <span style="font-size:11px; color:rgba(233,237,239,0.55);">${time}</span>
           ${isOut ? svgReadTicks() : ''}
-        </div>
-      </div>
-    `;
-  }
-
-  // ── NOTIFICATION PUSH BANNER ─────────────────────────────────
-  else if (msg.type === 'notification') {
-    wrapper.style.justifyContent = 'center';
-    wrapper.style.margin = '4px 0 10px';
-
-    const notifSender = msg.senderName || 'Ex Sayang 💔';
-    const notifText = msg.text || 'Kamu masih sendirian di rumah?';
-    const notifTime = time || '23:18';
-
-    bubbleHtml = `
-      <div style="position:relative; width:92%; max-width:340px; background:rgba(23,29,34,0.95);
-                  border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:10px 12px;
-                  box-shadow:0 10px 25px -5px rgba(0,0,0,0.6); display:flex; align-items:center; gap:10px;
-                  animation: slideDownNotif 0.35s cubic-bezier(0.16,1,0.3,1);">
-        <div style="width:36px; height:36px; border-radius:9px; background:#25D366; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <svg style="width:20px; height:20px; fill:white;" viewBox="0 0 24 24">
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l.277.442-.993 3.626 3.712-.974.447.273z"/>
-          </svg>
-        </div>
-        <div style="flex:1; min-width:0;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;">
-            <div style="display:flex; align-items:center; gap:4px;">
-              <span style="font-size:11px; font-weight:700; color:#25D366; letter-spacing:0.3px;">WhatsApp</span>
-              <span style="font-size:10px; color:#8696A0;">• sekarang</span>
-            </div>
-            <span style="font-size:10px; color:#8696A0;">${notifTime}</span>
-          </div>
-          <p style="font-size:12px; font-weight:700; color:#F1F5F9; margin:0; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(notifSender)}</p>
-          <p style="font-size:11px; color:#CBD5E1; margin:2px 0 0; line-height:1.3; word-break:break-word;">${escHtml(notifText)}</p>
         </div>
       </div>
     `;
@@ -1252,13 +1248,14 @@ function setMsgStatusAuthor(id, author) {
 
 /** Set Status Text Preview */
 function renderNotificationCardControlsHtml(msg) {
+  const customHoldMs = msg.customHoldMs || 2500;
   return `
-    <div class="space-y-2 bg-purple-950/40 border border-purple-800/40 p-2.5 rounded-lg">
+    <div class="space-y-2.5 bg-purple-950/40 border border-purple-800/40 p-3 rounded-xl">
       <div class="text-[11px] font-semibold text-purple-300 flex items-center justify-between">
         <span>🔔 Notifikasi Push Popup HP</span>
-        <span class="text-[10px] text-gray-400 font-normal">Tampil sebagai banner di atas layar HP</span>
+        <span class="text-[10px] text-purple-400/80 font-normal">Banner melayang di atas layar HP</span>
       </div>
-      <div class="space-y-1.5">
+      <div class="space-y-2">
         <div>
           <label class="text-[10px] font-medium text-gray-400">👤 Nama Pengirim Notifikasi:</label>
           <input type="text" placeholder="e.g. Ex Sayang 💔 / Bank BCA / Shopee"
@@ -1273,9 +1270,30 @@ function renderNotificationCardControlsHtml(msg) {
                     class="w-full bg-gray-800 border border-gray-600 rounded px-2.5 py-1 text-xs text-white placeholder-gray-500 resize-none focus:outline-none focus:ring-1 focus:ring-purple-400"
           >${escHtml(msg.text || '')}</textarea>
         </div>
+        <div>
+          <label class="text-[10px] font-medium text-gray-400 flex items-center justify-between mb-1">
+            <span>⏱️ Durasi Diam / Tampil Banner:</span>
+            <span class="text-purple-300 font-bold font-mono">${(customHoldMs / 1000).toFixed(1)} Detik</span>
+          </label>
+          <select onchange="setMsgCustomHoldMs('${msg.id}', this.value)"
+                  class="w-full bg-gray-800 border border-gray-600 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-400 cursor-pointer">
+            <option value="1500" ${customHoldMs === 1500 ? 'selected' : ''}>⚡ 1.5 Detik (Cepat)</option>
+            <option value="2500" ${customHoldMs === 2500 ? 'selected' : ''}>📜 2.5 Detik (Standar)</option>
+            <option value="3500" ${customHoldMs === 3500 ? 'selected' : ''}>🎬 3.5 Detik (Sedang)</option>
+            <option value="5000" ${customHoldMs === 5000 ? 'selected' : ''}>🔥 5.0 Detik (Lama)</option>
+            <option value="7000" ${customHoldMs === 7000 ? 'selected' : ''}>⏳ 7.0 Detik (Ekstra Lama)</option>
+          </select>
+        </div>
       </div>
     </div>
   `;
+}
+
+function setMsgCustomHoldMs(id, valMs) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.customHoldMs = parseInt(valMs, 10);
+  renderDashboard();
 }
 
 function setMsgStatusText(id, text) {
@@ -1600,6 +1618,10 @@ function applyFrame(frameIndex) {
     btn.style.color       = isActive ? '#00A884' : '#8696A0';
     btn.style.background  = isActive ? 'rgba(0,168,132,0.1)' : '';
   });
+
+  // Update Push Notification Banner Overlay if current frame message is a notification
+  const currentMsg = (frameIndex > 0 && state.messages) ? state.messages[frameIndex - 1] : null;
+  updatePushNotifOverlay(currentMsg);
 
   // Trigger VN waveform animation if newly revealed frame message is a Voice Note
   if (frameIndex > 0 && state.messages[frameIndex - 1]?.type === 'voice') {
