@@ -340,7 +340,7 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   if (!cleanText) return null;
 
   const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
-  const targetVoice = (!voiceId || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
+  let targetVoice = (!voiceId || voiceId === 'custom' || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
   const emotionMode = (previewState && previewState.ttsEmotion) ? previewState.ttsEmotion : 'horror';
 
   // Horror & Suspense settings: Low stability (0.25) + High style exaggeration (0.50)
