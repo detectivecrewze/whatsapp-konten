@@ -456,8 +456,8 @@ async function startAnimation() {
       if (textToSpeak) {
         lblEl.textContent = `Mengunduh ElevenLabs AI (${idx + 1}/${messages.length})… 🎙️✨`;
         const isOut = msg.direction === 'outgoing';
-        const defaultInVoice  = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Female)
-        const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam (Male)
+        const defaultInVoice  = 'dvWFQHCY2Y64dYruqGaE'; // Indonesian Female Native (Incoming)
+        const defaultOutVoice = 'h9T2LVqn08GUmYXqjOIE'; // Indonesian Male Native (Outgoing)
 
         let voiceId = isOut
           ? (previewState.ttsVoiceOut && previewState.ttsVoiceOut !== 'google-mp3' ? previewState.ttsVoiceOut : defaultOutVoice)
