@@ -80,16 +80,14 @@ Hasilkan JSON valid dengan format persis berikut:
   "messages": [
     { "type": "text", "direction": "incoming", "senderName": "Budi", "senderColor": "#25D366", "time": "21:15", "text": "isi pesan" },
     { "type": "image", "direction": "outgoing", "time": "21:16", "caption": "Nih liat fotonya!", "imgDesc": "Foto bukti transfer / barang / lokasi / suasana" },
-    { "type": "voice", "direction": "incoming", "senderName": "Sinta", "senderColor": "#e542a3", "time": "21:17", "vnDuration": "0:14", "text": "" },
     { "type": "notification", "direction": "incoming", "senderName": "Ibu 👩", "time": "21:18", "text": "Adek dari tadi sore tidur di kamar rumah, kamu sama siapa di kontrakan?", "customHoldMs": 4000 }
   ]
 }
 
-Ragam Tipe Pesan WA yang Tersedia (Gunakan HANYA JIKA ALAMI & COCOK UNTUK CERITA, DILARANG MEMAKSAKAN HARUS PAKAI SEMUA!):
+Ragam Tipe Pesan WA yang Tersedia (Gunakan HANYA JIKA ALAMI & COCOK UNTUK CERITA):
 - "text": Pesan teks percakapan biasa (default).
 - "notification": Banner notifikasi push melayang di atas HP (Sangat ampuh untuk plot twist mendadak dari orang ketiga/ibu/bank).
 - "image": Kartu foto/gambar dengan "caption" dan "imgDesc" (e.g. foto barang/bukti/suasana).
-- "voice": Voice note dengan "vnDuration": "0:14" (e.g. pesan suara panik/marah/menjelaskan).
 - "view_once": Foto 1x lihat / View Once Photo (e.g. foto rahasia / horor / bukti).
 - "deleted": Pesan ini telah dihapus (e.g. pesan horor/curhat yang dibatalkan pengirim).
 - "call": Log panggilan WA ("callType": "voice"/"video", "callMissed": true/false, "callDuration": "05:12").
@@ -101,7 +99,8 @@ Ragam Tipe Pesan WA yang Tersedia (Gunakan HANYA JIKA ALAMI & COCOK UNTUK CERITA
 - "document": Dokumen PDF ("docName": "Laporan_Final.pdf", "docSize": "2.4 MB").
 
 Syarat Wajib Naskah:
-1. PENGGUNAAN FITUR SEPERLUNYA & ORGANIK: Pilih tipe pesan yang paling alami untuk memperkuat alur cerita (misal: horor pakai notification/deleted/view_once; olshop pakai product/transfer; bucin pakai status_reply/voice/contact). Jangan pernah memaksakan semua fitur harus masuk jika tidak relevan.
+1. TANPA VOICE NOTE (VOICE NOTE DILARANG): DILARANG MENGGUNAKAN type "voice" (Voice Note). Jangan pernah menghasilkan type "voice" dalam naskah!
+2. PENGGUNAAN FITUR SEPERLUNYA & ORGANIK: Pilih tipe pesan yang paling alami untuk memperkuat alur cerita. Jangan pernah memaksakan semua fitur harus masuk jika tidak relevan.
 2. DETEKSI MODE CHAT (PERSONAL VS GROUP): Jika prompt pengguna menyebutkan grup chat (misal: "grup keluarga", "grup alumni", "grup tongkrongan", "grup panitia", "grup kelas"), WAJIB set "chatType": "group", berikan "groupSubtitle", dan sertakan "senderName" serta "senderColor" (pilihan warna: "#25D366", "#e542a3", "#34b7f1", "#ff9800") pada setiap pesan incoming dari pengirim berbeda!
 3. PATUHI GENRE USER: Ikuti GENRE dan TONE cerita yang diminta pengguna di prompt (olshop, bucin, komedi, horor, nagih utang, dll).
 4. JUMLAH PESAN: ${lengthRule} Wajib patuhi persis jika pengguna menyebutkan jumlah spesifik di prompt.
