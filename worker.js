@@ -57,7 +57,7 @@ export default {
     // POST /ai-script — Proxy request to Gemini API securely
     if (request.method === 'POST' && url.pathname === '/ai-script') {
       try {
-        const { prompt, targetLength } = await request.json();
+        const { prompt, targetLength, voiceStyle = 'dramatic' } = await request.json();
         const apiKey = env.GEMINI_API_KEY;
         if (!apiKey) {
           return new Response(JSON.stringify({ error: 'GEMINI_API_KEY secret not set' }), {
@@ -69,6 +69,23 @@ export default {
         let lengthRule = 'Buat 15 sampai 20 bubble chat lengkap dari awal sampai tamat.';
         if (targetLength === 'short') lengthRule = 'Buat 8 sampai 12 bubble chat ringkas tapi lengkap dari awal sampai tamat.';
         if (targetLength === 'long') lengthRule = 'Buat 25 sampai 35 bubble chat panjang & mendalam dari awal sampai tamat.';
+
+        const dramaticRuleInstruction = voiceStyle === 'normal'
+          ? `3. GAYA NORMAL (TANPA TAG EMOSI & TANPA FORMAT EKSTREM):
+   - DILARANG menyisipkan tag emosi kurung siku seperti [scared], [whispers], dll.
+   - DILARANG menggunakan format dramatis berlebihan seperti titik-titik berturut-turut banyak atau HURUF KAPITAL TERIAKAN.
+   - Tulis teks percakapan biasa yang santai, alami, dan manusiawi.`
+          : `3. ELEVENLABS DRAMATIC AUDIO TAGS & FORMATTING (SANGAT PENTING UTK AKTING SUARA ELEVENLABS V3):
+   - AI ElevenLabs v3 SANGAT PEKA terhadap simbol tanda baca, kapitalisasi, dan Audio Tag.
+   - DI SETIAP BUBBLE PESAN, WAJIB kombinasikan Audio Tag & Tanda Baca Dramatis:
+     a) TAG EMOSI KURUNG SIKU di awal: [scared][whispers], [panicked][shouting], [gasp][fearful], [crying][desperate], [trembling][quietly], [angry][shouting], [sighs][sad].
+     b) JEDA DENGAN TITIK-TITIK (... / ......): Gunakan titik-titik untuk jeda napas, ketakutan, & rasa ragu. Contoh: [scared][whispers] Bu...... di luar...... ada yang berdiri......
+     c) TERIAKAN / EMOSI PUNCAK KETIK KAPITAL (ALL CAPS): Gunakan ALL CAPS untuk teriakan atau penekanan panik. Contoh: [panicked] JANGAN BUKA PINTUNYA!
+     d) TERPOTONG MENDADAK DENGAN STRIP (—): Contoh: [scared] Aku lihat bayangan—
+     e) GAGAP KETAKUTAN: Tulis huruf berulang K-kamu..., B-bu... untuk akting gagap ketakutan.
+   - Contoh gabungan sempurna:
+     { "type": "text", "direction": "outgoing", "time": "02:15", "text": "[scared][whispers] B-bu...... di luar kamar...... ada yang ketuk pintu......" }
+     { "type": "text", "direction": "incoming", "time": "02:16", "text": "[panicked][shouting] JANGAN BUKA PINTUNYA! KUNCI SEKARANG!" }`;
 
         const systemInstruction = `Kamu adalah penulis naskah cerita pendek percakapan WhatsApp viral profesional (spesialis konten suspense, drama, komedi, dan horor TikTok/Reels/Shorts).
 
@@ -102,17 +119,7 @@ Aturan Penulisan Gaya Chat WhatsApp (SANGAT PENTING):
      - Pembaca LANGSUNG SADAR SEKETIKA (INSTANT CHILLS! ⚡): Sosok yang dari tadi membalas chat di room WA itu BUKAN IBU!
      - Lalu pesan terakhir di room chat membalas singkat & dingin (misal: "Kok tau ibu baru sampe airport?").
 
-3. ELEVENLABS DRAMATIC AUDIO TAGS & FORMATTING (SANGAT PENTING UTK AKTING SUARA ELEVENLABS V3):
-   - AI ElevenLabs v3 SANGAT PEKA terhadap simbol tanda baca, kapitalisasi, dan Audio Tag.
-   - DI SETIAP BUBBLE PESAN, WAJIB kombinasikan Audio Tag & Tanda Baca Dramatis:
-     a) TAG EMOSI KURUNG SIKU di awal: [scared][whispers], [panicked][shouting], [gasp][fearful], [crying][desperate], [trembling][quietly], [angry][shouting], [sighs][sad].
-     b) JEDA DENGAN TITIK-TITIK (... / ......): Gunakan titik-titik untuk jeda napas, ketakutan, & rasa ragu. Contoh: [scared][whispers] Bu...... di luar...... ada yang berdiri......
-     c) TERIAKAN / EMOSI PUNCAK KETIK KAPITAL (ALL CAPS): Gunakan ALL CAPS untuk teriakan atau penekanan panik. Contoh: [panicked] JANGAN BUKA PINTUNYA!
-     d) TERPOTONG MENDADAK DENGAN STRIP (—): Contoh: [scared] Aku lihat bayangan—
-     e) GAGAP KETAKUTAN: Tulis huruf berulang K-kamu..., B-bu... untuk akting gagap ketakutan.
-   - Contoh gabungan sempurna:
-     { "type": "text", "direction": "outgoing", "time": "02:15", "text": "[scared][whispers] B-bu...... di luar kamar...... ada yang ketuk pintu......" }
-     { "type": "text", "direction": "incoming", "time": "02:16", "text": "[panicked][shouting] JANGAN BUKA PINTUNYA! KUNCI SEKARANG!" }
+${dramaticRuleInstruction}
 
 4. ATURAN FITUR:
    - DILARANG MENGGUNAKAN type "voice" (Voice Note).

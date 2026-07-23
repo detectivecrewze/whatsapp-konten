@@ -69,7 +69,8 @@ function escHtml(str) {
  */
 function stripAudioTags(str) {
   if (!str) return '';
-  return str.replace(/\[[^\]]{1,40}\]/g, '').replace(/^\s+/, '').trim();
+  let cleaned = str.replace(/\[[^\]]{1,40}\]/g, '').replace(/^\s+/, '').trim();
+  return cleaned.replace(/\.{3,}/g, '..');
 }
 
 /** Return custom time for messages */
@@ -3284,9 +3285,11 @@ function setAiPrompt(text) {
 async function generateAiScript() {
   const inp = document.getElementById('inp-ai-prompt');
   const selLength = document.getElementById('sel-ai-length');
+  const selVoiceStyle = document.getElementById('sel-ai-voice-style');
   const btn = document.getElementById('btn-generate-ai');
   const userPrompt = inp ? inp.value.trim() : '';
   const targetLength = selLength ? selLength.value : 'medium';
+  const voiceStyle = selVoiceStyle ? selVoiceStyle.value : 'dramatic';
 
   if (!userPrompt) {
     if (typeof showToast === 'function') {
@@ -3317,7 +3320,7 @@ async function generateAiScript() {
       const res = await fetch(workerAiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userPrompt, targetLength: targetLength })
+        body: JSON.stringify({ prompt: userPrompt, targetLength: targetLength, voiceStyle: voiceStyle })
       });
       if (res.ok) {
         const json = await res.json();

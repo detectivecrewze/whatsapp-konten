@@ -34,8 +34,9 @@ function svgReadTicks() {
 
 function stripAudioTags(str) {
   if (!str) return '';
-  // Strip ANY [tag] up to 40 chars — catches all ElevenLabs audio tags regardless of name
-  return str.replace(/\[[^\]]{1,40}\]/g, '').replace(/^\s+/, '').trim();
+  // Strip ANY [tag] up to 40 chars & limit consecutive dots to max 2 for visual aesthetics
+  let cleaned = str.replace(/\[[^\]]{1,40}\]/g, '').replace(/^\s+/, '').trim();
+  return cleaned.replace(/\.{3,}/g, '..');
 }
 
 /* ── Bubble renderer ─────────────────────────────────────── */

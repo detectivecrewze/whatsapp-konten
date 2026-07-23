@@ -231,6 +231,17 @@
             </select>
           </div>
 
+          <!-- Voice Style Intonation Setting -->
+          <div class="flex items-center justify-between bg-gray-950/60 border border-purple-800/30 rounded-xl p-2.5 px-3">
+            <span class="text-[11px] font-semibold text-purple-300 flex items-center gap-1.5">
+              <span>🎙️ Gaya Intonasi AI:</span>
+            </span>
+            <select id="sel-ai-voice-style" class="bg-gray-900 border border-purple-700/50 text-white text-[11px] rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-purple-400">
+              <option value="dramatic" selected>🎭 Intonasi Dramatis ElevenLabs (Tags & Jeda)</option>
+              <option value="normal">💬 Normal (Tanpa Tag & Format Ekstrem)</option>
+            </select>
+          </div>
+
           <!-- Generate Action Button -->
           <button id="btn-generate-ai" onclick="generateAiScript()"
                   class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-lg hover:shadow-purple-900/40 flex items-center justify-center gap-2 transition transform active:scale-95">
