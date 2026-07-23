@@ -478,12 +478,12 @@ async function startAnimation() {
       if (textToSpeak) {
         lblEl.textContent = `Mengunduh ElevenLabs AI (${idx + 1}/${messages.length})… 🎙️✨`;
         const isOut = msg.direction === 'outgoing';
-        const defaultInVoice  = 'dvWFQHCY2Y64dYruqGaE'; // Indonesian Female Native (Incoming)
-        const defaultOutVoice = 'h9T2LVqn08GUmYXqjOIE'; // Indonesian Male Native (Outgoing)
+        const defaultInVoice  = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Female - 200 OK Free plan)
+        const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam (Male - 200 OK Free plan)
 
         let voiceId = isOut
-          ? (previewState.ttsVoiceOut && previewState.ttsVoiceOut !== 'google-mp3' ? previewState.ttsVoiceOut : defaultOutVoice)
-          : (previewState.ttsVoiceIn  && previewState.ttsVoiceIn  !== 'google-mp3' ? previewState.ttsVoiceIn  : defaultInVoice);
+          ? (previewState.ttsVoiceOut && previewState.ttsVoiceOut !== 'google-mp3' && previewState.ttsVoiceOut !== 'custom' ? previewState.ttsVoiceOut : defaultOutVoice)
+          : (previewState.ttsVoiceIn  && previewState.ttsVoiceIn  !== 'google-mp3' && previewState.ttsVoiceIn  !== 'custom' ? previewState.ttsVoiceIn  : defaultInVoice);
 
         ttsAudioMap[idx] = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
         await sleep(150); // Short delay to prevent ElevenLabs concurrent limit 429
