@@ -473,10 +473,15 @@ async function startAnimation() {
   const lblEl   = document.getElementById('countdown-label');
   overlay.classList.remove('hidden');
 
-  // Pre-fetch ElevenLabs Audio Blobs sequentially to strictly obey rate limits (max 2 parallel)
+  // Pre-fetch ElevenLabs Audio Blobs sequentially (cached across Replays)
   const ttsAudioMap = {};
+  const ttsAudioCache = window.__ttsAudioCache || (window.__ttsAudioCache = {});
+
   if (enableTts) {
     const apiKey = previewState.elevenKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+    const modelToUse = previewState.elevenModel || 'eleven_v3';
+    const stability  = previewState.ttsStability != null ? previewState.ttsStability : 0.25;
+    const style      = previewState.ttsStyle != null ? previewState.ttsStyle : 0.50;
 
     for (let idx = 0; idx < messages.length; idx++) {
       const msg = messages[idx];
@@ -485,7 +490,6 @@ async function startAnimation() {
         : (msg.text || msg.caption || '');
 
       if (textToSpeak) {
-        lblEl.textContent = `Mengunduh ElevenLabs AI (${idx + 1}/${messages.length})… 🎙️✨`;
         const isOut = msg.direction === 'outgoing';
         const defaultInVoice  = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Female - 200 OK Free plan)
         const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam (Male - 200 OK Free plan)
@@ -494,8 +498,20 @@ async function startAnimation() {
           ? (previewState.ttsVoiceOut && previewState.ttsVoiceOut !== 'google-mp3' && previewState.ttsVoiceOut !== 'custom' ? previewState.ttsVoiceOut : defaultOutVoice)
           : (previewState.ttsVoiceIn  && previewState.ttsVoiceIn  !== 'google-mp3' && previewState.ttsVoiceIn  !== 'custom' ? previewState.ttsVoiceIn  : defaultInVoice);
 
-        ttsAudioMap[idx] = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
-        await sleep(150); // Short delay to prevent ElevenLabs concurrent limit 429
+        const cacheKey = `${textToSpeak}_${voiceId}_${modelToUse}_${stability}_${style}`;
+
+        if (ttsAudioCache[cacheKey]) {
+          console.log(`⚡ [TTS Cache Hit] Reusing audio for message #${idx + 1}`);
+          ttsAudioMap[idx] = ttsAudioCache[cacheKey];
+        } else {
+          lblEl.textContent = `Mengunduh ElevenLabs AI (${idx + 1}/${messages.length})… 🎙️✨`;
+          const blobUrl = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
+          if (blobUrl) {
+            ttsAudioCache[cacheKey] = blobUrl;
+          }
+          ttsAudioMap[idx] = blobUrl;
+          await sleep(150); // Short delay to prevent ElevenLabs concurrent limit 429
+        }
       }
     }
   }
