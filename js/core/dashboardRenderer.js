@@ -98,54 +98,61 @@ function dashboardItemHtml(msg, idx) {
   <div class="msg-item bg-gray-800/60 border border-gray-700 rounded-xl p-3 space-y-2.5"
        data-msg-id="${msg.id}">
 
-    <div class="flex items-center gap-2 flex-wrap">
+    <!-- Row 1: Direction + Type + Controls -->
+    <div class="flex items-center justify-between gap-1.5 w-full">
 
+      <!-- Direction toggle -->
       <div class="flex rounded-lg overflow-hidden border border-gray-700 text-xs flex-shrink-0">
         <button onclick="setMsgDir('${msg.id}', 'incoming')"
-                class="dir-btn ${inActiveCls} px-2.5 py-1.5 font-medium transition"
+                class="dir-btn ${inActiveCls} px-2 py-1.5 font-medium transition text-xs"
                 style="${!isOut ? 'background:#00A884;color:white;' : 'color:#8696A0;'}">
           ← In
         </button>
         <button onclick="setMsgDir('${msg.id}', 'outgoing')"
-                class="dir-btn ${outActiveCls} px-2.5 py-1.5 font-medium transition"
+                class="dir-btn ${outActiveCls} px-2 py-1.5 font-medium transition text-xs"
                 style="${isOut ? 'background:#005C4B;color:#E9EDEF;' : 'color:#8696A0;'}">
           Out →
         </button>
       </div>
 
+      <!-- Type selector (clean & concise) -->
       <select onchange="setMsgType('${msg.id}', this.value)"
               class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5
-                     text-base md:text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
-        <option value="text"         ${isText        ? 'selected' : ''}>✏️ Text</option>
-        <option value="contact"      ${isContact     ? 'selected' : ''}>👤 Bagikan Kontak WA</option>
-        <option value="product"      ${isProduct     ? 'selected' : ''}>🛍️ Kartu Produk Olshop</option>
-        <option value="status_reply" ${isStatusReply ? 'selected' : ''}>💬 Balasan Status / Story</option>
-        <option value="voice"        ${isVoice       ? 'selected' : ''}>🎙️ Voice Note (VN)</option>
-        <option value="call"         ${isCall        ? 'selected' : ''}>📞/📹 Panggilan (Voice/Video Call)</option>
+                     text-xs text-white truncate font-medium focus:outline-none focus:ring-1 focus:ring-wa-accent cursor-pointer">
+        <option value="text"         ${isText        ? 'selected' : ''}>✏️ Teks</option>
+        <option value="contact"      ${isContact     ? 'selected' : ''}>👤 Kontak WA</option>
+        <option value="product"      ${isProduct     ? 'selected' : ''}>🛍️ Kartu Produk</option>
+        <option value="status_reply" ${isStatusReply ? 'selected' : ''}>💬 Balasan Status</option>
+        <option value="voice"        ${isVoice       ? 'selected' : ''}>🎙️ Voice Note</option>
+        <option value="call"         ${isCall        ? 'selected' : ''}>📞 Panggilan</option>
         <option value="transfer"     ${isTransfer    ? 'selected' : ''}>💸 Bukti Transfer</option>
-        <option value="view_once"    ${isViewOnce    ? 'selected' : ''}>① Foto Sekali Lihat</option>
+        <option value="view_once"    ${isViewOnce    ? 'selected' : ''}>① Foto 1× Lihat</option>
         <option value="document"     ${isDocument    ? 'selected' : ''}>📄 Dokumen PDF</option>
-        <option value="location"     ${isLocation    ? 'selected' : ''}>📍 Lokasi Langsung</option>
-        <option value="deleted"      ${isDeleted     ? 'selected' : ''}>🚫 Pesan Terhapus</option>
-        <option value="image"        ${isImg         ? 'selected' : ''}>🖼 Image / GIF</option>
+        <option value="location"     ${isLocation    ? 'selected' : ''}>📍 Lokasi</option>
+        <option value="deleted"      ${isDeleted     ? 'selected' : ''}>🚫 Terhapus</option>
+        <option value="image"        ${isImg         ? 'selected' : ''}>🖼 Gambar / GIF</option>
         ${qrOption}
       </select>
 
+      <!-- Advanced Settings Button ⚙️ -->
       <button onclick="toggleMsgAdvSettings('${msg.id}')"
               title="Pengaturan Khusus Pesan (Jam Custom & Zoom Kamera)"
               class="px-2 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 flex-shrink-0 ${msg.showAdvSettings || msg.enableZoom || msg.time ? 'bg-wa-accent/20 text-wa-accent border border-wa-accent/50 shadow-sm' : 'bg-gray-700/80 text-gray-400 border border-gray-600 hover:text-white'}">
         ⚙️ ${msg.enableZoom || msg.time ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>' : ''}
       </button>
 
-      <button onclick="moveMsg('${idx}', -1)" ${isFirst ? 'disabled' : ''}
-              class="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-white
-                     hover:bg-gray-700 transition disabled:opacity-30 flex-shrink-0 text-xs">↑</button>
-      <button onclick="moveMsg('${idx}', 1)" ${isLast ? 'disabled' : ''}
-              class="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-white
-                     hover:bg-gray-700 transition disabled:opacity-30 flex-shrink-0 text-xs">↓</button>
-      <button onclick="removeMsg('${msg.id}')"
-              class="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:text-red-400
-                     hover:bg-red-900/20 transition flex-shrink-0 text-xs">✕</button>
+      <!-- Move up / down / remove controls -->
+      <div class="flex items-center gap-0.5 flex-shrink-0">
+        <button onclick="moveMsg('${idx}', -1)" ${isFirst ? 'disabled' : ''}
+                title="Pindah ke atas"
+                class="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-gray-700 transition disabled:opacity-30 text-xs font-bold">↑</button>
+        <button onclick="moveMsg('${idx}', 1)" ${isLast ? 'disabled' : ''}
+                title="Pindah ke bawah"
+                class="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-gray-700 transition disabled:opacity-30 text-xs font-bold">↓</button>
+        <button onclick="removeMsg('${msg.id}')"
+                title="Hapus pesan"
+                class="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:text-red-400 hover:bg-red-900/20 transition text-xs font-bold ml-0.5">✕</button>
+      </div>
     </div>
 
     ${msg.showAdvSettings ? `
