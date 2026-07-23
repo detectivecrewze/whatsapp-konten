@@ -184,6 +184,29 @@ function dashboardItemHtml(msg, idx) {
         </div>
       </div>
     </div>
+    ${(state.chatType === 'group' && !isOut) ? `
+    <div class="p-2 bg-emerald-950/30 border border-emerald-800/40 rounded-xl space-y-1.5 text-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-bold text-emerald-400">👤 Nama Pengirim Anggota Group:</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="text" placeholder="e.g. Budi / Sinta / Agus" value="${escHtml(msg.senderName || '')}"
+               oninput="setMsgSenderName('${msg.id}', this.value)"
+               class="flex-1 bg-gray-800 border border-gray-700 rounded px-2.5 py-1 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+        <input type="color" value="${msg.senderColor || '#e542a3'}"
+               oninput="setMsgSenderColor('${msg.id}', this.value)"
+               title="Pilih Warna Nama"
+               class="w-7 h-7 bg-gray-800 border border-gray-700 rounded cursor-pointer p-0.5 flex-shrink-0" />
+      </div>
+      <div class="flex items-center gap-1.5 pt-0.5">
+        <span class="text-[10px] text-gray-400">Preset Warna:</span>
+        <button type="button" onclick="setMsgSenderColor('${msg.id}', '#e542a3')" class="w-4 h-4 rounded-full bg-[#e542a3] border border-white/20 hover:scale-110 transition"></button>
+        <button type="button" onclick="setMsgSenderColor('${msg.id}', '#53bdeb')" class="w-4 h-4 rounded-full bg-[#53bdeb] border border-white/20 hover:scale-110 transition"></button>
+        <button type="button" onclick="setMsgSenderColor('${msg.id}', '#e5a638')" class="w-4 h-4 rounded-full bg-[#e5a638] border border-white/20 hover:scale-110 transition"></button>
+        <button type="button" onclick="setMsgSenderColor('${msg.id}', '#2cb742')" class="w-4 h-4 rounded-full bg-[#2cb742] border border-white/20 hover:scale-110 transition"></button>
+        <button type="button" onclick="setMsgSenderColor('${msg.id}', '#9d53eb')" class="w-4 h-4 rounded-full bg-[#9d53eb] border border-white/20 hover:scale-110 transition"></button>
+      </div>
+    </div>
     ` : ''}
 
     <div class="${textHide} space-y-2">

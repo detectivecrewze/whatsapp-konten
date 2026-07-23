@@ -15,6 +15,12 @@ function svgReadTicks() {
   </svg>`;
 }
 
+function renderGroupSenderBadge(msg) {
+  const name = escHtml(msg.senderName || 'Anggota Group');
+  const color = msg.senderColor || '#e542a3';
+  return `<div style="font-size:12px; font-weight:600; color:${color}; margin-bottom:3px; line-height:1.2;">${name}</div>`;
+}
+
 /* ============================================================
    2. CANVAS RENDERER
    Builds message DOM elements inside #wa-messages from state.

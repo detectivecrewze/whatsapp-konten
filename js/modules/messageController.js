@@ -274,3 +274,20 @@ function setUnreadCount(count) {
   }
   if (typeof triggerAutoSave === 'function') triggerAutoSave();
 }
+
+function setMsgSenderName(id, name) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.senderName = name;
+  if (typeof renderCanvas === 'function') renderCanvas();
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
+}
+
+function setMsgSenderColor(id, color) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.senderColor = color;
+  if (typeof renderCanvas === 'function') renderCanvas();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
+}
