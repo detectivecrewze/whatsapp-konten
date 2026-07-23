@@ -1950,3 +1950,182 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (!loaded) renderDashboard();
 });
 
+/* ============================================================
+   20. VIRAL SCRIPT GENERATOR PRESETS
+   ============================================================ */
+
+const _scriptPresets = {
+  drama_labrak: {
+    name: 'Drama Selingkuh 💔',
+    data: {
+      name: 'Sayang 💔',
+      pfp: null,
+      messages: [
+        { type: 'text', direction: 'outgoing', text: 'Kamu tadi jam 3 sore di Cafe Senopati sama siapa?' },
+        { type: 'text', direction: 'incoming', text: 'Hah? Sama temen kantor kok beb, meeting kerjaan.' },
+        { type: 'text', direction: 'outgoing', text: 'Temen kantor kok rangkulan tangan? Jangan bohong ya!' },
+        { type: 'text', direction: 'incoming', text: 'Sumpah beb itu cuma temen lama yang ga sengaja ketemu 😭' },
+        { type: 'text', direction: 'outgoing', text: 'Aku punya foto kalian berdua. Kita selesai.' }
+      ],
+      scale: 2,
+      time: '15:42',
+      bgType: 'default',
+      bgColor: '#111B21',
+      bgImage: null,
+      holdMs: 2200,
+      replyDelay: 1200,
+      useTyping: true,
+      useSoundIn: true,
+      useSoundOut: true,
+      autoZoom: true,
+      zoomScale: '1.20',
+      zoomSpeed: '0.45'
+    }
+  },
+  olshop_cod: {
+    name: 'Olshop & COD 🛍️',
+    data: {
+      name: 'Kurir Paket 📦',
+      pfp: null,
+      messages: [
+        { type: 'text', direction: 'incoming', text: 'Permisi kak, paket Shopee COD Rp 185.000 sudah di depan rumah.' },
+        { type: 'text', direction: 'outgoing', text: 'Waduh mas, saya lagi di luar kota. Bisa ditaruh di dalam pagar?' },
+        { type: 'text', direction: 'incoming', text: 'Bisa kak, tapi harus lunas dulu via transfer/QRIS ya.' },
+        { type: 'text', direction: 'outgoing', text: 'Oke mas, minta QR Code QRIS-nya ya, saya bayar sekarang.' },
+        { type: 'text', direction: 'incoming', text: 'Siap kak, ditunggu ya.' }
+      ],
+      scale: 2,
+      time: '11:15',
+      bgType: 'default',
+      bgColor: '#111B21',
+      bgImage: null,
+      holdMs: 2500,
+      replyDelay: 1000,
+      useTyping: true,
+      useSoundIn: true,
+      useSoundOut: true,
+      autoZoom: true,
+      zoomScale: '1.20',
+      zoomSpeed: '0.45'
+    }
+  },
+  nagih_hutang: {
+    name: 'Nagih Hutang 💸',
+    data: {
+      name: 'Budi (Temen SMP) 💸',
+      pfp: null,
+      messages: [
+        { type: 'text', direction: 'outgoing', text: 'Bud, sory banget mau nanya, sisa hutang bulan lalu Rp 500rb kapan bisa ditransfer?' },
+        { type: 'text', direction: 'incoming', text: 'Aduh bro, ini lagi ada musibah banget, dompet hilang pas naik motor 😭' },
+        { type: 'text', direction: 'outgoing', text: 'Perasaan minggu lalu kamu habis upload Story liburan ke Bali deh Bud...' },
+        { type: 'text', direction: 'incoming', text: 'Itu story di-endorse temen bro, beneran aku lagi ga ada uang 😭' },
+        { type: 'text', direction: 'outgoing', text: 'Besok tanggal 1 harus udah masuk ya, janji terus dari bulan lalu.' }
+      ],
+      scale: 2,
+      time: '19:30',
+      bgType: 'default',
+      bgColor: '#111B21',
+      bgImage: null,
+      holdMs: 2400,
+      replyDelay: 1200,
+      useTyping: true,
+      useSoundIn: true,
+      useSoundOut: true,
+      autoZoom: true,
+      zoomScale: '1.20',
+      zoomSpeed: '0.45'
+    }
+  },
+  bucin_romantis: {
+    name: 'Bucin Romantis ❤️',
+    data: {
+      name: 'Sayang ❤️',
+      pfp: null,
+      messages: [
+        { type: 'text', direction: 'outgoing', text: 'Hari ini capek banget kerjanya, tapi langsung seneng liat kamu.' },
+        { type: 'text', direction: 'incoming', text: 'Jangan lupa makan malam ya sayang, jangan ketiduran dulu 😘' },
+        { type: 'text', direction: 'outgoing', text: 'Coba deh cek depan pintu rumah kamu sekarang...' },
+        { type: 'text', direction: 'incoming', text: 'Hah?! Kamu ngirim apa malam-malam gini??? 😱' },
+        { type: 'text', direction: 'outgoing', text: 'Kado sama makanan favorit kamu 🎁 Enjoy your dinner ya!' }
+      ],
+      scale: 2,
+      time: '21:05',
+      bgType: 'default',
+      bgColor: '#111B21',
+      bgImage: null,
+      holdMs: 2200,
+      replyDelay: 1000,
+      useTyping: true,
+      useSoundIn: true,
+      useSoundOut: true,
+      autoZoom: true,
+      zoomScale: '1.20',
+      zoomSpeed: '0.45'
+    }
+  },
+  horor_misteri: {
+    name: 'Horor & Malam 👻',
+    data: {
+      name: 'Tetangga Sebelah 👻',
+      pfp: null,
+      messages: [
+        { type: 'text', direction: 'incoming', text: 'Bro, kamu lagi di dalam rumah sendirian kan?' },
+        { type: 'text', direction: 'outgoing', text: 'Iya nih bro, lagi nonton TV. Kenapa emang?' },
+        { type: 'text', direction: 'incoming', text: 'Jangan keluar kamar dulu. Siapa yang lagi berdiri di teras rumahmu?' },
+        { type: 'text', direction: 'outgoing', text: 'Hah?! Jangan bercanda bro, jendela teras lagi kukunci kok!' },
+        { type: 'text', direction: 'incoming', text: 'Dia baru aja nengok ke jendela kamar kamu... Buka pintu belakang sekarang!' }
+      ],
+      scale: 2,
+      time: '23:48',
+      bgType: 'default',
+      bgColor: '#111B21',
+      bgImage: null,
+      holdMs: 2500,
+      replyDelay: 1400,
+      useTyping: true,
+      useSoundIn: true,
+      useSoundOut: true,
+      autoZoom: true,
+      zoomScale: '1.20',
+      zoomSpeed: '0.45'
+    }
+  },
+  prank_parkir: {
+    name: 'Prank Parkir 🤣',
+    data: {
+      name: 'Agus Bestie 🤣',
+      pfp: null,
+      messages: [
+        { type: 'text', direction: 'incoming', text: 'Gus, emergency banget!! Tolong TF 50rb sekarang, penting banget!' },
+        { type: 'text', direction: 'outgoing', text: 'Kenapa jir? Lagi di mana kamu? Kena tilang?!' },
+        { type: 'text', direction: 'incoming', text: 'Bukan bro, aku kebelet di mall tapi parkir motor kurang 5rb ga bisa keluar 😭' },
+        { type: 'text', direction: 'outgoing', text: 'Walah wkwk, kaget aku kira ada apa. Yaudah mana nomor DANA mu.' },
+        { type: 'text', direction: 'incoming', text: 'Wkwk makasih bro, penyelamat hidup 😭' }
+      ],
+      scale: 2,
+      time: '17:10',
+      bgType: 'default',
+      bgColor: '#111B21',
+      bgImage: null,
+      holdMs: 2000,
+      replyDelay: 1000,
+      useTyping: true,
+      useSoundIn: true,
+      useSoundOut: true,
+      autoZoom: true,
+      zoomScale: '1.20',
+      zoomSpeed: '0.45'
+    }
+  }
+};
+
+function loadScriptPreset(scriptKey) {
+  const tpl = _scriptPresets[scriptKey];
+  if (!tpl) return;
+
+  if (confirm(`Muat naskah "${tpl.name}"? (Pesan saat ini akan digantikan)`)) {
+    applyProjectPayload(tpl.data);
+    showToast(`✨ Naskah "${tpl.name}" berhasil dimuat! Tinggal Play Preview.`);
+  }
+}
+
