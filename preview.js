@@ -334,6 +334,86 @@ function triggerAutoZoom(msgEl, isOut, customScaleOverride) {
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
+function speakGoogleTts(rawText, speedRate = 1.0) {
+  return new Promise((resolve) => {
+    if (!rawText) {
+      resolve();
+      return;
+    }
+
+    // Strip emoticons & html/markdown for clean voiceover
+    const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+
+    if (!cleanText) {
+      resolve();
+      return;
+    }
+
+    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=id&client=tw-ob&q=${encodeURIComponent(cleanText)}`;
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+    audio.src = ttsUrl;
+    audio.playbackRate = speedRate;
+
+    let finished = false;
+    const finish = () => {
+      if (!finished) {
+        finished = true;
+        resolve();
+      }
+    };
+
+    audio.onended = finish;
+    audio.onerror = () => {
+      // Fallback: browser SpeechSynthesis if audio fetch fails
+      speakBrowserFallbackClean(cleanText, speedRate).then(finish);
+    };
+
+    const estDuration = Math.max(1400, Math.round((cleanText.length / 10) * 1000 / speedRate));
+    const safetyTimeout = setTimeout(finish, estDuration + 900);
+
+    audio.play().then(() => {
+      // Playing clean Google TTS audio
+    }).catch(err => {
+      console.log('Google Audio play blocked, using browser fallback:', err);
+      clearTimeout(safetyTimeout);
+      speakBrowserFallbackClean(cleanText, speedRate).then(finish);
+    });
+  });
+}
+
+function speakBrowserFallbackClean(cleanText, speedRate = 1.0) {
+  return new Promise((resolve) => {
+    if (!('speechSynthesis' in window)) {
+      resolve();
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(cleanText);
+    utter.lang = 'id-ID';
+    utter.rate = speedRate;
+
+    const voices = window.speechSynthesis.getVoices();
+    const idVoice = voices.find(v => v.lang.includes('id') || v.lang.includes('ID'));
+    if (idVoice) utter.voice = idVoice;
+
+    let done = false;
+    const finish = () => {
+      if (!done) {
+        done = true;
+        resolve();
+      }
+    };
+
+    utter.onend = finish;
+    utter.onerror = finish;
+    setTimeout(finish, Math.max(1200, Math.round((cleanText.length / 10) * 1000)));
+
+    window.speechSynthesis.speak(utter);
+  });
+}
+
 async function startAnimation() {
   if (!previewState) return;
 
@@ -430,9 +510,20 @@ async function startAnimation() {
       setTimeout(() => msgEl.classList.remove(animClass), 400);
     }
 
-    // Hold (custom hold per message/notification if set)
-    const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
-    await sleep(frameHoldMs);
+    // Google TTS Voice Over or Hold Duration
+    const enableTts = previewState.enableTts === true;
+    const textToSpeak = messages[f].type === 'notification'
+      ? `${messages[f].senderName || 'Notifikasi'}: ${messages[f].text || ''}`
+      : (messages[f].text || messages[f].caption || '');
+
+    if (enableTts && textToSpeak) {
+      const speedRate = parseFloat(previewState.ttsSpeed || '1.00');
+      await speakGoogleTts(textToSpeak, speedRate);
+      await sleep(250);
+    } else {
+      const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
+      await sleep(frameHoldMs);
+    }
 
     // Zoom OUT back to full screen view after message hold, before next frame/typing starts
     if (shouldZoomThisMsg && f < totalF - 1) {

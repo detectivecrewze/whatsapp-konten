@@ -1502,6 +1502,19 @@ function updateZoomSpeedValue(val) {
   triggerAutoSave();
 }
 
+function toggleTtsEnable(checked) {
+  const wrap = document.getElementById('wrap-tts-options');
+  if (wrap) wrap.style.display = checked ? 'block' : 'none';
+  triggerAutoSave();
+}
+
+function updateTtsSpeedValue(val) {
+  const formatted = parseFloat(val).toFixed(2) + '×';
+  const label = document.getElementById('tts-speed-val');
+  if (label) label.textContent = formatted;
+  triggerAutoSave();
+}
+
 function setMsgCustomZoomScale(id, scaleVal) {
   const msg = state.messages.find(m => m.id === id);
   if (!msg) return;
@@ -2284,9 +2297,11 @@ function getProjectPayload() {
     useTyping,
     useSoundIn,
     useSoundOut,
-    autoZoom,
-    zoomScale,
-    zoomSpeed,
+    autoZoom:        autoZoom,
+    zoomScale:       zoomScale,
+    zoomSpeed:       zoomSpeed,
+    enableTts:       document.getElementById('chk-enable-tts')?.checked === true,
+    ttsSpeed:        parseFloat(document.getElementById('inp-tts-speed')?.value || '1.00'),
     updatedAt:       Date.now()
   };
 }
