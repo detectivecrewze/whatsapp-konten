@@ -746,6 +746,15 @@ if (inpAutoZoom) {
   });
 }
 
+// Auto-save listeners for Video & Auto-Zoom options
+['inp-hold-duration', 'inp-reply-delay', 'inp-typing', 'inp-sound-in', 'inp-sound-out', 'inp-auto-zoom', 'inp-zoom-scale', 'inp-zoom-speed'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('change', () => triggerAutoSave());
+    el.addEventListener('input', () => triggerAutoSave());
+  }
+});
+
 /* ============================================================
    12. CAPTURE ENGINE — html2canvas
    ============================================================ */
@@ -1241,10 +1250,14 @@ function triggerAutoSave() {
 }
 
 function getProjectPayload() {
-  const holdMs       = parseInt(document.getElementById('inp-hold-duration')?.value || '2000', 10);
+  const holdMs       = parseInt(document.getElementById('inp-hold-duration')?.value || '2500', 10);
+  const replyDelay   = parseInt(document.getElementById('inp-reply-delay')?.value || '1400', 10);
   const useTyping    = document.getElementById('inp-typing')?.checked ?? true;
   const useSoundIn   = document.getElementById('inp-sound-in')?.checked ?? true;
   const useSoundOut  = document.getElementById('inp-sound-out')?.checked ?? false;
+  const autoZoom     = document.getElementById('inp-auto-zoom')?.checked ?? false;
+  const zoomScale    = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.20');
+  const zoomSpeed    = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
 
   return {
     name:        state.name,
@@ -1256,9 +1269,13 @@ function getProjectPayload() {
     bgColor:     state.bgColor,
     bgImage:     state.bgImage,
     holdMs,
+    replyDelay,
     useTyping,
     useSoundIn,
     useSoundOut,
+    autoZoom,
+    zoomScale,
+    zoomSpeed,
     updatedAt:   Date.now()
   };
 }
@@ -1420,6 +1437,13 @@ function applyProjectPayload(data) {
   // Video options UI
   if (data.holdMs !== undefined && document.getElementById('inp-hold-duration')) {
     document.getElementById('inp-hold-duration').value = data.holdMs;
+    const holdVal = document.getElementById('hold-val');
+    if (holdVal) holdVal.textContent = (data.holdMs / 1000).toFixed(1) + 's';
+  }
+  if (data.replyDelay !== undefined && document.getElementById('inp-reply-delay')) {
+    document.getElementById('inp-reply-delay').value = data.replyDelay;
+    const replyVal = document.getElementById('reply-delay-val');
+    if (replyVal) replyVal.textContent = (data.replyDelay / 1000).toFixed(1) + 's';
   }
   if (data.useTyping !== undefined && document.getElementById('inp-typing')) {
     document.getElementById('inp-typing').checked = data.useTyping;
@@ -1429,6 +1453,19 @@ function applyProjectPayload(data) {
   }
   if (data.useSoundOut !== undefined && document.getElementById('inp-sound-out')) {
     document.getElementById('inp-sound-out').checked = data.useSoundOut;
+  }
+  if (data.autoZoom !== undefined && document.getElementById('inp-auto-zoom')) {
+    const inpAZ = document.getElementById('inp-auto-zoom');
+    inpAZ.checked = data.autoZoom;
+    document.getElementById('wrap-zoom-scale')?.classList.toggle('hidden', !data.autoZoom);
+  }
+  if (data.zoomScale !== undefined && document.getElementById('inp-zoom-scale')) {
+    document.getElementById('inp-zoom-scale').value = data.zoomScale;
+  }
+  if (data.zoomSpeed !== undefined && document.getElementById('inp-zoom-speed')) {
+    document.getElementById('inp-zoom-speed').value = data.zoomSpeed;
+    const speedVal = document.getElementById('zoom-speed-val');
+    if (speedVal) speedVal.textContent = parseFloat(data.zoomSpeed).toFixed(2) + 's';
   }
 
   syncBaseFields();
