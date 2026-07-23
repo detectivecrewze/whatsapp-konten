@@ -252,17 +252,41 @@
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Contact Info</p>
 
-        <!-- Name -->
+        <!-- Chat Mode (Personal vs Group) -->
         <div>
-          <label class="block text-xs text-gray-400 mb-1.5">Contact Name</label>
+          <label class="block text-xs text-gray-400 mb-1.5 font-medium">Tipe Obrolan (Chat Mode)</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-chat-personal" type="button" onclick="setChatType('personal')"
+                    class="px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
+              👤 Personal Chat
+            </button>
+            <button id="btn-chat-group" type="button" onclick="setChatType('group')"
+                    class="px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition">
+              👥 Group Chat
+            </button>
+          </div>
+        </div>
+
+        <!-- Name (Contact or Group) -->
+        <div>
+          <label id="lbl-name" class="block text-xs text-gray-400 mb-1.5">Contact Name</label>
           <input id="inp-name" type="text" placeholder="e.g. Sayang 💙"
             class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
                    placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
         </div>
 
+        <!-- Group Members Subtitle (shown only in Group Mode) -->
+        <div id="wrap-group-subtitle" class="hidden">
+          <label class="block text-xs text-gray-400 mb-1.5">Daftar Anggota Group (Subtitle)</label>
+          <input id="inp-group-subtitle" type="text" placeholder="e.g. Sinta, Budi, Anda, Agus" value="Sinta, Budi, Anda, Agus"
+                 oninput="setGroupSubtitle(this.value)"
+                 class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
+                        placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
+        </div>
+
         <!-- PFP -->
         <div>
-          <label class="block text-xs text-gray-400 mb-1.5">Profile Picture</label>
+          <label id="lbl-pfp" class="block text-xs text-gray-400 mb-1.5">Profile Picture</label>
           <label class="flex items-center gap-2.5 bg-gray-800 border border-gray-700 border-dashed
                         rounded-xl px-3.5 py-2.5 cursor-pointer hover:border-wa-accent transition group">
             <svg class="w-4 h-4 text-gray-500 group-hover:text-wa-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,6 +298,38 @@
           <div id="pfp-preview-wrap" class="hidden mt-2 flex items-center gap-2">
             <img id="pfp-preview" class="w-10 h-10 rounded-full object-cover border-2 border-wa-accent flex-shrink-0" />
             <span id="pfp-preview-name" class="text-xs text-gray-400 truncate"></span>
+          </div>
+        </div>
+
+        <!-- Phone Device OS (iPhone / Android) -->
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5 font-medium">Tampilan Device / OS Bar</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-os-ios" type="button" onclick="setPhoneOs('ios')"
+                    class="px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
+              🍎 iPhone (iOS)
+            </button>
+            <button id="btn-os-android" type="button" onclick="setPhoneOs('android')"
+                    class="px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition">
+              🤖 Android
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Battery Level -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs text-gray-400 font-medium">Persentase Baterai HP</label>
+            <span id="battery-val" class="text-xs font-bold text-emerald-400">85%</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="inp-battery" type="range" min="1" max="100" value="85"
+                   oninput="setBatteryLevel(this.value)"
+                   class="w-full accent-emerald-500 bg-gray-800 rounded-lg cursor-pointer h-2" />
+            <button type="button" onclick="setBatteryLevel(1)" title="Set Lowbat 1% (Horor/Darurat)"
+                    class="px-2 py-1 bg-red-950 text-red-400 border border-red-800/80 rounded-lg text-[10px] font-bold whitespace-nowrap hover:bg-red-900 transition">
+              🪫 1% Lowbat
+            </button>
           </div>
         </div>
 
@@ -474,7 +530,7 @@
                       box-shadow:0 25px 50px rgba(0,0,0,0.7);">
 
             <!-- STATUS BAR -->
-            <div style="display:flex; align-items:center; justify-content:space-between;
+            <div id="wa-status-bar" style="display:flex; align-items:center; justify-content:space-between;
                         padding:10px 20px 6px; background:#202C33;">
               <span id="wa-time" style="font-size:13px; font-weight:600; color:#E9EDEF;">9:41</span>
               <div style="display:flex; align-items:center; gap:6px;">
@@ -549,7 +605,7 @@
                      style="font-size:15px; font-weight:600; color:#E9EDEF;
                             white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
                             line-height:1.3; margin:0; padding:0;">Contact Name</p>
-                  <p style="font-size:12px; color:#00A884; margin:0; padding:0; line-height:1.3;">online</p>
+                  <p id="wa-status-text" style="font-size:12px; color:#00A884; margin:0; padding:0; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">online</p>
                 </td>
 
                 <!-- Action icons -->
@@ -659,6 +715,11 @@
   </div><!-- end grid -->
 </div><!-- end dashboard -->
 
+<script src="js/modules/groupChat.js"></script>
+<script src="js/modules/statusBarCustom.js"></script>
+<script src="js/modules/voiceNote.js"></script>
+<script src="js/modules/transferCard.js"></script>
+<script src="js/modules/typingIndicator.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

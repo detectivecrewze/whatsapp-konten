@@ -16,14 +16,18 @@
    1. STATE
    ============================================================ */
 const state = {
-  name:     '',
-  pfp:      null,   // data URL
-  messages: [],     // array of message objects (see addMessage)
-  scale:    2,
-  time:     '16:12', // Custom time
-  bgType:   'default', // 'default', 'color', 'image'
-  bgColor:  '#111B21',
-  bgImage:  null,
+  name:          '',
+  pfp:           null,   // data URL
+  messages:      [],     // array of message objects (see addMessage)
+  scale:         2,
+  time:          '16:12', // Custom time
+  bgType:        'default', // 'default', 'color', 'image'
+  bgColor:       '#111B21',
+  bgImage:       null,
+  phoneOs:       'ios',   // 'ios' or 'android'
+  chatType:      'personal', // 'personal' or 'group'
+  groupSubtitle: 'Sinta, Budi, Anda, Agus',
+  batteryLevel:  85,     // 1 - 100
 };
 
 // Auto-increment ID for messages
@@ -183,17 +187,21 @@ function dashboardItemHtml(msg, idx) {
   const isFirst = idx === 0;
   const isLast  = idx === state.messages.length - 1;
 
-  const isOut  = msg.direction === 'outgoing';
-  const isText = msg.type === 'text';
-  const isImg  = msg.type === 'image';
-  const isQr   = msg.type === 'qr';
+  const isOut      = msg.direction === 'outgoing';
+  const isText     = msg.type === 'text';
+  const isImg      = msg.type === 'image';
+  const isQr       = msg.type === 'qr';
+  const isVoice    = msg.type === 'voice';
+  const isTransfer = msg.type === 'transfer';
 
   const outActiveCls  = isOut  ? 'active-dir' : '';
   const inActiveCls   = !isOut ? 'active-dir' : '';
 
-  const textHide  = isText ? '' : 'hidden';
-  const imgHide   = isImg  ? '' : 'hidden';
-  const qrHide    = isQr   ? '' : 'hidden';
+  const textHide     = isText     ? '' : 'hidden';
+  const imgHide      = isImg      ? '' : 'hidden';
+  const qrHide       = isQr       ? '' : 'hidden';
+  const voiceHide    = isVoice    ? '' : 'hidden';
+  const transferHide = isTransfer ? '' : 'hidden';
 
   // QR only available for outgoing
   const qrOption = msg.direction === 'outgoing'
@@ -236,8 +244,10 @@ function dashboardItemHtml(msg, idx) {
       <select onchange="setMsgType('${msg.id}', this.value)"
               class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5
                      text-base md:text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
-        <option value="text"  ${isText ? 'selected' : ''}>✏️ Text</option>
-        <option value="image" ${isImg  ? 'selected' : ''}>🖼 Image / GIF</option>
+        <option value="text"     ${isText     ? 'selected' : ''}>✏️ Text</option>
+        <option value="voice"    ${isVoice    ? 'selected' : ''}>🎙️ Voice Note (VN)</option>
+        <option value="transfer" ${isTransfer ? 'selected' : ''}>💸 Bukti Transfer</option>
+        <option value="image"    ${isImg      ? 'selected' : ''}>🖼 Image / GIF</option>
         ${qrOption}
       </select>
 
@@ -336,8 +346,21 @@ function dashboardItemHtml(msg, idx) {
       ${hasThumbnail && isQr ? `<img src="${msg.dataUrl}" class="mt-2 w-16 h-16 object-contain border border-gray-600 rounded-lg bg-white p-1 block" />` : thumbnailHtml}
     </div>
 
+    <!-- VOICE NOTE -->
+    <div class="${voiceHide}">
+      ${renderVoiceNoteControlsHtml(msg)}
+    </div>
+
+    <!-- BUKTI TRANSFER -->
+    <div class="${transferHide}">
+      ${renderTransferCardControlsHtml(msg)}
+    </div>
+
+    <!-- Group Member Sender Input (Group Mode only) -->
+    ${state.chatType === 'group' && !isOut ? renderGroupSenderInputHtml(msg) : ''}
+
     <!-- Frame label -->
-    <p class="text-xs text-gray-600">Frame ${idx + 2} — ${msg.direction === 'outgoing' ? 'Outgoing' : 'Incoming'} ${isText ? 'Text' : isImg ? 'Image/GIF' : 'QR Code'}</p>
+    <p class="text-xs text-gray-600 pt-1">Frame ${idx + 2} — ${msg.direction === 'outgoing' ? 'Outgoing' : 'Incoming'} ${isText ? 'Text' : isVoice ? 'Voice Note' : isTransfer ? 'Bukti Transfer' : isImg ? 'Image/GIF' : 'QR Code'}</p>
   </div>
   `;
 }
@@ -386,10 +409,12 @@ function createCanvasBubble(msg, idx) {
   if (msg.type === 'text') {
     const bg = isOut ? '#005C4B' : '#202C33';
     const br = isOut ? '12px 0 12px 12px' : '0 12px 12px 12px';
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
 
     bubbleHtml = `
       <div style="background:${bg}; border-radius:${br}; max-width:270px;
                   padding:8px 10px 6px; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
+        ${groupSenderBadge}
         <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
                   word-break:break-word; white-space:pre-wrap;">${escHtml(msg.text || '')}</p>
         <div style="display:flex; justify-content:flex-end; align-items:center;
@@ -399,6 +424,18 @@ function createCanvasBubble(msg, idx) {
         </div>
       </div>
     `;
+  }
+
+  // ── VOICE NOTE bubble ─────────────────────────────────────
+  else if (msg.type === 'voice') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderVoiceNoteBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
+  }
+
+  // ── BUKTI TRANSFER bubble ──────────────────────────────────
+  else if (msg.type === 'transfer') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderTransferCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
   }
 
   // ── IMAGE / GIF bubble ────────────────────────────────────
@@ -692,6 +729,174 @@ async function handlePfpUpload(input) {
   triggerAutoSave();
 }
 
+/** Switch phone OS style: 'ios' or 'android' */
+function setPhoneOs(os) {
+  state.phoneOs = os || 'ios';
+  updatePhoneOsUI();
+  triggerAutoSave();
+}
+
+/** Render status bar icons & layout based on state.phoneOs & state.batteryLevel */
+function updatePhoneOsUI() {
+  const isIos = state.phoneOs !== 'android';
+
+  // 1. Control Panel buttons
+  const btnIos = document.getElementById('btn-os-ios');
+  const btnAndroid = document.getElementById('btn-os-android');
+
+  if (btnIos && btnAndroid) {
+    if (isIos) {
+      btnIos.className = 'px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm';
+      btnAndroid.className = 'px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition';
+    } else {
+      btnIos.className = 'px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition';
+      btnAndroid.className = 'px-3 py-2 bg-emerald-600 text-white border border-emerald-600 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm';
+    }
+  }
+
+  // 2. Delegate Status Bar Canvas HTML to statusBarCustom.js module
+  const statusBar = document.getElementById('wa-status-bar');
+  if (statusBar) {
+    statusBar.style.padding = isIos ? '10px 20px 6px' : '8px 16px 6px';
+    statusBar.innerHTML = renderCustomStatusBarHtml({
+      phoneOs: state.phoneOs,
+      clockTime: state.time || '16:12',
+      batteryLevel: state.batteryLevel || 85
+    });
+  }
+}
+
+/** Switch chat type: 'personal' or 'group' */
+function setChatType(type) {
+  state.chatType = type || 'personal';
+  updateChatTypeUI();
+  renderDashboard();
+  triggerAutoSave();
+}
+
+/** Update Chat Type UI controls & canvas header */
+function updateChatTypeUI() {
+  const isGroup = state.chatType === 'group';
+
+  // Toggle buttons
+  const btnPersonal = document.getElementById('btn-chat-personal');
+  const btnGroup = document.getElementById('btn-chat-group');
+  if (btnPersonal && btnGroup) {
+    if (isGroup) {
+      btnGroup.className = 'px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm';
+      btnPersonal.className = 'px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition';
+    } else {
+      btnPersonal.className = 'px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm';
+      btnGroup.className = 'px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition';
+    }
+  }
+
+  // Labels & Subtitle wrapper
+  const lblName = document.getElementById('lbl-name');
+  if (lblName) lblName.textContent = isGroup ? 'Nama Group' : 'Contact Name';
+
+  const wrapSub = document.getElementById('wrap-group-subtitle');
+  if (wrapSub) wrapSub.classList.toggle('hidden', !isGroup);
+
+  // Update canvas header status subtitle
+  const statusEl = document.getElementById('wa-status-text');
+  if (statusEl) {
+    statusEl.textContent = isGroup ? (state.groupSubtitle || 'Sinta, Budi, Anda, Agus') : 'online';
+  }
+}
+
+/** Update Group members list subtitle */
+function setGroupSubtitle(text) {
+  state.groupSubtitle = text;
+  const statusEl = document.getElementById('wa-status-text');
+  if (statusEl && state.chatType === 'group') {
+    statusEl.textContent = text || 'Sinta, Budi, Anda, Agus';
+  }
+  triggerAutoSave();
+}
+
+/** Set custom battery percentage (1 - 100) */
+function setBatteryLevel(val) {
+  const num = Math.max(1, Math.min(100, parseInt(val, 10) || 85));
+  state.batteryLevel = num;
+
+  const inp = document.getElementById('inp-battery');
+  if (inp) inp.value = num;
+
+  const badge = document.getElementById('battery-val');
+  if (badge) {
+    badge.textContent = `${num}%`;
+    badge.className = num <= 20 ? 'text-xs font-bold text-red-500' : 'text-xs font-bold text-emerald-400';
+  }
+
+  updatePhoneOsUI();
+  triggerAutoSave();
+}
+
+/** Set incoming sender name for a message */
+function setMsgSenderName(id, name) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.senderName = name;
+  renderCanvas();
+}
+
+/** Set incoming sender color for a message */
+function setMsgSenderColor(id, color) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.senderColor = color;
+  renderCanvas();
+}
+
+/** Set Voice Note duration string e.g. "0:14" */
+function setMsgVnDuration(id, duration) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.vnDuration = duration;
+  renderCanvas();
+}
+
+/** Set Voice Note listened/played mic status (boolean) */
+function setMsgVnPlayed(id, isPlayed) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.vnPlayed = isPlayed;
+  renderCanvas();
+}
+
+/** Set Transfer Card Nominal Amount */
+function setMsgTrAmount(id, amount) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.trAmount = amount;
+  renderCanvas();
+}
+
+/** Set Transfer Card Receiver Name */
+function setMsgTrReceiver(id, receiver) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.trReceiver = receiver;
+  renderCanvas();
+}
+
+/** Set Transfer Card Bank/E-Wallet Provider */
+function setMsgTrProvider(id, provider) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.trProvider = provider;
+  renderCanvas();
+}
+
+/** Set Transfer Card Optional Note */
+function setMsgTrNote(id, note) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.trNote = note;
+  renderCanvas();
+}
+
 /* ============================================================
    10. FRAME CONTROLLER
    Show only first N canvas messages for frame N.
@@ -723,6 +928,11 @@ function applyFrame(frameIndex) {
     btn.style.color       = isActive ? '#00A884' : '#8696A0';
     btn.style.background  = isActive ? 'rgba(0,168,132,0.1)' : '';
   });
+
+  // Trigger VN waveform animation if newly revealed frame message is a Voice Note
+  if (frameIndex > 0 && state.messages[frameIndex - 1]?.type === 'voice') {
+    triggerVnAnimationOnFrame(state.messages[frameIndex - 1].id);
+  }
 }
 
 function previewFrame(frameIndex) {
@@ -1194,6 +1404,7 @@ function playPreview() {
         <path d="M8 5v14l11-7z"/>
       </svg> Play Preview`;
     hideTyping();
+    restoreStatusHeader(state);
     applyFrame(state.messages.length + 1);
     return;
   }
@@ -1225,6 +1436,7 @@ function playPreview() {
           <path d="M8 5v14l11-7z"/>
         </svg> Play Preview`;
       hideTyping();
+      restoreStatusHeader(state);
       applyFrame(state.messages.length + 1);
       return;
     }
@@ -1345,8 +1557,12 @@ function getProjectPayload() {
     pfp:         state.pfp,
     messages:    state.messages,
     scale:       state.scale,
-    time:        state.time,
-    bgType:      state.bgType,
+    time:          state.time,
+    phoneOs:       state.phoneOs || 'ios',
+    chatType:      state.chatType || 'personal',
+    groupSubtitle: state.groupSubtitle || 'Sinta, Budi, Anda, Agus',
+    batteryLevel:  state.batteryLevel || 85,
+    bgType:        state.bgType,
     bgColor:     state.bgColor,
     bgImage:     state.bgImage,
     holdMs,
@@ -1541,11 +1757,29 @@ function applyProjectPayload(data) {
     ...m,
     id: m.id || newId()
   }));
-  state.scale    = data.scale || 2;
-  state.time     = data.time || '16:12';
-  state.bgType   = data.bgType || 'default';
-  state.bgColor  = data.bgColor || '#111B21';
-  state.bgImage  = data.bgImage || null;
+  state.scale         = data.scale || 2;
+  state.time          = data.time || '16:12';
+  state.phoneOs       = data.phoneOs || 'ios';
+  state.chatType      = data.chatType || 'personal';
+  state.groupSubtitle = data.groupSubtitle || 'Sinta, Budi, Anda, Agus';
+  state.batteryLevel  = data.batteryLevel !== undefined ? data.batteryLevel : 85;
+  state.bgType        = data.bgType || 'default';
+  state.bgColor       = data.bgColor || '#111B21';
+  state.bgImage       = data.bgImage || null;
+
+  const inpBattery = document.getElementById('inp-battery');
+  if (inpBattery) inpBattery.value = state.batteryLevel;
+  const badgeBattery = document.getElementById('battery-val');
+  if (badgeBattery) {
+    badgeBattery.textContent = `${state.batteryLevel}%`;
+    badgeBattery.className = state.batteryLevel <= 20 ? 'text-xs font-bold text-red-500' : 'text-xs font-bold text-emerald-400';
+  }
+
+  const inpGroupSub = document.getElementById('inp-group-subtitle');
+  if (inpGroupSub) inpGroupSub.value = state.groupSubtitle;
+
+  updateChatTypeUI();
+  updatePhoneOsUI();
 
   // Max msg counter ID sync
   _msgIdCounter = state.messages.reduce((max, m) => {
