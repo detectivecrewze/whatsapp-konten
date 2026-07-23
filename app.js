@@ -50,6 +50,9 @@ function escHtml(str) {
 
 /** Return custom time for messages */
 function msgTime(index) {
+  if (typeof index === 'number' && state.messages[index] && state.messages[index].time) {
+    return state.messages[index].time;
+  }
   return state.time || '16:12';
 }
 
@@ -196,22 +199,24 @@ function dashboardItemHtml(msg, idx) {
   const isDeleted  = msg.type === 'deleted';
   const isLocation = msg.type === 'location';
   const isViewOnce = msg.type === 'view_once';
-  const isDocument = msg.type === 'document';
-  const isCall     = msg.type === 'call';
+  const isDocument    = msg.type === 'document';
+  const isCall        = msg.type === 'call';
+  const isStatusReply = msg.type === 'status_reply';
 
   const outActiveCls  = isOut  ? 'active-dir' : '';
   const inActiveCls   = !isOut ? 'active-dir' : '';
 
-  const textHide     = isText     ? '' : 'hidden';
-  const imgHide      = isImg      ? '' : 'hidden';
-  const qrHide       = isQr       ? '' : 'hidden';
-  const voiceHide    = isVoice    ? '' : 'hidden';
-  const transferHide = isTransfer ? '' : 'hidden';
-  const deletedHide  = isDeleted  ? '' : 'hidden';
-  const locationHide = isLocation ? '' : 'hidden';
-  const viewOnceHide = isViewOnce ? '' : 'hidden';
-  const documentHide = isDocument ? '' : 'hidden';
-  const callHide     = isCall     ? '' : 'hidden';
+  const textHide        = isText        ? '' : 'hidden';
+  const imgHide         = isImg         ? '' : 'hidden';
+  const qrHide          = isQr          ? '' : 'hidden';
+  const voiceHide       = isVoice       ? '' : 'hidden';
+  const transferHide    = isTransfer    ? '' : 'hidden';
+  const deletedHide     = isDeleted     ? '' : 'hidden';
+  const locationHide    = isLocation    ? '' : 'hidden';
+  const viewOnceHide    = isViewOnce    ? '' : 'hidden';
+  const documentHide    = isDocument    ? '' : 'hidden';
+  const callHide        = isCall        ? '' : 'hidden';
+  const statusReplyHide = isStatusReply ? '' : 'hidden';
 
   // QR only available for outgoing
   const qrOption = msg.direction === 'outgoing'
@@ -254,17 +259,26 @@ function dashboardItemHtml(msg, idx) {
       <select onchange="setMsgType('${msg.id}', this.value)"
               class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5
                      text-base md:text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
-        <option value="text"      ${isText     ? 'selected' : ''}>✏️ Text</option>
-        <option value="voice"     ${isVoice    ? 'selected' : ''}>🎙️ Voice Note (VN)</option>
-        <option value="call"      ${isCall     ? 'selected' : ''}>📞/📹 Panggilan (Voice/Video Call)</option>
-        <option value="transfer"  ${isTransfer ? 'selected' : ''}>💸 Bukti Transfer</option>
-        <option value="view_once" ${isViewOnce ? 'selected' : ''}>① Foto Sekali Lihat</option>
-        <option value="document"  ${isDocument ? 'selected' : ''}>📄 Dokumen PDF</option>
-        <option value="location"  ${isLocation ? 'selected' : ''}>📍 Lokasi Langsung</option>
-        <option value="deleted"   ${isDeleted  ? 'selected' : ''}>🚫 Pesan Terhapus</option>
-        <option value="image"     ${isImg      ? 'selected' : ''}>🖼 Image / GIF</option>
+        <option value="text"         ${isText        ? 'selected' : ''}>✏️ Text</option>
+        <option value="status_reply" ${isStatusReply ? 'selected' : ''}>💬 Balasan Status / Story</option>
+        <option value="voice"        ${isVoice       ? 'selected' : ''}>🎙️ Voice Note (VN)</option>
+        <option value="call"         ${isCall        ? 'selected' : ''}>📞/📹 Panggilan (Voice/Video Call)</option>
+        <option value="transfer"     ${isTransfer    ? 'selected' : ''}>💸 Bukti Transfer</option>
+        <option value="view_once"    ${isViewOnce    ? 'selected' : ''}>① Foto Sekali Lihat</option>
+        <option value="document"     ${isDocument    ? 'selected' : ''}>📄 Dokumen PDF</option>
+        <option value="location"     ${isLocation    ? 'selected' : ''}>📍 Lokasi Langsung</option>
+        <option value="deleted"      ${isDeleted     ? 'selected' : ''}>🚫 Pesan Terhapus</option>
+        <option value="image"        ${isImg         ? 'selected' : ''}>🖼 Image / GIF</option>
         ${qrOption}
       </select>
+
+      <!-- Custom Message Time Input -->
+      <div class="flex items-center gap-1 bg-gray-700/80 border border-gray-600 rounded-lg px-1.5 py-1 flex-shrink-0" title="Jam Pesan Khusus (misal: 00:05)">
+        <span class="text-[10px] text-gray-400">🕒</span>
+        <input type="text" placeholder="${state.time || '16:12'}" value="${escHtml(msg.time || '')}"
+               oninput="setMsgTime('${msg.id}', this.value)"
+               class="w-12 bg-transparent text-xs text-white placeholder-gray-500 focus:outline-none text-center font-mono font-medium" />
+      </div>
 
       <!-- Move up -->
       <button onclick="moveMsg('${msg.id}', -1)" ${isFirst ? 'disabled' : ''}
@@ -396,6 +410,11 @@ function dashboardItemHtml(msg, idx) {
       ${renderCallCardControlsHtml(msg)}
     </div>
 
+    <!-- BALASAN STATUS / STORY WA -->
+    <div class="${statusReplyHide}">
+      ${renderStatusReplyControlsHtml(msg)}
+    </div>
+
     <!-- Group Member Sender Input (Group Mode only) -->
     ${state.chatType === 'group' && !isOut ? renderGroupSenderInputHtml(msg) : ''}
 
@@ -506,6 +525,12 @@ function createCanvasBubble(msg, idx) {
   else if (msg.type === 'call') {
     const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
     bubbleHtml = renderCallCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
+  }
+
+  // ── STATUS / STORY REPLY bubble ───────────────────────────
+  else if (msg.type === 'status_reply') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderStatusReplyBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
   }
 
   // ── IMAGE / GIF bubble ────────────────────────────────────
@@ -1070,6 +1095,37 @@ function setMsgCallDuration(id, duration) {
   renderCanvas();
 }
 
+/** Set Status Author (e.g. "Status Anda" / "Nadin") */
+function setMsgStatusAuthor(id, author) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.statusAuthor = author;
+  renderCanvas();
+}
+
+/** Set Status Text Preview */
+function setMsgStatusText(id, text) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.statusText = text;
+  renderCanvas();
+}
+
+/** Handle Status Image Upload for Story Reply Thumbnail */
+function handleStatusImgUpload(id, input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const msg = state.messages.find(m => m.id === id);
+    if (!msg) return;
+    msg.statusDataUrl = e.target.result;
+    renderCanvas();
+    renderDashboard();
+  };
+  reader.readAsDataURL(file);
+}
+
 /** Set View Once Photo Opened Status */
 function setMsgViewOnceOpened(id, isOpened) {
   const msg = state.messages.find(m => m.id === id);
@@ -1100,6 +1156,40 @@ function setMsgDocSize(id, size) {
   if (!msg) return;
   msg.docSize = size;
   renderCanvas();
+}
+
+/** Set Custom Time for an Individual Message */
+function setMsgTime(id, time) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.time = time;
+  renderCanvas();
+}
+
+/** Auto sequence message timestamps with a custom gap (e.g. +1 minute per chat) */
+function autoSequenceMsgTimes(gapMinutes = 1) {
+  if (state.messages.length === 0) return;
+  let startTime = state.time || '12:00';
+  let [h, m] = startTime.split(':').map(n => parseInt(n, 10) || 0);
+
+  state.messages.forEach((msg, idx) => {
+    if (idx === 0) {
+      msg.time = startTime;
+    } else {
+      m += gapMinutes;
+      if (m >= 60) {
+        h = (h + Math.floor(m / 60)) % 24;
+        m = m % 60;
+      }
+      const hh = h.toString().padStart(2, '0');
+      const mm = m.toString().padStart(2, '0');
+      msg.time = `${hh}:${mm}`;
+    }
+  });
+
+  renderCanvas();
+  renderDashboard();
+  triggerAutoSave();
 }
 
 /* ============================================================

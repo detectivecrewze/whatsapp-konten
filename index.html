@@ -412,16 +412,24 @@
 
       <!-- Dynamic Message Builder -->
       <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Chat Sequence</p>
-          <button onclick="addMessage()"
-            class="flex items-center gap-1 text-xs bg-wa-accent/20 hover:bg-wa-accent/30 text-wa-accent
-                   px-2.5 py-1.5 rounded-lg transition font-medium">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Add Message
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="autoSequenceMsgTimes(1)"
+                    title="Otomatis beri jeda +1 menit secara berurutan untuk semua pesan"
+                    class="flex items-center gap-1 text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-400
+                           px-2.5 py-1.5 rounded-lg transition font-medium border border-amber-500/30">
+              ⚡ Auto Jeda +1 Mnt
+            </button>
+            <button onclick="addMessage()"
+                    class="flex items-center gap-1 text-xs bg-wa-accent/20 hover:bg-wa-accent/30 text-wa-accent
+                           px-2.5 py-1.5 rounded-lg transition font-medium">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add Message
+            </button>
+          </div>
         </div>
 
         <!-- Message list -->
@@ -770,6 +778,7 @@
 <script src="js/modules/viewOnce.js"></script>
 <script src="js/modules/documentCard.js"></script>
 <script src="js/modules/callCards.js"></script>
+<script src="js/modules/statusReply.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

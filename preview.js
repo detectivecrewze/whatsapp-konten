@@ -19,6 +19,9 @@ function escHtml(str) {
 }
 
 function msgTime(index) {
+  if (typeof index === 'number' && previewState && previewState.messages && previewState.messages[index] && previewState.messages[index].time) {
+    return previewState.messages[index].time;
+  }
   return (previewState && previewState.time) ? previewState.time : '16:12';
 }
 
@@ -107,6 +110,11 @@ function createBubble(msg, idx) {
   // RIWAYAT PANGGILAN (VOICE / VIDEO)
   else if (msg.type === 'call' && typeof renderCallCardBubble === 'function') {
     html = renderCallCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
+  // BALASAN STATUS / STORY WA
+  else if (msg.type === 'status_reply' && typeof renderStatusReplyBubble === 'function') {
+    html = renderStatusReplyBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
   }
 
   // IMAGE / GIF
