@@ -85,9 +85,9 @@ function debounce(fn, ms = 250) {
    ============================================================ */
 
 function svgReadTicks() {
-  return `<svg width="14" height="10" viewBox="0 0 18 11" fill="none">
-    <path d="M1 5.5L5.5 10L17 1" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M7 5.5L11.5 10" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round"/>
+  return `<svg width="16" height="11" viewBox="0 0 18 11" fill="none" style="flex-shrink:0;">
+    <path d="M1 5.5L5.5 10L11 2" stroke="#53BDEB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M7 5.5L11.5 10L17 2" stroke="#53BDEB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
 }
 
