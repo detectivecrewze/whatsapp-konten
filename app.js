@@ -1581,6 +1581,8 @@ function handleSelectTemplate(val) {
   }
 }
 
+let _isNewBlankProject = false;
+
 async function saveCurrentTemplate(isCloud = true) {
   const currentVal = document.getElementById('tpl-select')?.value || 'auto';
   const payload = getProjectPayload();
@@ -1593,32 +1595,25 @@ async function saveCurrentTemplate(isCloud = true) {
   let cleanId = null;
   let tplName = '';
 
-  // 1. If an existing Cloud Preset is selected, update it DIRECTLY without prompt dialog!
-  if (currentVal.startsWith('cloud_')) {
+  // 1. If an existing Cloud Preset is selected AND not a new blank project, update it DIRECTLY!
+  if (currentVal.startsWith('cloud_') && !_isNewBlankProject) {
     cleanId = currentVal.replace('cloud_', '');
     if (_cloudTemplates[cleanId]) {
       tplName = _cloudTemplates[cleanId].name;
     }
   }
 
-  // 2. If in Draft mode, prompt once for the new Preset Name
+  // 2. If in Draft mode or New Blank Project, prompt for a NEW Preset Name
   if (!cleanId) {
-    const inputName = prompt('Nama Preset Cloud Baru:', state.name || 'My WA Preset');
+    const inputName = prompt('Nama Preset Cloud Baru:', state.name || '');
     if (!inputName || !inputName.trim()) return;
     tplName = inputName.trim();
-
-    // Check if another preset has the exact same name
-    const matchedKey = Object.keys(_cloudTemplates).find(
-      key => _cloudTemplates[key]?.name?.toLowerCase() === tplName.toLowerCase()
-    );
-    if (matchedKey) {
-      cleanId = matchedKey;
-    } else {
-      cleanId = `${Date.now()}`;
-    }
+    cleanId = `${Date.now()}`;
   }
 
-  // Overwrite / Save preset in _cloudTemplates
+  _isNewBlankProject = false;
+
+  // Save/Overwrite preset in _cloudTemplates
   _cloudTemplates[cleanId] = {
     id: cleanId,
     name: tplName,
@@ -1637,7 +1632,7 @@ async function saveCurrentTemplate(isCloud = true) {
     });
     if (!res.ok) throw new Error('Cloud save failed');
     renderTemplateDropdown(`cloud_${cleanId}`);
-    showToast(`☁️ Preset "${tplName}" berhasil di-update!`);
+    showToast(`☁️ Preset "${tplName}" tersimpan di Team Cloud!`);
   } catch (e) {
     alert('⚠️ Gagal menyimpan ke Cloud Worker. Periksa koneksi atau Passcode Tim.');
   }
@@ -1691,6 +1686,7 @@ async function deleteCurrentTemplate() {
 
 function createNewProject() {
   if (confirm('Buat project baru yang kosong? (Draft saat ini akan di-reset)')) {
+    _isNewBlankProject = true;
     applyProjectPayload({
       name: '',
       pfp: null,
