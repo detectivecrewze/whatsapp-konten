@@ -301,6 +301,13 @@ function dashboardItemHtml(msg, idx) {
                class="w-12 bg-transparent text-xs text-white placeholder-gray-500 focus:outline-none text-center font-mono font-medium" />
       </div>
 
+      <!-- Selective Zoom Toggle -->
+      <button onclick="toggleMsgZoom('${msg.id}')"
+              title="Aktifkan efek zoom khusus hanya untuk pesan ini saat animasi video"
+              class="px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 flex-shrink-0 ${msg.enableZoom ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-sm' : 'bg-gray-700/80 text-gray-400 border border-gray-600 hover:text-white'}">
+        🔍 ${msg.enableZoom ? 'Zoom ON' : 'Zoom'}
+      </button>
+
       <!-- Move up -->
       <button onclick="moveMsg('${msg.id}', -1)" ${isFirst ? 'disabled' : ''}
               class="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-white
@@ -1330,6 +1337,15 @@ function autoSequenceMsgTimes(gapMinutes = 1) {
   });
 
   renderCanvas();
+  renderDashboard();
+  triggerAutoSave();
+}
+
+/** Toggle Selective Zoom on a specific message */
+function toggleMsgZoom(id) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.enableZoom = !msg.enableZoom;
   renderDashboard();
   triggerAutoSave();
 }

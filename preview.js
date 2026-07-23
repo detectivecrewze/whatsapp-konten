@@ -341,11 +341,13 @@ async function startAnimation() {
   for (let f = 0; f < totalF; f++) {
     const isOut = messages[f].direction === 'outgoing';
 
-    // If autoZoom is enabled and this is not the first message, zoom out completely first
-    if (autoZoom && f > 0) {
+    // Check if any message has explicit selective zoom enabled (msg.enableZoom === true)
+    const hasSelectiveZoom = messages.some(m => m.enableZoom === true);
+    const shouldZoomThisMsg = hasSelectiveZoom ? !!messages[f].enableZoom : autoZoom;
+
+    // Reset zoom before transition if current message is not zoomed
+    if (f > 0 && !shouldZoomThisMsg) {
       resetZoom();
-      const zoomSleep = Math.round((previewState.zoomSpeed || 0.45) * 1000);
-      await sleep(zoomSleep); // Wait for full custom zoom-out transition to complete
     }
 
     // Typing indicator / Reply delay before incoming replies
@@ -374,8 +376,10 @@ async function startAnimation() {
     
     // Auto-Zoom Punch-In Camera Effect to new message
     const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
-    if (autoZoom && msgEl) {
+    if (shouldZoomThisMsg && msgEl) {
       triggerAutoZoom(msgEl, isOut);
+    } else {
+      resetZoom();
     }
 
     // Play sound
