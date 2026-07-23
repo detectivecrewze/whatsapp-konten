@@ -526,10 +526,11 @@ async function startAnimation() {
   // Animate frame by frame
   for (let f = 0; f < totalF; f++) {
     const isOut = messages[f].direction === 'outgoing';
+    const isNotification = messages[f].type === 'notification';
 
     // Check if any message has explicit selective zoom enabled (msg.enableZoom === true)
     const hasSelectiveZoom = messages.some(m => m.enableZoom === true);
-    const shouldZoomThisMsg = hasSelectiveZoom ? !!messages[f].enableZoom : autoZoom;
+    const shouldZoomThisMsg = isNotification ? false : (hasSelectiveZoom ? !!messages[f].enableZoom : autoZoom);
 
     // Typing indicator / Reply delay before incoming replies
     if (f > 0 && messages[f].direction === 'incoming') {
@@ -555,9 +556,9 @@ async function startAnimation() {
     // Reveal this message with slide-in animation
     applyFrame(f + 1);
     
-    // Auto-Zoom Punch-In Camera Effect to new message
+    // Auto-Zoom Punch-In Camera Effect (Disabled for Floating Notification Banners)
     const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
-    if (shouldZoomThisMsg && msgEl) {
+    if (shouldZoomThisMsg && msgEl && !isNotification) {
       triggerAutoZoom(msgEl, isOut, messages[f].customScale);
     } else {
       resetZoom();
