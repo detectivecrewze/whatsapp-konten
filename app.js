@@ -293,33 +293,12 @@ function dashboardItemHtml(msg, idx) {
         ${qrOption}
       </select>
 
-      <!-- Custom Message Time Input -->
-      <div class="flex items-center gap-1 bg-gray-700/80 border border-gray-600 rounded-lg px-1.5 py-1 flex-shrink-0" title="Jam Pesan Khusus (misal: 00:05)">
-        <span class="text-[10px] text-gray-400">🕒</span>
-        <input type="text" placeholder="${state.time || '16:12'}" value="${escHtml(msg.time || '')}"
-               oninput="setMsgTime('${msg.id}', this.value)"
-               class="w-12 bg-transparent text-xs text-white placeholder-gray-500 focus:outline-none text-center font-mono font-medium" />
-      </div>
-
-      <!-- Selective Zoom Toggle & Custom Scale Selector -->
-      <div class="flex items-center gap-1 flex-shrink-0">
-        <button onclick="toggleMsgZoom('${msg.id}')"
-                title="Aktifkan efek zoom khusus hanya untuk pesan ini saat animasi video"
-                class="px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${msg.enableZoom ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-sm' : 'bg-gray-700/80 text-gray-400 border border-gray-600 hover:text-white'}">
-          🔍 ${msg.enableZoom ? 'Zoom ON' : 'Zoom'}
-        </button>
-        ${msg.enableZoom ? `
-        <select onchange="setMsgCustomZoomScale('${msg.id}', this.value)"
-                title="Skala zoom khusus pesan ini"
-                class="bg-amber-950/80 border border-amber-500/40 rounded-lg px-1 py-1 text-[11px] text-amber-200 font-mono focus:outline-none">
-          <option value="1.15" ${msg.customScale === '1.15' ? 'selected' : ''}>1.15×</option>
-          <option value="1.30" ${(!msg.customScale || msg.customScale === '1.30') ? 'selected' : ''}>1.30×</option>
-          <option value="1.50" ${msg.customScale === '1.50' ? 'selected' : ''}>1.50×</option>
-          <option value="1.80" ${msg.customScale === '1.80' ? 'selected' : ''}>1.80×</option>
-          <option value="2.20" ${msg.customScale === '2.20' ? 'selected' : ''}>2.20×</option>
-        </select>
-        ` : ''}
-      </div>
+      <!-- Advanced Settings Button ⚙️ -->
+      <button onclick="toggleMsgAdvSettings('${msg.id}')"
+              title="Pengaturan Khusus Pesan (Jam Custom & Zoom Kamera)"
+              class="px-2 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 flex-shrink-0 ${msg.showAdvSettings || msg.enableZoom || msg.time ? 'bg-wa-accent/20 text-wa-accent border border-wa-accent/50 shadow-sm' : 'bg-gray-700/80 text-gray-400 border border-gray-600 hover:text-white'}">
+        ⚙️ ${msg.enableZoom || msg.time ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>' : ''}
+      </button>
 
       <!-- Move up -->
       <button onclick="moveMsg('${msg.id}', -1)" ${isFirst ? 'disabled' : ''}
@@ -334,6 +313,40 @@ function dashboardItemHtml(msg, idx) {
               class="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:text-red-400
                      hover:bg-red-900/20 transition flex-shrink-0 text-xs">✕</button>
     </div>
+
+    <!-- ⚙️ Advanced Message Options Panel (Custom Time & Zoom) -->
+    ${msg.showAdvSettings ? `
+    <div class="mb-3 p-2.5 bg-gray-900/80 border border-gray-700/80 rounded-xl space-y-2 text-xs">
+      <div class="flex items-center justify-between font-bold text-gray-300 border-b border-gray-800 pb-1 text-[11px]">
+        <span>⚙️ OPSI KHUSUS PESAN INI</span>
+        <button onclick="toggleMsgAdvSettings('${msg.id}')" class="text-gray-400 hover:text-white">✕ Close</button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 pt-0.5">
+        <!-- Custom Time -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-gray-400 font-medium">🕒 Jam Custom:</span>
+          <input type="text" placeholder="${state.time || '16:12'}" value="${escHtml(msg.time || '')}"
+                 oninput="setMsgTime('${msg.id}', this.value)"
+                 class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white placeholder-gray-500 focus:outline-none text-center font-mono font-medium" />
+        </div>
+
+        <!-- Zoom Camera Custom -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-gray-400 font-medium">🔍 Zoom Kamera:</span>
+          <select onchange="handleMsgZoomSelect('${msg.id}', this.value)"
+                  class="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono focus:outline-none cursor-pointer">
+            <option value="off" ${!msg.enableZoom ? 'selected' : ''}>OFF (Tanpa Zoom)</option>
+            <option value="1.15" ${msg.enableZoom && msg.customScale === '1.15' ? 'selected' : ''}>1.15× (Soft Zoom)</option>
+            <option value="1.30" ${msg.enableZoom && (!msg.customScale || msg.customScale === '1.30') ? 'selected' : ''}>1.30× (Standard)</option>
+            <option value="1.50" ${msg.enableZoom && msg.customScale === '1.50' ? 'selected' : ''}>1.50× (Drama Focus)</option>
+            <option value="1.80" ${msg.enableZoom && msg.customScale === '1.80' ? 'selected' : ''}>1.80× (Close-Up)</option>
+            <option value="2.20" ${msg.enableZoom && msg.customScale === '2.20' ? 'selected' : ''}>2.20× (Extreme)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    ` : ''}
 
     <!-- Row 2: Content input (conditional) -->
 
@@ -1416,6 +1429,44 @@ function setMsgCustomZoomScale(id, scaleVal) {
   if (msgEl) {
     triggerAutoZoomEditor(msgEl, msg.direction === 'outgoing', scaleVal);
   }
+  triggerAutoSave();
+}
+
+function toggleMsgAdvSettings(id) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.showAdvSettings = !msg.showAdvSettings;
+  renderDashboard();
+}
+
+function handleMsgZoomSelect(id, value) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+
+  if (value === 'off') {
+    msg.enableZoom = false;
+  } else {
+    msg.enableZoom = true;
+    msg.customScale = value;
+    
+    // Make sure autoZoom is active
+    const chkAuto = document.getElementById('inp-auto-zoom');
+    if (chkAuto && !chkAuto.checked) {
+      chkAuto.checked = true;
+    }
+  }
+
+  renderDashboard();
+
+  setTimeout(() => {
+    const msgEl = document.querySelector(`#wa-messages > div[data-msg-id="${id}"]`);
+    if (msg.enableZoom && msgEl) {
+      triggerAutoZoomEditor(msgEl, msg.direction === 'outgoing', msg.customScale);
+    } else {
+      resetZoomEditor();
+    }
+  }, 50);
+
   triggerAutoSave();
 }
 
