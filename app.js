@@ -1341,12 +1341,58 @@ function autoSequenceMsgTimes(gapMinutes = 1) {
   triggerAutoSave();
 }
 
+function resetZoomEditor() {
+  const messagesContainer = document.getElementById('wa-messages');
+  if (!messagesContainer) return;
+  const zoomSpeed = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
+  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
+  messagesContainer.style.transformOrigin = 'center center';
+  messagesContainer.style.transform = 'scale(1)';
+}
+
+function triggerAutoZoomEditor(msgEl, isOut) {
+  if (!msgEl) return;
+  const messagesContainer = document.getElementById('wa-messages');
+  if (!messagesContainer) return;
+
+  const zoomIntensity = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.20');
+  const zoomSpeed     = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
+
+  const bubbleCenterY = msgEl.offsetTop + msgEl.offsetHeight / 2;
+  const originX = isOut ? '85%' : '15%';
+
+  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
+  messagesContainer.style.transformOrigin = `${originX} ${bubbleCenterY}px`;
+  messagesContainer.style.transform = `scale(${zoomIntensity})`;
+}
+
 /** Toggle Selective Zoom on a specific message */
 function toggleMsgZoom(id) {
   const msg = state.messages.find(m => m.id === id);
   if (!msg) return;
   msg.enableZoom = !msg.enableZoom;
+
+  // Make sure autoZoom setting is checked if any message enables zoom
+  if (msg.enableZoom) {
+    const chkAuto = document.getElementById('inp-auto-zoom');
+    if (chkAuto && !chkAuto.checked) {
+      chkAuto.checked = true;
+      document.getElementById('wrap-zoom-scale')?.classList.remove('hidden');
+    }
+  }
+
   renderDashboard();
+
+  // Instantly preview zoom on editor canvas if Zoom ON
+  setTimeout(() => {
+    const msgEl = document.querySelector(`#wa-messages > div[data-msg-id="${id}"]`);
+    if (msg.enableZoom && msgEl) {
+      triggerAutoZoomEditor(msgEl, msg.direction === 'outgoing');
+    } else {
+      resetZoomEditor();
+    }
+  }, 50);
+
   triggerAutoSave();
 }
 
@@ -1929,6 +1975,19 @@ function playPreview() {
     const targetMsg = (frame >= 1 && frame <= state.messages.length) ? state.messages[frame - 1] : null;
     const isTextMsg = targetMsg && targetMsg.type === 'text';
 
+    const hasSelectiveZoom = state.messages.some(m => m.enableZoom === true);
+    const autoZoomSetting = document.getElementById('inp-auto-zoom')?.checked ?? false;
+    const shouldZoomMsg = hasSelectiveZoom ? !!targetMsg?.enableZoom : autoZoomSetting;
+
+    const handleZoomAnimation = () => {
+      if (shouldZoomMsg && targetMsg) {
+        const msgEl = document.querySelector(`#wa-messages > div[data-msg-id="${targetMsg.id}"]`);
+        if (msgEl) triggerAutoZoomEditor(msgEl, targetMsg.direction === 'outgoing');
+      } else {
+        resetZoomEditor();
+      }
+    };
+
     if (useTyping && isTextMsg) {
       if (targetMsg.direction === 'incoming' && typeof showTypingIndicatorHeader === 'function') {
         showTypingIndicatorHeader('mengetik');
@@ -1942,6 +2001,7 @@ function playPreview() {
           restoreStatusHeader(state);
         }
         applyFrame(frame); 
+        handleZoomAnimation();
         playSoundIfIncoming(frame);
       }, 800);
     } else {
@@ -1953,6 +2013,7 @@ function playPreview() {
       }
       applyFrame(frame);
       if (frame >= 1 && frame <= state.messages.length) {
+        handleZoomAnimation();
         playSoundIfIncoming(frame);
       }
     }

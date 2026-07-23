@@ -288,7 +288,7 @@ function resetZoom() {
 }
 
 function triggerAutoZoom(msgEl, isOut) {
-  if (!previewState || !previewState.autoZoom || !msgEl) return;
+  if (!previewState || !msgEl) return;
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
 
