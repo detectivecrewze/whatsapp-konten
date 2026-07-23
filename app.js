@@ -3118,13 +3118,27 @@ async function generateAiScript() {
   try {
     let aiData = null;
 
-    // Check if user has Gemini API Key or Worker configured
-    const apiKey = localStorage.getItem('gemini_api_key') || window.GEMINI_API_KEY;
-    if (apiKey) {
-      aiData = await fetchScriptFromGeminiApi(userPrompt, apiKey);
-    } else {
-      // Simulate realistic AI generation with smart dynamic story synthesis
-      await sleep(1200); // Realistic AI thinking pause
+    // 1. Try Cloudflare Worker Gemini AI Endpoint first
+    const workerAiUrl = 'https://wa-templates-worker.aldoramadhan16.workers.dev/ai-script';
+    try {
+      const res = await fetch(workerAiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userPrompt })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.messages && json.messages.length > 0) {
+          aiData = json;
+        }
+      }
+    } catch (e) {
+      console.warn('Worker AI Endpoint unavailable, falling back to smart local engine:', e);
+    }
+
+    // 2. Fallback to smart local generator engine if worker is offline/unreachable
+    if (!aiData) {
+      await sleep(1000);
       aiData = generateSmartAiStory(userPrompt);
     }
 
