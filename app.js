@@ -1537,7 +1537,10 @@ function applyProjectPayload(data) {
 
   state.name     = data.name || '';
   state.pfp      = data.pfp || null;
-  state.messages = Array.isArray(data.messages) ? data.messages : [];
+  state.messages = (Array.isArray(data.messages) ? data.messages : []).map(m => ({
+    ...m,
+    id: m.id || newId()
+  }));
   state.scale    = data.scale || 2;
   state.time     = data.time || '16:12';
   state.bgType   = data.bgType || 'default';
@@ -2205,7 +2208,9 @@ function loadScriptPreset(scriptKey) {
   if (!tpl) return;
 
   if (confirm(`Muat naskah "${tpl.name}"? (Pesan saat ini akan digantikan)`)) {
-    applyProjectPayload(tpl.data);
+    const payload = JSON.parse(JSON.stringify(tpl.data));
+    payload.messages = (payload.messages || []).map(m => ({ ...m, id: newId() }));
+    applyProjectPayload(payload);
     showToast(`✨ Naskah "${tpl.name}" berhasil dimuat! Tinggal Play Preview.`);
   }
 }
