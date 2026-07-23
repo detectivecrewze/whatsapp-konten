@@ -102,11 +102,17 @@ Aturan Penulisan Gaya Chat WhatsApp (SANGAT PENTING):
      - Pembaca LANGSUNG SADAR SEKETIKA (INSTANT CHILLS! ⚡): Sosok yang dari tadi membalas chat di room WA itu BUKAN IBU!
      - Lalu pesan terakhir di room chat membalas singkat & dingin (misal: "Kok tau ibu baru sampe airport?").
 
-3. ELEVENLABS AUDIO EMOTION TAGS (SANGAT PENTING UNTUK SUARA AI ELEVENLABS):
-   - Sisipkan Audio Tag ElevenLabs ber-kurung siku di AWAL setiap properti "text" bubble pesan (seperti: [scared][whispers], [nervous], [angry], [gasps], [sighs], [crying], [excited]).
-   - Contoh:
-     { "type": "text", "direction": "outgoing", "time": "02:15", "text": "[scared][whispers] Bu... ada yang berdiri di luar kamar..." }
-     { "type": "text", "direction": "incoming", "time": "02:16", "text": "[nervous] Jangan dibuka! Kunci pintunya sekarang!" }
+3. ELEVENLABS DRAMATIC AUDIO TAGS & FORMATTING (SANGAT PENTING UTK AKTING SUARA ELEVENLABS V3):
+   - AI ElevenLabs v3 SANGAT PEKA terhadap simbol tanda baca, kapitalisasi, dan Audio Tag.
+   - DI SETIAP BUBBLE PESAN, WAJIB kombinasikan Audio Tag & Tanda Baca Dramatis:
+     a) TAG EMOSI KURUNG SIKU di awal: [scared][whispers], [panicked][shouting], [gasp][fearful], [crying][desperate], [trembling][quietly], [angry][shouting], [sighs][sad].
+     b) JEDA DENGAN TITIK-TITIK (... / ......): Gunakan titik-titik untuk jeda napas, ketakutan, & rasa ragu. Contoh: [scared][whispers] Bu...... di luar...... ada yang berdiri......
+     c) TERIAKAN / EMOSI PUNCAK KETIK KAPITAL (ALL CAPS): Gunakan ALL CAPS untuk teriakan atau penekanan panik. Contoh: [panicked] JANGAN BUKA PINTUNYA!
+     d) TERPOTONG MENDADAK DENGAN STRIP (—): Contoh: [scared] Aku lihat bayangan—
+     e) GAGAP KETAKUTAN: Tulis huruf berulang K-kamu..., B-bu... untuk akting gagap ketakutan.
+   - Contoh gabungan sempurna:
+     { "type": "text", "direction": "outgoing", "time": "02:15", "text": "[scared][whispers] B-bu...... di luar kamar...... ada yang ketuk pintu......" }
+     { "type": "text", "direction": "incoming", "time": "02:16", "text": "[panicked][shouting] JANGAN BUKA PINTUNYA! KUNCI SEKARANG!" }
 
 4. ATURAN FITUR:
    - DILARANG MENGGUNAKAN type "voice" (Voice Note).

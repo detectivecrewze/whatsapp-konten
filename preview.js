@@ -351,8 +351,8 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   const modelToUse = (previewState && previewState.elevenModel) ? previewState.elevenModel : 'eleven_v3';
 
   // Use manual sliders if set, otherwise extreme horror defaults
-  const stability  = (previewState && previewState.ttsStability != null) ? previewState.ttsStability : 0.25;
-  const style      = (previewState && previewState.ttsStyle      != null) ? previewState.ttsStyle      : 0.50;
+  const stability  = (previewState && previewState.ttsStability != null) ? previewState.ttsStability : 0.15;
+  const style      = (previewState && previewState.ttsStyle      != null) ? previewState.ttsStyle      : 0.65;
 
   const voiceSettings = {
     stability:          stability,
