@@ -80,13 +80,13 @@ Hasilkan JSON valid dengan format persis berikut:
   "messages": [
     { "type": "text", "direction": "incoming", "senderName": "Budi", "senderColor": "#25D366", "time": "21:15", "text": "isi pesan" },
     { "type": "image", "direction": "outgoing", "time": "21:16", "caption": "Nih liat fotonya!", "imgDesc": "Foto bukti transfer / barang / lokasi / suasana" },
-    { "type": "notification", "direction": "incoming", "senderName": "Ex Sayang 💔", "time": "21:17", "text": "Kamu masih sendirian di kontrakan?" },
+    { "type": "notification", "direction": "incoming", "senderName": "Ibu 👩", "time": "21:17", "text": "Adek dari tadi sore tidur di kamar rumah, kamu sama siapa di kontrakan?", "customHoldMs": 4000 },
     { "type": "voice", "direction": "incoming", "senderName": "Sinta", "senderColor": "#e542a3", "time": "21:18", "vnDuration": "0:14", "text": "" }
   ]
 }
 
 Syarat Wajib Naskah:
-1. PESAN NOTIFIKASI POPUP (PUSH NOTIFICATION): Apabila cerita melibatkan pesan mendadak dari orang ketiga/pihak luar (misal: mantan nge-chat pas lagi obrolan lain, notifikasi transfer bank, chat peringatan horor dari teman lain), sisipkan pesan ber-type "notification" dengan "senderName" dan "text"!
+1. STRATEGI NOTIFIKASI POPUP (PUSH NOTIFICATION & PLOT TWIST): Gunakan "type": "notification" secara STRATEGIS di momen KLIMAKS / PLOT TWIST / KEJUTAN MENDADAK! Sangat disarankan dipakai di cerita Horor (misal notifikasi dari Ibu/Teman di luar obrolan yang memberikan fakta mengejutkan), Cerita Labrak/Bucin (notifikasi mantan/orang ketiga), atau Olshop (notifikasi transfer bank). Wajib isi "senderName", "text", dan "customHoldMs": 3500-5000 agar penonton sempat membaca plot twistnya!
 2. DETEKSI MODE CHAT (PERSONAL VS GROUP): Jika prompt pengguna menyebutkan grup chat (misal: "grup keluarga", "grup alumni", "grup tongkrongan", "grup panitia", "grup kelas"), WAJIB set "chatType": "group", berikan "groupSubtitle", dan sertakan "senderName" serta "senderColor" (pilihan warna: "#25D366", "#e542a3", "#34b7f1", "#ff9800") pada setiap pesan incoming dari pengirim berbeda!
 3. PATUHI GENRE USER: Ikuti GENRE dan TONE cerita yang diminta pengguna di prompt (misal jika tentang olshop/COD buat komplain olshop; jika romantis/bucin buat percakapan manis/bucin; jika komedi buat lucu; jika horor buat horor). DILARANG mengubah cerita menjadi horor apabila prompt pengguna bertema lain!
 4. KARTU FOTO / IMAGE BUBBLE: Apabila alur cerita membutuhkan pengiriman foto (misal: foto barang olshop, foto bukti transfer, foto lokasi, foto selfie, foto suasana serem, foto bukti labrak selingkuh), WAJIB sisipkan 1-3 pesan ber-type "image" dengan properti "caption" dan "imgDesc" (deskripsi foto singkat).
