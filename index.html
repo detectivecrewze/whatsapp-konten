@@ -739,17 +739,62 @@
                          class="hidden w-full bg-gray-950 border border-amber-500/40 text-amber-300 font-mono text-[11px] rounded px-2 py-1 mt-1 focus:outline-none focus:ring-1 focus:ring-amber-500" />
                 </div>
 
-                <!-- Mood & Expression Intensity -->
-                <div class="space-y-1">
-                  <label class="text-[11px] text-gray-300 font-medium flex items-center justify-between">
-                    <span>🎭 Ekspresi & Emosi Suara:</span>
-                  </label>
-                  <select id="sel-tts-emotion" onchange="setTtsEmotion(this.value)"
-                          class="w-full bg-gray-900 border border-gray-700 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer">
-                    <option value="horror" selected>😱 Horror & Suspense (Bisikan, Tegang & Emosional)</option>
-                    <option value="dramatic">🎭 Sangat Ekspresif & Dramatis</option>
-                    <option value="conversational">💬 Santai / Obrolan Biasa</option>
-                  </select>
+                <!-- Manual Voice Emotion Sliders -->
+                <div class="space-y-2 p-2 rounded-lg bg-gray-800/60 border border-amber-500/20">
+                  <p class="text-[10px] text-amber-400 font-bold">🎚️ Manual Voice Settings (Eleven v3):</p>
+
+                  <!-- Stability -->
+                  <div>
+                    <div class="flex items-center justify-between text-[11px] mb-1">
+                      <span class="text-gray-300">🔇 Stability <span class="text-gray-500">(rendah = lebih ekspresif)</span></span>
+                      <span id="tts-stability-val" class="text-amber-400 font-mono font-bold bg-amber-500/15 px-1.5 py-0.5 rounded text-[10px]">0.25</span>
+                    </div>
+                    <input id="inp-tts-stability" type="range" min="0" max="1" step="0.05" value="0.25"
+                           class="w-full accent-amber-500 cursor-pointer h-2 bg-gray-700 rounded-lg"
+                           oninput="updateStability(this.value)" />
+                    <div class="flex justify-between text-[9px] text-gray-600 mt-0.5">
+                      <span>😱 Sangat Ekspresif</span><span>📻 Monoton/Stabil</span>
+                    </div>
+                  </div>
+
+                  <!-- Style Exaggeration -->
+                  <div>
+                    <div class="flex items-center justify-between text-[11px] mb-1">
+                      <span class="text-gray-300">🎭 Style Exaggeration <span class="text-gray-500">(tinggi = dramatis)</span></span>
+                      <span id="tts-style-val" class="text-amber-400 font-mono font-bold bg-amber-500/15 px-1.5 py-0.5 rounded text-[10px]">0.50</span>
+                    </div>
+                    <input id="inp-tts-style" type="range" min="0" max="1" step="0.05" value="0.50"
+                           class="w-full accent-amber-500 cursor-pointer h-2 bg-gray-700 rounded-lg"
+                           oninput="updateStyle(this.value)" />
+                    <div class="flex justify-between text-[9px] text-gray-600 mt-0.5">
+                      <span>💬 Natural</span><span>🔥 Hyper Dramatis</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Audio Tags Guide for eleven_v3 -->
+                <div class="p-2 rounded-lg bg-gray-900/80 border border-gray-700/50 space-y-1.5">
+                  <p class="text-[10px] text-amber-400 font-bold">💡 Audio Tags Eleven v3 (Tempel di teks bubble):</p>
+                  <div class="grid grid-cols-2 gap-x-2 gap-y-1">
+                    <div class="space-y-0.5">
+                      <p class="text-[9px] text-gray-400 font-semibold">😱 Emosi:</p>
+                      <code class="block text-[9px] text-green-400">[nervous]</code>
+                      <code class="block text-[9px] text-green-400">[scared]</code>
+                      <code class="block text-[9px] text-green-400">[angry]</code>
+                      <code class="block text-[9px] text-green-400">[sad]</code>
+                      <code class="block text-[9px] text-green-400">[excited]</code>
+                    </div>
+                    <div class="space-y-0.5">
+                      <p class="text-[9px] text-gray-400 font-semibold">🎙️ Gaya Bicara:</p>
+                      <code class="block text-[9px] text-blue-400">[whispers]</code>
+                      <code class="block text-[9px] text-blue-400">[shouts]</code>
+                      <code class="block text-[9px] text-blue-400">[gasps]</code>
+                      <code class="block text-[9px] text-blue-400">[sighs]</code>
+                      <code class="block text-[9px] text-blue-400">[crying]</code>
+                    </div>
+                  </div>
+                  <p class="text-[9px] text-gray-500 mt-1">Contoh: <span class="text-yellow-400">[scared][whispers] Bu... ada yang di luar...</span></p>
+                  <p class="text-[9px] text-gray-500">Titik-titik <span class="text-yellow-400">…</span> = jeda dramatis | <span class="text-yellow-400">—</span> = penekanan</p>
                 </div>
 
                 <!-- Speech Speed -->

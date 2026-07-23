@@ -1559,6 +1559,20 @@ function setTtsEmotion(val) {
   triggerAutoSave();
 }
 
+function updateStability(val) {
+  const v = parseFloat(val).toFixed(2);
+  const label = document.getElementById('tts-stability-val');
+  if (label) label.textContent = v;
+  triggerAutoSave();
+}
+
+function updateStyle(val) {
+  const v = parseFloat(val).toFixed(2);
+  const label = document.getElementById('tts-style-val');
+  if (label) label.textContent = v;
+  triggerAutoSave();
+}
+
 function updateTtsSpeedValue(val) {
   const formatted = parseFloat(val).toFixed(2) + '×';
   const label = document.getElementById('tts-speed-val');
@@ -2356,7 +2370,8 @@ function getProjectPayload() {
     elevenModel:     document.getElementById('sel-eleven-model')?.value || 'eleven_v3',
     ttsVoiceIn:      (document.getElementById('sel-tts-voice-in')?.value === 'custom') ? (document.getElementById('inp-custom-voice-in')?.value?.trim() || 'EXAVITQu4vr4xnSDxMaL') : (document.getElementById('sel-tts-voice-in')?.value || 'EXAVITQu4vr4xnSDxMaL'),
     ttsVoiceOut:     (document.getElementById('sel-tts-voice-out')?.value === 'custom') ? (document.getElementById('inp-custom-voice-out')?.value?.trim() || 'pNInz6obpgDQGcFmaJgB') : (document.getElementById('sel-tts-voice-out')?.value || 'pNInz6obpgDQGcFmaJgB'),
-    ttsEmotion:      document.getElementById('sel-tts-emotion')?.value || 'horror',
+    ttsStability:    parseFloat(document.getElementById('inp-tts-stability')?.value ?? '0.25'),
+    ttsStyle:        parseFloat(document.getElementById('inp-tts-style')?.value ?? '0.50'),
     ttsSpeed:        parseFloat(document.getElementById('inp-tts-speed')?.value || '1.00'),
     updatedAt:       Date.now()
   };

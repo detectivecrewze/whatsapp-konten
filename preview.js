@@ -341,18 +341,20 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
 
   const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
   let targetVoice = (!voiceId || voiceId === 'custom' || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
-  const emotionMode = (previewState && previewState.ttsEmotion) ? previewState.ttsEmotion : 'horror';
   const modelToUse = (previewState && previewState.elevenModel) ? previewState.elevenModel : 'eleven_v3';
 
-  // Horror & Suspense settings: Low stability (0.25) + High style exaggeration (0.50)
-  const settingsMap = {
-    horror:         { stability: 0.25, similarity_boost: 0.85, style: 0.50, use_speaker_boost: true },
-    dramatic:       { stability: 0.35, similarity_boost: 0.80, style: 0.35, use_speaker_boost: true },
-    conversational: { stability: 0.55, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true }
-  };
-  const voiceSettings = settingsMap[emotionMode] || settingsMap.horror;
+  // Use manual sliders if set, otherwise extreme horror defaults
+  const stability  = (previewState && previewState.ttsStability != null) ? previewState.ttsStability : 0.25;
+  const style      = (previewState && previewState.ttsStyle      != null) ? previewState.ttsStyle      : 0.50;
 
-  console.log(`🎙️ [ElevenLabs API] Generating ${emotionMode.toUpperCase()} voice (${modelToUse}) for "${cleanText.slice(0, 30)}..." | VoiceID: ${targetVoice}`);
+  const voiceSettings = {
+    stability:          stability,
+    similarity_boost:   0.85,
+    style:              style,
+    use_speaker_boost:  true
+  };
+
+  console.log(`🎙️ [ElevenLabs] model=${modelToUse} stability=${stability} style=${style} voice=${targetVoice}`);
 
   async function requestAudio(vId) {
     try {
