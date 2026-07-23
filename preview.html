@@ -163,7 +163,7 @@
 <div id="wa-canvas">
 
   <!-- STATUS BAR -->
-  <div style="display:flex; align-items:center; justify-content:space-between;
+  <div id="wa-status-bar" style="display:flex; align-items:center; justify-content:space-between;
               padding:10px 20px 6px; background:#202C33;">
     <span id="wa-time" style="font-size:13px; font-weight:600; color:#E9EDEF;">9:41</span>
     <div style="display:flex; align-items:center; gap:6px;">
@@ -230,7 +230,7 @@
            style="font-size:15px; font-weight:600; color:#E9EDEF;
                   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
                   line-height:1.3; margin:0; padding:0;">Contact Name</p>
-        <p style="font-size:12px; color:#00A884; margin:0; padding:0; line-height:1.3;">online</p>
+        <p id="wa-status-text" style="font-size:12px; color:#00A884; margin:0; padding:0; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">online</p>
       </td>
       <!-- Icons -->
       <td style="padding:0 10px 0 0; vertical-align:middle;">
@@ -306,6 +306,11 @@
 </div><!-- end #wa-canvas -->
 </div><!-- end #scale-wrapper -->
 
+<script src="js/modules/groupChat.js"></script>
+<script src="js/modules/statusBarCustom.js"></script>
+<script src="js/modules/voiceNote.js"></script>
+<script src="js/modules/transferCard.js"></script>
+<script src="js/modules/typingIndicator.js"></script>
 <script src="preview.js"></script>
 </body>
 </html>

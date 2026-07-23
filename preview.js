@@ -52,6 +52,10 @@ function createBubble(msg, idx) {
 
   let html = '';
 
+  const groupBadgeHtml = (previewState && previewState.chatType === 'group' && !isOut && typeof renderGroupSenderBadge === 'function')
+    ? renderGroupSenderBadge(msg)
+    : '';
+
   // TEXT
   if (msg.type === 'text') {
     const bg = isOut ? '#005C4B' : '#202C33';
@@ -59,6 +63,7 @@ function createBubble(msg, idx) {
     html = `
       <div style="background:${bg}; border-radius:${br}; max-width:270px;
                   padding:8px 10px 6px; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
+        ${groupBadgeHtml}
         <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
                   word-break:break-word; white-space:pre-wrap;">${escHtml(msg.text || '')}</p>
         <div style="display:flex; justify-content:flex-end; align-items:center;
@@ -67,6 +72,16 @@ function createBubble(msg, idx) {
           ${isOut ? svgReadTicks() : ''}
         </div>
       </div>`;
+  }
+
+  // VOICE NOTE
+  else if (msg.type === 'voice' && typeof renderVoiceNoteBubble === 'function') {
+    html = renderVoiceNoteBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
+  // BUKTI TRANSFER
+  else if (msg.type === 'transfer' && typeof renderTransferCardBubble === 'function') {
+    html = renderTransferCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
   }
 
   // IMAGE / GIF
@@ -163,6 +178,14 @@ function applyFrame(n) {
       el.style.display = 'none';
     }
   });
+
+  // Trigger VN animation if newly revealed message is a Voice Note
+  if (n > 0 && previewState && previewState.messages && previewState.messages[n - 1]?.type === 'voice') {
+    if (typeof triggerVnAnimationOnFrame === 'function') {
+      triggerVnAnimationOnFrame(previewState.messages[n - 1].id);
+    }
+  }
+
   // Scroll to bottom
   const area = document.getElementById('wa-chat-area');
   if (area) area.scrollTop = area.scrollHeight;
@@ -285,9 +308,15 @@ async function startAnimation() {
     // Typing indicator / Reply delay before incoming replies
     if (f > 0 && messages[f].direction === 'incoming') {
       if (useTyping) {
+        if (typeof showTypingIndicatorHeader === 'function') {
+          showTypingIndicatorHeader('mengetik');
+        }
         showTyping();
         await sleep(replyDelay);
         hideTyping();
+        if (typeof restoreStatusHeader === 'function') {
+          restoreStatusHeader(previewState);
+        }
         await sleep(120);
       } else {
         await sleep(replyDelay);
@@ -433,6 +462,19 @@ window.addEventListener('DOMContentLoaded', async () => {
          <p style="font-size:12px;">Go back to the editor and click<br><strong style="color:#00A884;">🎬 Open Clean Preview</strong></p>
        </div>`;
     return;
+  }
+
+  // Apply Status Bar (iOS vs Android, battery level)
+  if (typeof renderCustomStatusBarHtml === 'function') {
+    const statusBarEl = document.getElementById('wa-status-bar');
+    if (statusBarEl) {
+      statusBarEl.innerHTML = renderCustomStatusBarHtml(previewState);
+    }
+  }
+
+  // Apply Header Status Subtitle
+  if (typeof restoreStatusHeader === 'function') {
+    restoreStatusHeader(previewState);
   }
 
   // Apply name & PFP
