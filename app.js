@@ -1581,71 +1581,70 @@ function handleSelectTemplate(val) {
   }
 }
 
-async function saveCurrentTemplate(isCloud = false) {
+async function saveCurrentTemplate(isCloud = true) {
   const currentVal = document.getElementById('tpl-select')?.value || 'auto';
-  const localTemplates = getSavedTemplates();
 
-  let defaultName = 'My WA Preset';
-  if (currentVal.startsWith('local_')) {
-    const id = currentVal.replace('local_', '');
-    if (localTemplates[id]) defaultName = localTemplates[id].name;
-  } else if (currentVal.startsWith('cloud_')) {
+  let defaultName = state.name || 'My WA Preset';
+  let existingCloudId = null;
+
+  if (currentVal.startsWith('cloud_')) {
     const id = currentVal.replace('cloud_', '');
-    if (_cloudTemplates[id]) defaultName = _cloudTemplates[id].name;
+    if (_cloudTemplates[id]) {
+      defaultName = _cloudTemplates[id].name;
+      existingCloudId = id;
+    }
   }
 
-  const targetLabel = isCloud ? '☁️ Team Cloud' : '💾 Local';
-  const tplName = prompt(`Simpan Template ke [${targetLabel}]:`, defaultName);
+  const tplName = prompt(`Simpan Template ke [☁️ Team Cloud]:`, defaultName);
   if (!tplName || !tplName.trim()) return;
 
+  const trimmedName = tplName.trim();
   const payload = getProjectPayload();
 
-  if (isCloud) {
-    if (!WORKER_URL) {
-      alert('⚠️ Silakan masukkan URL Cloudflare Worker milikmu pada variabel WORKER_URL di app.js terlebih dahulu!');
-      return;
-    }
+  if (!WORKER_URL) {
+    alert('⚠️ URL Cloudflare Worker belum dikonfigurasi!');
+    return;
+  }
 
-    const cloudId = `cloud_${Date.now()}`;
-    _cloudTemplates[cloudId] = {
-      id: cloudId,
-      name: tplName.trim(),
-      updatedAt: Date.now(),
-      data: payload
-    };
+  // Determine target cloud ID: use existing selected ID, or find matching name, or create new ID
+  let cleanId = existingCloudId;
 
-    try {
-      const res = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Team-Passcode': TEAM_PASSCODE
-        },
-        body: JSON.stringify({ templates: _cloudTemplates })
-      });
-      if (!res.ok) throw new Error('Cloud save failed');
-      alert(`✅ Template "${tplName.trim()}" berhasil tersimpan ke Team Cloud!`);
-      renderTemplateDropdown(`cloud_${cloudId}`);
-      showAutoSaveBadge();
-    } catch (e) {
-      alert('⚠️ Gagal menyimpan ke Cloud Worker. Periksa URL Worker di app.js');
+  if (!cleanId) {
+    const matchedKey = Object.keys(_cloudTemplates).find(
+      key => _cloudTemplates[key]?.name?.toLowerCase() === trimmedName.toLowerCase()
+    );
+    if (matchedKey) {
+      cleanId = matchedKey;
     }
-  } else {
-    const id = currentVal.startsWith('local_') ? currentVal.replace('local_', '') : `tpl_${Date.now()}`;
-    localTemplates[id] = {
-      id,
-      name: tplName.trim(),
-      updatedAt: Date.now(),
-      data: payload
-    };
+  }
 
-    try {
-      localStorage.setItem(TPL_KEY, JSON.stringify(localTemplates));
-      renderTemplateDropdown(`local_${id}`);
-      showAutoSaveBadge();
-    } catch (e) {
-      alert('⚠️ Gagal menyimpan template lokal. Penyimpanan browser mungkin penuh jika gambar terlalu besar.');
-    }
+  if (!cleanId) {
+    cleanId = `${Date.now()}`;
+  }
+
+  // Overwrite or create template in _cloudTemplates
+  _cloudTemplates[cleanId] = {
+    id: cleanId,
+    name: trimmedName,
+    updatedAt: Date.now(),
+    data: payload
+  };
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Team-Passcode': TEAM_PASSCODE
+      },
+      body: JSON.stringify({ templates: _cloudTemplates })
+    });
+    if (!res.ok) throw new Error('Cloud save failed');
+    alert(`✅ Template "${trimmedName}" berhasil diperbarui & tersimpan di Team Cloud!`);
+    renderTemplateDropdown(`cloud_${cleanId}`);
+    showAutoSaveBadge();
+  } catch (e) {
+    alert('⚠️ Gagal menyimpan ke Cloud Worker. Periksa koneksi atau Passcode Tim.');
   }
 }
 
