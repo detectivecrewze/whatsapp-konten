@@ -591,7 +591,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     pfpEl.style.display = 'block';
     if (pfpFallback) pfpFallback.style.display = 'none';
   } else if (pfpEl) {
-    pfpEl.dispatchEvent(new Event('error'));
+    pfpEl.style.display = 'none';
+    if (pfpFallback) pfpFallback.style.display = 'flex';
   }
 
   // Render all bubbles (hidden, applyFrame reveals them)

@@ -1800,7 +1800,6 @@ async function generateAssets() {
   // Validation
   const missing = [];
   if (!state.name.trim())        missing.push('Contact Name');
-  if (!state.pfp)                missing.push('Profile Picture');
   if (state.messages.length < 1) missing.push('At least 1 message');
 
   // Check all image/gif/qr messages have files
@@ -1964,7 +1963,6 @@ async function generateVideo() {
 
   const missing = [];
   if (!state.name.trim())        missing.push('Contact Name');
-  if (!state.pfp)                missing.push('Profile Picture');
   if (state.messages.length < 1) missing.push('At least 1 message');
   if (missing.length) {
     alert(`⚠️ Please complete:\n\n• ${missing.join('\n• ')}`);
@@ -2224,7 +2222,6 @@ function openCleanPreview() {
 
   const missing = [];
   if (!state.name.trim())        missing.push('Contact Name');
-  if (!state.pfp)                missing.push('Profile Picture');
   if (state.messages.length < 1) missing.push('At least 1 message');
   if (missing.length) {
     alert(`⚠️ Please fill in:\n\n• ${missing.join('\n• ')}`);
