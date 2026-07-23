@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>For You, Always — WhatsApp Asset Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            wa: {
+              bg:       '#111B21',
+              header:   '#202C33',
+              input:    '#2A3942',
+              incoming: '#202C33',
+              outgoing: '#005C4B',
+              accent:   '#00A884',
+              text:     '#E9EDEF',
+              subtext:  '#8696A0',
+              icon:     '#AEBAC1',
+              online:   '#00A884',
+              blue:     '#53BDEB',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Fix for iOS Safari time input text alignment */
+    input[type="time"]::-webkit-datetime-edit {
+      justify-content: flex-start;
+      text-align: left;
+    }
+    /* Typing dots for video animation */
+    @keyframes tdot {
+      0%,60%,100% { transform:translateY(0); opacity:.35; }
+      30% { transform:translateY(-5px); opacity:1; }
+    }
+    .t-dot {
+      width:7px; height:7px; border-radius:50%;
+      background:#8696A0; display:inline-block;
+      animation: tdot 1.2s ease-in-out infinite;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .animate-shake {
+      animation: shake 0.4s ease-in-out;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-jaynWmrl.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CmM_GSx6.css">
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen relative" style="font-family:'Segoe UI',system-ui,sans-serif;">
+
+<!-- ================================================================
+     PASSCODE GATE MODAL (Team Access Protection)
+     ================================================================ -->
+<div id="passcode-modal" class="hidden fixed inset-0 z-[99999] items-center justify-center bg-gray-950/90 backdrop-blur-md p-4 transition-all duration-300">
+  <div class="bg-gray-900 border border-gray-800 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl space-y-5 text-center relative overflow-hidden" id="passcode-card">
+    <button type="button" onclick="hidePasscodeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-xs font-bold px-2 py-1 rounded-lg bg-gray-800/80">✕ Close</button>
+    <div class="w-14 h-14 rounded-2xl bg-wa-accent/10 border border-wa-accent/30 text-wa-accent mx-auto flex items-center justify-center">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+      </svg>
+    </div>
+
+    <div>
+      <h2 class="text-lg font-bold text-white">Team Passcode Required</h2>
+      <p class="text-xs text-gray-400 mt-1">Masukkan Passcode Tim untuk membuka akses Editor & Team Cloud.</p>
+    </div>
+
+    <form onsubmit="handleUnlockApp(event)" class="space-y-3">
+      <div class="relative">
+        <input id="inp-passcode" type="password" placeholder="Enter Team Passcode…"
+               class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-wa-accent transition pr-10" />
+        <button type="button" onclick="togglePasscodeVisibility()" class="absolute right-3 top-3.5 text-gray-500 hover:text-gray-300">
+          <svg id="eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </button>
+      </div>
+
+      <p id="passcode-error" class="text-xs text-red-400 font-medium hidden">⚠️ Passcode Salah! Akses ditolak.</p>
+
+      <button type="submit" id="btn-unlock"
+              class="w-full bg-wa-accent hover:bg-[#009272] text-white font-bold text-sm py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+        <span>🔓 Unlock App</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ================================================================
+     DASHBOARD
+     ================================================================ -->
+<div id="dashboard" class="min-h-screen p-3 sm:p-5 lg:p-8">
+
+  <!-- Header bar -->
+  <div class="max-w-6xl mx-auto mb-5 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="w-8 h-8 rounded-full bg-wa-accent flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-lg sm:text-xl font-bold text-white leading-tight truncate">For You, Always</h1>
+        <p class="text-[11px] sm:text-xs text-gray-500 truncate">WhatsApp Dark Mode Asset Generator</p>
+      </div>
+    </div>
+    <button onclick="lockAppSession()" title="Lock App Session"
+            class="px-2.5 py-1.5 bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 rounded-xl text-xs font-medium transition flex items-center gap-1 flex-shrink-0">
+      🔒 Lock
+    </button>
+  </div>
+
+  <!-- Main 2-col grid -->
+  <div class="max-w-6xl mx-auto grid lg:grid-cols-5 gap-4 items-start">
+
+    <!-- ── LEFT: Control Panel ── -->
+    <div class="lg:col-span-2 space-y-4 min-w-0 w-full">
+
+      <!-- Presets & Auto-Save -->
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+            <span>💾 Presets & Team Cloud</span>
+          </p>
+          <span id="save-status-badge" class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full transition opacity-0">
+            Auto-saved ✓
+          </span>
+        </div>
+
+        <!-- Select Template -->
+        <div class="flex flex-col sm:flex-row gap-2">
+          <select id="tpl-select" onchange="handleSelectTemplate(this.value)"
+                  class="w-full sm:flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-wa-accent">
+            <option value="auto">Draft (Auto-saved)</option>
+          </select>
+          <div class="flex items-center gap-1.5 justify-center sm:justify-start w-full sm:w-auto">
+            <button onclick="saveCurrentTemplate()" title="Update Current Preset"
+                    class="flex-1 sm:flex-none px-3 py-2 bg-wa-accent hover:bg-[#009272] text-white text-xs font-medium rounded-xl transition flex items-center justify-center gap-1 whitespace-nowrap shadow-sm">
+              💾 Save
+            </button>
+            <button onclick="saveAsNewTemplate()" title="Simpan Sebagai Preset Baru"
+                    class="flex-1 sm:flex-none px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 text-xs font-medium rounded-xl transition flex items-center justify-center gap-1 whitespace-nowrap">
+              ➕ Save As New
+            </button>
+            <button onclick="deleteCurrentTemplate()" title="Delete Template"
+                    class="px-2.5 py-2 bg-gray-800 hover:bg-red-900/50 text-gray-400 hover:text-red-300 border border-gray-700 rounded-xl transition text-xs">
+              🗑️
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center sm:justify-between pt-2 text-xs text-gray-400 border-t border-gray-800/80 gap-2">
+          <button onclick="createNewProject()" class="text-wa-accent hover:underline flex items-center gap-1 font-medium">
+            + New Blank
+          </button>
+
+          <div class="flex items-center gap-1.5">
+            <button onclick="copyShareLink('preview')" title="Copy Direct Shareable Link for Client Review"
+                    class="px-2.5 py-1 bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 border border-indigo-700/50 rounded-lg text-[11px] font-semibold transition flex items-center gap-1 shadow-sm">
+              🔗 Share Link
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generator Naskah Viral (Auto Script) -->
+      <div class="bg-gradient-to-r from-purple-950/40 via-gray-900 to-indigo-950/40 border border-purple-800/40 rounded-2xl p-3.5 sm:p-4 space-y-3">
+        <div class="flex items-center justify-between cursor-pointer select-none"
+             onclick="toggleSectionAccordion('sec-presets-body', 'icon-presets-arrow')">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🎭</span>
+            <div>
+              <h3 class="text-xs font-bold text-purple-300 uppercase tracking-widest">Generator Naskah Viral</h3>
+              <p class="text-[11px] text-gray-400">Pilih skenario drama/konten siap pakai dengan 1x klik!</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] bg-purple-900/60 text-purple-300 border border-purple-700/50 px-2 py-0.5 rounded-full font-semibold hidden sm:inline-block">
+              Templates
+            </span>
+            <button type="button" class="text-purple-300 hover:text-white transition-transform duration-200" id="icon-presets-arrow" style="transform: rotate(180deg);">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="sec-presets-body" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1 transition-all">
+          <button onclick="loadScriptPreset('drama_labrak')" 
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-purple-900/40 border border-gray-700/80 hover:border-purple-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">💔</span>
+            <div class="min-w-0">
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-purple-300 truncate">Drama Selingkuh</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Labrak cafe & bukti foto</p>
+            </div>
+          </button>
+
+          <button onclick="loadScriptPreset('olshop_cod')" 
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-emerald-900/40 border border-gray-700/80 hover:border-emerald-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">🛍️</span>
+            <div class="min-w-0">
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-emerald-300 truncate">Olshop & COD</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Paket nyasar & komplain</p>
+            </div>
+          </button>
+
+          <button onclick="loadScriptPreset('nagih_hutang')" 
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-amber-900/40 border border-gray-700/80 hover:border-amber-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">💸</span>
+            <div class="min-w-0">
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-amber-300 truncate">Nagih Hutang</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Alasan cicilan & centang dua</p>
+            </div>
+          </button>
+
+          <button onclick="loadScriptPreset('bucin_romantis')" 
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-pink-900/40 border border-gray-700/80 hover:border-pink-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">❤️</span>
+            <div class="min-w-0">
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-pink-300 truncate">Bucin Romantis</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Kejutan kado & voice note</p>
+            </div>
+          </button>
+
+          <button onclick="loadScriptPreset('horor_misteri')" 
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-red-900/40 border border-gray-700/80 hover:border-red-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">👻</span>
+            <div class="min-w-0">
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-red-300 truncate">Horor & Malam</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Suara di luar pintu kamar</p>
+            </div>
+          </button>
+
+          <button onclick="loadScriptPreset('prank_parkir')" 
+                  class="p-2 sm:p-2.5 bg-gray-800/80 hover:bg-blue-900/40 border border-gray-700/80 hover:border-blue-500/50 rounded-xl transition text-left group flex items-start gap-2">
+            <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">🤣</span>
+            <div class="min-w-0">
+              <p class="text-[11px] sm:text-xs font-semibold text-white group-hover:text-blue-300 truncate">Prank Parkir</p>
+              <p class="text-[9px] sm:text-[10px] text-gray-400 truncate">Pinjam 50rb darurat</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between cursor-pointer select-none"
+             onclick="toggleSectionAccordion('sec-contact-body', 'icon-contact-arrow')">
+          <div class="flex items-center gap-2">
+            <span class="text-base">👤</span>
+            <p class="text-xs font-semibold text-gray-300 uppercase tracking-widest">Contact Info & Header WA</p>
+          </div>
+          <button type="button" class="text-gray-400 hover:text-white transition-transform duration-200" id="icon-contact-arrow" style="transform: rotate(180deg);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+
+        <div id="sec-contact-body" class="space-y-4 pt-1">
+        <!-- Chat Mode (Personal vs Group) -->
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5 font-medium">Tipe Obrolan (Chat Mode)</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-chat-personal" type="button" onclick="setChatType('personal')"
+                    class="px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
+              👤 Personal Chat
+            </button>
+            <button id="btn-chat-group" type="button" onclick="setChatType('group')"
+                    class="px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition">
+              👥 Group Chat
+            </button>
+          </div>
+        </div>
+
+        <!-- Name (Contact or Group) -->
+        <div>
+          <label id="lbl-name" class="block text-xs text-gray-400 mb-1.5">Contact Name</label>
+          <input id="inp-name" type="text" placeholder="e.g. Sayang 💙"
+            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
+                   placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
+        </div>
+
+        <!-- Status Header Mode (Online vs Last Seen Custom) -->
+        <div id="wrap-status-mode">
+          <label class="block text-xs text-gray-400 mb-1.5 font-medium">Status Header WA</label>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <button id="btn-status-online" type="button" onclick="setLastSeenMode('online')"
+                    class="px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
+              🟢 Online
+            </button>
+            <button id="btn-status-lastseen" type="button" onclick="setLastSeenMode('custom')"
+                    class="px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition">
+              🕒 Terakhir Dilihat
+            </button>
+          </div>
+          <div id="wrap-lastseen-input" class="hidden">
+            <input id="inp-lastseen-text" type="text" placeholder="e.g. terakhir dilihat hari ini pukul 03:15"
+                   value="terakhir dilihat hari ini pukul 03:15"
+                   oninput="setLastSeenText(this.value)"
+                   class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+          </div>
+        </div>
+
+        <!-- Group Members Subtitle (shown only in Group Mode) -->
+        <div id="wrap-group-subtitle" class="hidden">
+          <label class="block text-xs text-gray-400 mb-1.5">Daftar Anggota Group (Subtitle)</label>
+          <input id="inp-group-subtitle" type="text" placeholder="e.g. Sinta, Budi, Anda, Agus" value="Sinta, Budi, Anda, Agus"
+                 oninput="setGroupSubtitle(this.value)"
+                 class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
+                        placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
+        </div>
+
+        <!-- PFP -->
+        <div>
+          <label id="lbl-pfp" class="block text-xs text-gray-400 mb-1.5">Profile Picture</label>
+          <label class="flex items-center gap-2.5 bg-gray-800 border border-gray-700 border-dashed
+                        rounded-xl px-3.5 py-2.5 cursor-pointer hover:border-wa-accent transition group">
+            <svg class="w-4 h-4 text-gray-500 group-hover:text-wa-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span id="pfp-label" class="text-xs text-gray-500 group-hover:text-gray-300 truncate">Upload image…</span>
+            <input id="inp-pfp" type="file" accept="image/*" class="hidden" onchange="handlePfpUpload(this)" />
+          </label>
+          <div id="pfp-preview-wrap" class="hidden mt-2 flex items-center gap-2">
+            <img id="pfp-preview" class="w-10 h-10 rounded-full object-cover border-2 border-wa-accent flex-shrink-0" />
+            <span id="pfp-preview-name" class="text-xs text-gray-400 truncate"></span>
+          </div>
+        </div>
+
+        <!-- Phone Device OS (iPhone / Android) -->
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5 font-medium">Tampilan Device / OS Bar</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-os-ios" type="button" onclick="setPhoneOs('ios')"
+                    class="px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
+              🍎 iPhone (iOS)
+            </button>
+            <button id="btn-os-android" type="button" onclick="setPhoneOs('android')"
+                    class="px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition">
+              🤖 Android
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Battery Level -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs text-gray-400 font-medium">Persentase Baterai HP</label>
+            <span id="battery-val" class="text-xs font-bold text-emerald-400">85%</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="inp-battery" type="range" min="1" max="100" value="85"
+                   oninput="setBatteryLevel(this.value)"
+                   class="w-full accent-emerald-500 bg-gray-800 rounded-lg cursor-pointer h-2" />
+            <button type="button" onclick="setBatteryLevel(1)" title="Set Lowbat 1% (Horor/Darurat)"
+                    class="px-2 py-1 bg-red-950 text-red-400 border border-red-800/80 rounded-lg text-[10px] font-bold whitespace-nowrap hover:bg-red-900 transition">
+              🔋 1% Lowbat
+            </button>
+          </div>
+        </div>
+
+        <!-- Pinned Message Banner Settings -->
+        <div class="bg-gray-800/60 border border-gray-700/80 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs text-gray-300 font-semibold flex items-center gap-1">
+              📌 Banner Pesan Tersemat
+            </label>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input id="inp-pinned-enabled" type="checkbox" onchange="setPinnedEnabled(this.checked)" class="sr-only peer">
+              <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-wa-accent"></div>
+            </label>
+          </div>
+          <div id="wrap-pinned-inputs" class="hidden space-y-2 pt-1">
+            <div>
+              <label class="block text-[10px] text-gray-400 mb-1">Teks Pesan Tersemat</label>
+              <input id="inp-pinned-text" type="text" placeholder="e.g. Jangan lupa bayar uang kas ya guys!"
+                     value="Jangan lupa bayar uang kas ya guys!"
+                     oninput="setPinnedText(this.value)"
+                     class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Unread Chat Count Badge Settings -->
+        <div class="bg-gray-800/60 border border-gray-700/80 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs text-gray-300 font-semibold flex items-center gap-1">
+              🟢 Unread Chat Badge (&lt; 99+)
+            </label>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input id="inp-unread-enabled" type="checkbox" onchange="toggleUnreadBadge(this.checked)" class="sr-only peer">
+              <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-wa-accent"></div>
+            </label>
+          </div>
+          <div id="wrap-unread-inputs" class="hidden space-y-2 pt-1">
+            <label class="block text-[10px] text-gray-400 mb-1">Jumlah Pesan Belum Dibaca</label>
+            <div class="flex gap-2">
+              <input id="inp-unread-count" type="text" placeholder="99+" value="99+"
+                     oninput="setUnreadCount(this.value)"
+                     class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+              <button type="button" onclick="setUnreadCount('99+')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded-lg">99+</button>
+              <button type="button" onclick="setUnreadCount('14')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded-lg">14</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clock Time -->
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5">Clock Time</label>
+          <input id="inp-time" type="time" value="16:12"
+            class="w-full appearance-none block max-w-full text-left bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
+                   focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
+        </div>
+
+        <!-- Chat Background -->
+        <div class="space-y-2">
+          <label class="block text-xs text-gray-400 mb-1.5">Chat Background</label>
+          <select id="inp-bg-type"
+                  class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-base md:text-sm text-white
+                         focus:outline-none focus:ring-2 focus:ring-wa-accent transition">
+            <option value="default">Default Dark</option>
+            <option value="color">Custom Color</option>
+            <option value="image">Custom Image</option>
+          </select>
+          
+          <!-- Color picker (hidden by default) -->
+          <input type="color" id="inp-bg-color" value="#111B21" class="hidden w-full h-10 bg-gray-800 border border-gray-700 rounded-xl cursor-pointer" />
+          
+          <!-- File upload (hidden by default) -->
+          <label id="lbl-bg-image" class="hidden flex items-center gap-2.5 bg-gray-800 border border-gray-700 border-dashed
+                        rounded-xl px-3.5 py-2.5 cursor-pointer hover:border-wa-accent transition group">
+            <svg class="w-4 h-4 text-gray-500 group-hover:text-wa-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span id="bg-image-name" class="text-xs text-gray-500 group-hover:text-gray-300 truncate">Upload wallpaper…</span>
+            <input id="inp-bg-image" type="file" accept="image/*" class="hidden" />
+          </label>
+        </div>
+        </div><!-- end sec-contact-body -->
+      </div>
+
+      <!-- Dynamic Message Builder -->
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+        <div class="flex items-center justify-between flex-wrap gap-2 cursor-pointer select-none"
+             onclick="toggleSectionAccordion('sec-sequence-body', 'icon-sequence-arrow')">
+          <div class="flex items-center gap-2">
+            <span class="text-base">💬</span>
+            <p class="text-xs font-semibold text-gray-300 uppercase tracking-widest">Chat Sequence (Daftar Pesan)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="event.stopPropagation(); autoSequenceMsgTimes(1)"
+                    title="Otomatis beri jeda +1 menit secara berurutan untuk semua pesan"
+                    class="flex items-center gap-1 text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-400
+                           px-2.5 py-1.5 rounded-lg transition font-medium border border-amber-500/30">
+              ⚡ Auto Jeda +1 Mnt
+            </button>
+            <button onclick="event.stopPropagation(); addMessage()"
+                    class="flex items-center gap-1 text-xs bg-wa-accent/20 hover:bg-wa-accent/30 text-wa-accent
+                           px-2.5 py-1.5 rounded-lg transition font-medium">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Add Message
+            </button>
+            <button type="button" class="text-gray-400 hover:text-white transition-transform duration-200" id="icon-sequence-arrow" style="transform: rotate(180deg);">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="sec-sequence-body" class="pt-3">
+          <!-- Message list -->
+          <div id="msg-builder" class="space-y-3"></div>
+
+          <!-- Empty state -->
+          <p id="msg-empty-hint" class="text-center text-xs text-gray-600 py-3 italic">
+            No messages yet. Click "Add Message" ↑
+          </p>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
+        <div class="flex items-center justify-between cursor-pointer select-none"
+             onclick="toggleSectionAccordion('sec-export-body', 'icon-export-arrow')">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🎬</span>
+            <p class="text-xs font-semibold text-gray-300 uppercase tracking-widest">Export & Video Settings</p>
+          </div>
+          <button type="button" class="text-gray-400 hover:text-white transition-transform duration-200" id="icon-export-arrow" style="transform: rotate(180deg);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+
+        <div id="sec-export-body" class="space-y-3 pt-1">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5">Output Resolution (Scale)</label>
+          <select id="inp-scale" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5
+                                       text-sm text-white focus:outline-none focus:ring-2 focus:ring-wa-accent">
+            <option value="1">1× — Preview (faster)</option>
+            <option value="2" selected>2× — High Quality (recommended)</option>
+            <option value="3">3× — Ultra HD (slower)</option>
+          </select>
+        </div>
+
+        <!-- Video settings -->
+        <div class="border-t border-gray-800 pt-3 space-y-2">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Video Options</p>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">
+              Hold per frame:
+              <span id="hold-val" class="text-wa-accent font-semibold">2.5s</span>
+            </label>
+            <input id="inp-hold-duration" type="range" min="1000" max="6000" step="500" value="2500"
+                   class="w-full accent-wa-accent cursor-pointer"
+                   oninput="document.getElementById('hold-val').textContent=(this.value/1000).toFixed(1)+'s'" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">
+              Reply / Typing Delay:
+              <span id="reply-delay-val" class="text-wa-accent font-semibold">1.4s</span>
+            </label>
+            <input id="inp-reply-delay" type="range" min="400" max="5000" step="200" value="1400"
+                   class="w-full accent-wa-accent cursor-pointer"
+                   oninput="document.getElementById('reply-delay-val').textContent=(this.value/1000).toFixed(1)+'s'" />
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="inp-typing" type="checkbox" checked class="accent-wa-accent w-4 h-4 cursor-pointer" />
+            <label for="inp-typing" class="text-xs text-gray-400 cursor-pointer">Show typing indicator between messages</label>
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <input id="inp-sound-in" type="checkbox" checked class="accent-wa-accent w-4 h-4 cursor-pointer" />
+            <label for="inp-sound-in" class="text-xs text-gray-400 cursor-pointer">Enable Sound (Incoming Msg)</label>
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <input id="inp-sound-out" type="checkbox" class="accent-wa-accent w-4 h-4 cursor-pointer" />
+            <label for="inp-sound-out" class="text-xs text-gray-400 cursor-pointer">Enable Sound (Outgoing Msg)</label>
+          </div>
+          <!-- Auto-Zoom Option -->
+          <div class="pt-3 border-t border-gray-800/80 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <label for="inp-auto-zoom" class="text-xs text-gray-200 font-bold flex items-center gap-1.5 cursor-pointer">
+                <input id="inp-auto-zoom" type="checkbox" checked class="accent-wa-accent w-4 h-4 cursor-pointer" />
+                <span>🎥 Auto-Zoom Camera Effect</span>
+              </label>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono font-semibold">CAMERA ACTIVE</span>
+            </div>
+
+            <div id="wrap-zoom-scale" class="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 space-y-3">
+              <!-- Zoom Scale Slider -->
+              <div>
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="text-gray-300 font-medium">🔍 Skala Zoom Kamera (Scale):</span>
+                  <span id="zoom-scale-val" class="text-wa-accent font-mono font-bold bg-wa-accent/15 px-2 py-0.5 rounded border border-wa-accent/30">1.35×</span>
+                </div>
+                <input id="inp-zoom-scale" type="range" min="1.10" max="2.50" step="0.05" value="1.35"
+                       class="w-full accent-wa-accent cursor-pointer h-2 bg-gray-700 rounded-lg"
+                       oninput="updateZoomScaleValue(this.value)" />
+                <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-1">
+                  <span>1.10× (Sedang)</span>
+                  <span>1.50× (Dekat)</span>
+                  <span>2.50× (Ekstrem Close-up)</span>
+                </div>
+              </div>
+
+              <!-- Zoom Speed Slider -->
+              <div>
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="text-gray-300 font-medium">⚡ Kecepatan Zoom (Speed):</span>
+                  <span id="zoom-speed-val" class="text-wa-accent font-mono font-bold bg-wa-accent/15 px-2 py-0.5 rounded border border-wa-accent/30">0.45s</span>
+                </div>
+                <input id="inp-zoom-speed" type="range" min="0.15" max="1.00" step="0.05" value="0.45"
+                       class="w-full accent-wa-accent cursor-pointer h-2 bg-gray-700 rounded-lg"
+                       oninput="updateZoomSpeedValue(this.value)" />
+                <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-1">
+                  <span>0.15s (Cepat/Snap)</span>
+                  <span>0.45s (Standar)</span>
+                  <span>1.00s (Cinematic)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🎬 OPEN CLEAN PREVIEW (main CTA for screen recording) -->
+        <button onclick="openCleanPreview()"
+          class="w-full text-white font-bold text-sm
+                 rounded-xl py-3.5 px-4 transition-all flex items-center justify-center gap-2
+                 active:scale-95 shadow-lg"
+          style="background: linear-gradient(135deg, #00A884, #06cf9c);
+                 box-shadow: 0 4px 24px rgba(0,168,132,0.35);">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+          </svg>
+          🎬 Open Clean Preview (Record This)
+        </button>
+        <p class="text-xs text-gray-600 text-center -mt-1">
+          Opens a clean tab → use screen recorder on it
+        </p>
+
+        <!-- Generate ZIP -->
+        <button id="btn-generate" onclick="generateAssets()"
+          class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-sm
+                 rounded-xl py-2.5 px-4 transition-all flex items-center justify-center gap-2
+                 active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Download ZIP (static frames)
+        </button>
+
+
+        <!-- Progress -->
+        <div id="status-bar" class="hidden bg-gray-800 rounded-xl px-4 py-3">
+          <p id="status-text" class="text-xs font-medium text-wa-accent mb-2">Generating…</p>
+          <div class="w-full bg-gray-700 rounded-full h-1">
+            <div id="status-progress" class="bg-wa-accent h-1 rounded-full transition-all duration-500" style="width:0%"></div>
+          </div>
+        </div>
+        </div><!-- end sec-export-body -->
+      </div>
+
+    </div><!-- end left col -->
+
+    <!-- ── RIGHT: Preview ── -->
+    <div class="lg:col-span-3 sticky top-5">
+
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Canvas Preview</p>
+          <span class="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded-full">390 × 844 px</span>
+        </div>
+
+        <!-- Phone frame -->
+        <div class="flex justify-center">
+          <!-- ============================================================
+               WA CANVAS — this element is captured by html2canvas
+               ============================================================ -->
+          <div id="wa-canvas"
+               style="width:390px; height:844px; background-color:#111B21;
+                      font-family:'Segoe UI',system-ui,sans-serif;
+                      position:relative; overflow:hidden; border-radius:20px;
+                      box-shadow:0 25px 50px rgba(0,0,0,0.7);">
+
+            <!-- STATUS BAR -->
+            <div id="wa-status-bar" style="display:flex; align-items:center; justify-content:space-between;
+                        padding:10px 20px 6px; background:#202C33;">
+              <span id="wa-time" style="font-size:13px; font-weight:600; color:#E9EDEF;">9:41</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <!-- Signal -->
+                <svg width="17" height="12" viewBox="0 0 17 12" fill="#E9EDEF">
+                  <rect x="0" y="8" width="3" height="4" rx="0.5"/>
+                  <rect x="4.5" y="5" width="3" height="7" rx="0.5"/>
+                  <rect x="9" y="2" width="3" height="10" rx="0.5"/>
+                  <rect x="13.5" y="0" width="3" height="12" rx="0.5" opacity="0.35"/>
+                </svg>
+                <!-- WiFi -->
+                <svg width="16" height="12" viewBox="0 0 20 15" fill="none" stroke="#E9EDEF" stroke-width="1.8" stroke-linecap="round">
+                  <path d="M1 5.5C4.5 2 9.5 1 14 3.5"/>
+                  <path d="M3.5 8.5C5.8 6 9 5.3 12 7"/>
+                  <circle cx="10" cy="12.5" r="1.5" fill="#E9EDEF"/>
+                </svg>
+                <!-- Battery -->
+                <div style="display:flex; align-items:center; gap:1px;">
+                  <div style="width:22px; height:11px; border:1.5px solid #E9EDEF; border-radius:3px;
+                              position:relative; padding:1.5px;">
+                    <div style="position:absolute; inset:1.5px; width:80%; background:#E9EDEF; border-radius:1px;"></div>
+                  </div>
+                  <div style="width:2px; height:5px; background:#E9EDEF; opacity:0.5; border-radius:0 1px 1px 0;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── WA HEADER — HTML TABLE (100% reliable, mathematically exact widths) ──
+                 Col widths: 40px back | 56px pfp | auto name | 96px icons
+                 Name gets: 390 - 40 - 56 - 96 = 198px. Impossible to crop.
+            -->
+            <div id="wa-header"
+                 style="width:100%; height:62px; background:#202C33; border-bottom:1px solid #1D282F;
+                        display:flex; align-items:center; padding:0 10px 0 6px; gap:8px; box-sizing:border-box;">
+              <!-- Back arrow + Unread Badge -->
+              <div style="display:flex; align-items:center; gap:2px; color:#AEBAC1; flex-shrink:0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+                  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+                <span id="wa-unread-badge"
+                      style="display:none; background:#00A884; color:white; font-size:11px; font-weight:700;
+                             border-radius:12px; padding:2px 6px; line-height:1; flex-shrink:0; margin-left:1px;">99+</span>
+              </div>
+
+              <!-- PFP -->
+              <div style="position:relative; width:42px; height:42px; flex-shrink:0;">
+                <img id="wa-pfp" src=""
+                     style="width:42px; height:42px; border-radius:50%; object-fit:cover;
+                            border:2px solid #00A884; display:block;"
+                     onerror="this.style.display='none'; document.getElementById('wa-pfp-fallback').style.display='flex';" />
+                <div id="wa-pfp-fallback"
+                     style="width:42px; height:42px; border-radius:50%; background:#00A884;
+                            align-items:center; justify-content:center;
+                            position:absolute; top:0; left:0; display:none;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <span style="position:absolute; bottom:0; right:0; width:11px; height:11px;
+                             border-radius:50%; background:#00A884; border:2px solid #202C33;"></span>
+              </div>
+
+              <!-- Name + Status -->
+              <div style="flex:1; min-width:0; padding-left:2px;">
+                <p id="wa-name"
+                   style="font-size:15px; font-weight:600; color:#E9EDEF;
+                          white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+                          line-height:1.25; margin:0; padding:0;">Contact Name</p>
+                <p id="wa-status-text" style="font-size:12px; color:#00A884; margin:0; padding:0; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">online</p>
+              </div>
+
+              <!-- Action icons -->
+              <div style="display:flex; align-items:center; justify-content:flex-end; gap:12px; color:#AEBAC1; flex-shrink:0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                </svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </div>
+            </div><!-- end wa-header --><!-- end wa-header -->
+
+            <!-- ── CHAT AREA ── -->
+            <div id="wa-chat-area"
+                 style="position:relative; height:690px; overflow-y:auto; overflow-x:hidden;
+                        background-color:#111B21;
+                        background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5saW5lIHsgc3Ryb2tlOiAjODY5NkEwOyBzdHJva2Utd2lkdGg6IDAuNTsgZmlsbDogbm9uZTsgb3BhY2l0eTogMC4xNTsgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CgogIDwhLS0gU3VidGxlIGRpYWdvbmFsIGdyaWQgcGF0dGVybiByZXNlbWJsaW5nIFdoYXRzQXBwJ3MgY2hhdCBiYWNrZ3JvdW5kIC0tPgogIDwhLS0gSG9yaXpvbnRhbCBsaW5lcyAtLT4KICA8bGluZSBjbGFzcz0ibGluZSIgeDE9IjAiIHkxPSIyMCIgIHgyPSI0MDAiIHkyPSIyMCIvPgogIDxsaW5lIGNsYXNzPSJsaW5lIiB4MT0iMCIgeTE9IjYwIiAgeDI9IjQwMCIgeTI9IjYwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiB5MT0iMTAwIiB4Mj0iNDAwIiB5Mj0iMTAwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiB5MT0iMTQwIiB4Mj0iNDAwIiB5Mj0iMTQwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiB5MT0iMTgwIiB4Mj0iNDAwIiB5Mj0iMTgwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiB5MT0iMjIwIiB4Mj0iNDAwIiB5Mj0iMjIwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiB5MT0iMjYwIiB4Mj0iNDAwIiB5Mj0iMjYwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiB5MT0iMzAwIiB4Mj0iNDAwIiB5Mj0iMzAwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiB5MT0iMzQwIiB4Mj0iNDAwIiB5Mj0iMzQwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiB5MT0iMzgwIiB4Mj0iNDAwIiB5Mj0iMzgwIi8+CgogIDwhLS0gRGlhZ29uYWwgbGluZXMgKHRvcC1sZWZ0IHRvIGJvdHRvbS1yaWdodCkgLS0+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiAgIHkxPSIwIiAgIHgyPSI0MDAiIHkyPSI0MDAiLz4KICA8bGluZSBjbGFzcz0ibGluZSIgeDE9IjAiICAgeTE9IjgwIiAgeDI9IjMyMCIgeTI9IjQwMCIvPgogIDxsaW5lIGNsYXNzPSJsaW5lIiB4MT0iMCIgICB5MT0iMTYwIiB4Mj0iMjQwIiB5Mj0iNDAwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIwIiAgIHkxPSIyNDAiIHgyPSIxNjAiIHkyPSI0MDAiLz4KICA8bGluZSBjbGFzcz0ibGluZSIgeDE9IjAiICAgeTE9IjMyMCIgeDI9IjgwIiAgeTI9IjQwMCIvPgogIDxsaW5lIGNsYXNzPSJsaW5lIiB4MT0iODAiICB5MT0iMCIgICB4Mj0iNDAwIiB5Mj0iMzIwIi8+CiAgPGxpbmUgY2xhc3M9ImxpbmUiIHgxPSIxNjAiIHkxPSIwIiAgIHgyPSI0MDAiIHkyPSIyNDAiLz4KICA8bGluZSBjbGFzcz0ibGluZSIgeDE9IjI0MCIgeTE9IjAiICAgeDI9IjQwMCIgeTI9IjE2MCIvPgogIDxsaW5lIGNsYXNzPSJsaW5lIiB4MT0iMzIwIiB5MT0iMCIgICB4Mj0iNDAwIiB5Mj0iODAiLz4KCiAgPCEtLSBTbWFsbCBkaWFtb25kIGRvdHMgYXQgaW50ZXJzZWN0aW9ucyAtLT4KICA8ZyBmaWxsPSIjODY5NkEwIiBvcGFjaXR5PSIwLjEiPgogICAgPHJlY3QgeD0iMzkiICB5PSIzOSIgIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDQwIDQwKSIvPgogICAgPHJlY3QgeD0iMTE5IiB5PSIzOSIgIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDEyMCA0MCkiLz4KICAgIDxyZWN0IHg9IjE5OSIgeT0iMzkiICB3aWR0aD0iMiIgaGVpZ2h0PSIyIiB0cmFuc2Zvcm09InJvdGF0ZSg0NSAyMDAgNDApIi8+CiAgICA8cmVjdCB4PSIyNzkiIHk9IjM5IiAgd2lkdGg9IjIiIGhlaWdodD0iMiIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgMjgwIDQwKSIvPgogICAgPHJlY3QgeD0iMzU5IiB5PSIzOSIgIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDM2MCA0MCkiLz4KCiAgICA8cmVjdCB4PSIzOSIgIHk9IjExOSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgNDAgMTIwKSIvPgogICAgPHJlY3QgeD0iMTE5IiB5PSIxMTkiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDEyMCAxMjApIi8+CiAgICA8cmVjdCB4PSIxOTkiIHk9IjExOSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgMjAwIDEyMCkiLz4KICAgIDxyZWN0IHg9IjI3OSIgeT0iMTE5IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiB0cmFuc2Zvcm09InJvdGF0ZSg0NSAyODAgMTIwKSIvPgogICAgPHJlY3QgeD0iMzU5IiB5PSIxMTkiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDM2MCAxMjApIi8+CgogICAgPHJlY3QgeD0iMzkiICB5PSIxOTkiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDQwIDIwMCkiLz4KICAgIDxyZWN0IHg9IjExOSIgeT0iMTk5IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiB0cmFuc2Zvcm09InJvdGF0ZSg0NSAxMjAgMjAwKSIvPgogICAgPHJlY3QgeD0iMTk5IiB5PSIxOTkiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDIwMCAyMDApIi8+CiAgICA8cmVjdCB4PSIyNzkiIHk9IjE5OSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgMjgwIDIwMCkiLz4KICAgIDxyZWN0IHg9IjM1OSIgeT0iMTk5IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiB0cmFuc2Zvcm09InJvdGF0ZSg0NSAzNjAgMjAwKSIvPgoKICAgIDxyZWN0IHg9IjM5IiAgeT0iMjc5IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiB0cmFuc2Zvcm09InJvdGF0ZSg0NSA0MCAyODApIi8+CiAgICA8cmVjdCB4PSIxMTkiIHk9IjI3OSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgMTIwIDI4MCkiLz4KICAgIDxyZWN0IHg9IjE5OSIgeT0iMjc5IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiB0cmFuc2Zvcm09InJvdGF0ZSg0NSAyMDAgMjgwKSIvPgogICAgPHJlY3QgeD0iMjc5IiB5PSIyNzkiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDI4MCAyODApIi8+CiAgICA8cmVjdCB4PSIzNTkiIHk9IjI3OSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgMzYwIDI4MCkiLz4KCiAgICA8cmVjdCB4PSIzOSIgIHk9IjM1OSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgNDAgMzYwKSIvPgogICAgPHJlY3QgeD0iMTE5IiB5PSIzNTkiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDEyMCAzNjApIi8+CiAgICA8cmVjdCB4PSIxOTkiIHk9IjM1OSIgd2lkdGg9IjIiIGhlaWdodD0iMiIgdHJhbnNmb3JtPSJyb3RhdGUoNDUgMjAwIDM2MCkiLz4KICAgIDxyZWN0IHg9IjI3OSIgeT0iMzU5IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiB0cmFuc2Zvcm09InJvdGF0ZSg0NSAyODAgMzYwKSIvPgogICAgPHJlY3QgeD0iMzU5IiB5PSIzNTkiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHRyYW5zZm9ybT0icm90YXRlKDQ1IDM2MCAzNjApIi8+CiAgPC9nPgo8L3N2Zz4K');
+                        background-repeat:repeat; background-size:400px; background-position:center top;
+                        padding:4px 8px 10px;">
+
+              <!-- BG pattern overlay (kept for JS compat, visually hidden) -->
+              <div id="wa-bg-pattern" style="display:none;"></div>
+
+              <!-- Date separator -->
+              <div style="position:relative; z-index:1; display:flex; justify-content:center;
+                          width:100%; margin-bottom:10px;">
+                <span style="font-size:11.5px; padding:4px 14px; border-radius:999px;
+                             background:#1D282F; color:#8696A0; white-space:nowrap;">TODAY</span>
+              </div>
+
+              <!-- Dynamic messages go here -->
+              <div id="wa-messages" style="position:relative; z-index:1; width:100%;"></div>
+
+              <!-- Typing indicator (shown during video recording transitions) -->
+              <div id="wa-typing"
+                   style="position:relative; z-index:1; display:none;
+                          padding:0 8px 6px; width:100%;">
+                <div style="background:#202C33; border-radius:0 12px 12px 12px;
+                            padding:10px 14px; width:fit-content; display:inline-block;">
+                  <div style="display:flex; gap:5px; align-items:center; height:14px;">
+                    <span class="t-dot"></span>
+                    <span class="t-dot" style="animation-delay:0.16s"></span>
+                    <span class="t-dot" style="animation-delay:0.32s"></span>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- end chat area -->
+
+            <!-- INPUT BAR (bottom) -->
+            <div style="position:absolute; bottom:0; left:0; right:0;
+                        display:flex; align-items:center; gap:8px;
+                        padding:8px 12px; background:#202C33;">
+              <div style="color:#AEBAC1;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                </svg>
+              </div>
+              <div style="flex:1; background:#2A3942; border-radius:999px; padding:8px 16px;
+                          font-size:13px; color:#8696A0;">Message</div>
+              <div style="color:#AEBAC1;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+                </svg>
+              </div>
+              <div style="width:40px; height:40px; background:#00A884; border-radius:50%;
+                          display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+              </div>
+            </div><!-- end input bar -->
+
+          </div><!-- end #wa-canvas -->
+        </div>
+
+      </div><!-- end preview card -->
+
+      <!-- Frame preview strip + Play button -->
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs text-gray-500 font-medium uppercase tracking-widest">Frame Preview</p>
+          <button id="btn-play" onclick="playPreview()"
+            class="flex items-center gap-1.5 text-xs bg-purple-600/20 hover:bg-purple-600/40
+                   text-purple-400 px-3 py-1.5 rounded-lg transition font-medium">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            Play Preview
+          </button>
+        </div>
+        <div id="frame-buttons" class="flex gap-2 flex-wrap">
+          <!-- Populated dynamically by JS -->
+          <span class="text-xs text-gray-600 italic">Add messages to see frames</span>
+        </div>
+      </div>
+
+    </div><!-- end right col -->
+  </div><!-- end grid -->
+</div><!-- end dashboard -->
+
+  <!-- Single Vite ES Module Entry Point -->
+</body>
+</html>
