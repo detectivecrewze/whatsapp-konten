@@ -1583,22 +1583,6 @@ function handleSelectTemplate(val) {
 
 async function saveCurrentTemplate(isCloud = true) {
   const currentVal = document.getElementById('tpl-select')?.value || 'auto';
-
-  let defaultName = state.name || 'My WA Preset';
-  let existingCloudId = null;
-
-  if (currentVal.startsWith('cloud_')) {
-    const id = currentVal.replace('cloud_', '');
-    if (_cloudTemplates[id]) {
-      defaultName = _cloudTemplates[id].name;
-      existingCloudId = id;
-    }
-  }
-
-  const tplName = prompt(`Simpan Template ke [☁️ Team Cloud]:`, defaultName);
-  if (!tplName || !tplName.trim()) return;
-
-  const trimmedName = tplName.trim();
   const payload = getProjectPayload();
 
   if (!WORKER_URL) {
@@ -1606,26 +1590,38 @@ async function saveCurrentTemplate(isCloud = true) {
     return;
   }
 
-  // Determine target cloud ID: use existing selected ID, or find matching name, or create new ID
-  let cleanId = existingCloudId;
+  let cleanId = null;
+  let tplName = '';
 
-  if (!cleanId) {
-    const matchedKey = Object.keys(_cloudTemplates).find(
-      key => _cloudTemplates[key]?.name?.toLowerCase() === trimmedName.toLowerCase()
-    );
-    if (matchedKey) {
-      cleanId = matchedKey;
+  // 1. If an existing Cloud Preset is selected, update it DIRECTLY without prompt dialog!
+  if (currentVal.startsWith('cloud_')) {
+    cleanId = currentVal.replace('cloud_', '');
+    if (_cloudTemplates[cleanId]) {
+      tplName = _cloudTemplates[cleanId].name;
     }
   }
 
+  // 2. If in Draft mode, prompt once for the new Preset Name
   if (!cleanId) {
-    cleanId = `${Date.now()}`;
+    const inputName = prompt('Nama Preset Cloud Baru:', state.name || 'My WA Preset');
+    if (!inputName || !inputName.trim()) return;
+    tplName = inputName.trim();
+
+    // Check if another preset has the exact same name
+    const matchedKey = Object.keys(_cloudTemplates).find(
+      key => _cloudTemplates[key]?.name?.toLowerCase() === tplName.toLowerCase()
+    );
+    if (matchedKey) {
+      cleanId = matchedKey;
+    } else {
+      cleanId = `${Date.now()}`;
+    }
   }
 
-  // Overwrite or create template in _cloudTemplates
+  // Overwrite / Save preset in _cloudTemplates
   _cloudTemplates[cleanId] = {
     id: cleanId,
-    name: trimmedName,
+    name: tplName,
     updatedAt: Date.now(),
     data: payload
   };
@@ -1640,9 +1636,8 @@ async function saveCurrentTemplate(isCloud = true) {
       body: JSON.stringify({ templates: _cloudTemplates })
     });
     if (!res.ok) throw new Error('Cloud save failed');
-    alert(`✅ Template "${trimmedName}" berhasil diperbarui & tersimpan di Team Cloud!`);
     renderTemplateDropdown(`cloud_${cleanId}`);
-    showAutoSaveBadge();
+    showToast(`☁️ Preset "${tplName}" berhasil di-update!`);
   } catch (e) {
     alert('⚠️ Gagal menyimpan ke Cloud Worker. Periksa koneksi atau Passcode Tim.');
   }
