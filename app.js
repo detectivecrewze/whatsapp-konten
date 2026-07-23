@@ -1468,19 +1468,16 @@ function triggerAutoZoomEditor(msgEl, isOut, customScaleOverride) {
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
 
-  void msgEl.offsetHeight; // force layout reflow
+  // Exact untransformed Y and X center of the message bubble relative to container
+  const bubbleCenterY = msgEl.offsetTop + Math.round(msgEl.offsetHeight / 2);
+  const bubbleCenterX = msgEl.offsetLeft + Math.round(msgEl.offsetWidth / 2);
 
-  const containerRect = messagesContainer.getBoundingClientRect();
-  const msgRect       = msgEl.getBoundingClientRect();
-  const bubbleCenterY = (msgRect.top - containerRect.top) + (msgRect.height / 2);
-  const originX       = isOut ? '85%' : '15%';
-
-  const scaleInput    = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.35');
-  const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.35');
+  const scaleInput    = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.15');
+  const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.15');
   const zoomSpeed     = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
 
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = `${originX} ${Math.round(bubbleCenterY)}px`;
+  messagesContainer.style.transformOrigin = `${bubbleCenterX}px ${bubbleCenterY}px`;
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
