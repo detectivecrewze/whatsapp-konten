@@ -8,6 +8,10 @@
    1. MESSAGE CRUD OPERATIONS
    ============================================================ */
 
+function addMessage() {
+  addMsg('text', 'outgoing');
+}
+
 function addMsg(type = 'text', direction = 'outgoing') {
   const msg = {
     id: newId(),
@@ -29,11 +33,39 @@ function addMsg(type = 'text', direction = 'outgoing') {
   state.messages.push(msg);
   renderDashboard();
 
-  // Scroll dashboard to newly added message
   setTimeout(() => {
     const builder = document.getElementById('msg-builder');
     if (builder) builder.scrollTop = builder.scrollHeight;
   }, 50);
+}
+
+function autoSequenceMsgTimes(gapMinutes = 1) {
+  if (!state.messages || state.messages.length === 0) {
+    if (typeof showToast === 'function') showToast('⚠️ Tambahkan pesan terlebih dahulu!');
+    return;
+  }
+  let startTime = state.time || '16:12';
+  let [h, m] = startTime.split(':').map(n => parseInt(n, 10) || 0);
+
+  state.messages.forEach((msg, idx) => {
+    if (idx === 0) {
+      msg.time = startTime;
+    } else {
+      m += gapMinutes;
+      if (m >= 60) {
+        h = (h + Math.floor(m / 60)) % 24;
+        m = m % 60;
+      }
+      const hh = h.toString().padStart(2, '0');
+      const mm = m.toString().padStart(2, '0');
+      msg.time = `${hh}:${mm}`;
+    }
+  });
+
+  if (typeof renderCanvas === 'function') renderCanvas();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
+  if (typeof showToast === 'function') showToast(`⚡ Auto Jeda +${gapMinutes} Mnt Berhasil Diterapkan!`);
 }
 
 function removeMsg(id) {
