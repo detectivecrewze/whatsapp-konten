@@ -1642,6 +1642,95 @@ function importTemplateJson(input) {
   input.value = '';
 }
 
+function showToast(msg) {
+  const badge = document.getElementById('save-status-badge');
+  if (badge) {
+    badge.textContent = msg;
+    badge.classList.remove('opacity-0');
+    badge.classList.add('opacity-100');
+    setTimeout(() => {
+      badge.classList.remove('opacity-100');
+      badge.classList.add('opacity-0');
+      setTimeout(() => { badge.textContent = 'Auto-saved ✓'; }, 300);
+    }, 3500);
+  }
+}
+
+async function copyShareLink(targetType = 'preview') {
+  const currentVal = document.getElementById('tpl-select')?.value || 'auto';
+  let cloudId = null;
+
+  if (currentVal.startsWith('cloud_')) {
+    cloudId = currentVal;
+  } else {
+    const confirmSave = confirm('Untuk membuat Share Link yang bisa di-review client via URL, preset perlu tersimpan di Team Cloud.\n\nSimpan ke Team Cloud sekarang?');
+    if (!confirmSave) return;
+
+    await saveCurrentTemplate(true);
+    const newVal = document.getElementById('tpl-select')?.value || '';
+    if (newVal.startsWith('cloud_')) {
+      cloudId = newVal;
+    } else {
+      return;
+    }
+  }
+
+  const cleanPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+  const cleanBase = window.location.origin + (cleanPath.endsWith('/') ? cleanPath : cleanPath + '/');
+
+  const previewUrl = `${cleanBase}preview.html?preset=${cloudId}`;
+  const editorUrl  = `${cleanBase}index.html?preset=${cloudId}`;
+  const shareUrl   = targetType === 'editor' ? editorUrl : previewUrl;
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    alert(`🔗 Link Review Client Berhasil Di-copy!\n\nURL: \n${shareUrl}\n\nKirimkan link ini ke client kamu. Client tinggal membuka link tersebut untuk melihat hasilnya secara langsung!`);
+  } catch (e) {
+    prompt(`Copy Share Link berikut untuk dikirim ke client:`, shareUrl);
+  }
+}
+
+async function checkUrlParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const presetParam = urlParams.get('preset') || urlParams.get('p') || urlParams.get('id');
+  if (!presetParam) return false;
+
+  const cleanId = presetParam.replace(/^(cloud_|local_)/, '');
+
+  // 1. Check if already in _cloudTemplates
+  if (_cloudTemplates[cleanId] || _cloudTemplates[`cloud_${cleanId}`]) {
+    const tpl = _cloudTemplates[cleanId] || _cloudTemplates[`cloud_${cleanId}`];
+    applyProjectPayload(tpl.data);
+    renderTemplateDropdown(tpl.id.startsWith('cloud_') ? tpl.id : `cloud_${tpl.id}`);
+    showToast(`🌐 Loaded shared preset: "${tpl.name}"`);
+    return true;
+  }
+
+  // 2. Fetch from Cloud Worker
+  if (WORKER_URL) {
+    try {
+      const res = await fetch(WORKER_URL, {
+        headers: { 'X-Team-Passcode': TEAM_PASSCODE }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        _cloudTemplates = json.templates || {};
+        const tpl = _cloudTemplates[cleanId] || _cloudTemplates[`cloud_${cleanId}`];
+        if (tpl) {
+          applyProjectPayload(tpl.data);
+          renderTemplateDropdown(tpl.id.startsWith('cloud_') ? tpl.id : `cloud_${tpl.id}`);
+          showToast(`🌐 Loaded shared preset: "${tpl.name}"`);
+          return true;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load shared preset from Worker:', e);
+    }
+  }
+
+  return false;
+}
+
 /* ============================================================
    19. INIT
    ============================================================ */
@@ -1649,9 +1738,14 @@ function importTemplateJson(input) {
 window.addEventListener('DOMContentLoaded', async () => {
   renderTemplateDropdown('auto');
   await fetchCloudTemplates();
-  const loaded = loadDraftFromLocalStorage();
-  if (!loaded) {
-    renderDashboard();
+
+  // Check URL parameters for share links first
+  const loadedFromUrl = await checkUrlParams();
+  if (!loadedFromUrl) {
+    const loaded = loadDraftFromLocalStorage();
+    if (!loaded) {
+      renderDashboard();
+    }
   }
 });
 

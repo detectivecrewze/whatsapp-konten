@@ -350,13 +350,43 @@ function fitToScreen() {
 
 window.addEventListener('resize', fitToScreen);
 
+async function checkPreviewUrlParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const presetParam = urlParams.get('preset') || urlParams.get('p') || urlParams.get('id');
+  if (!presetParam) return null;
+
+  const cleanId = presetParam.replace(/^(cloud_|local_)/, '');
+  const cloudKey = `cloud_${cleanId}`;
+
+  const WORKER_URL = 'https://wa-templates-worker.aldoramadhan16.workers.dev/templates';
+  const TEAM_PASSCODE = 'loves2026';
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      headers: { 'X-Team-Passcode': TEAM_PASSCODE }
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const templates = json.templates || {};
+      const tpl = templates[cleanId] || templates[cloudKey];
+      if (tpl && tpl.data) {
+        return tpl.data;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to fetch shared preview preset:', e);
+  }
+  return null;
+}
+
 /* ── Boot ─────────────────────────────────────────────────── */
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   fitToScreen();
   updateClock();
   setInterval(updateClock, 30_000);
 
-  previewState = loadState();
+  const urlState = await checkPreviewUrlParams();
+  previewState = urlState || loadState();
 
   const chatArea = document.getElementById('wa-chat-area');
   if (previewState && chatArea) {
