@@ -72,7 +72,7 @@ function createCanvasBubble(msg, idx) {
                   padding:8px 10px 6px; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
         ${groupSenderBadge}
         <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
-                  word-break:break-word; white-space:pre-wrap;">${escHtml(msg.text || '')}</p>
+                  word-break:break-word; white-space:pre-wrap;">${escHtml(msg.text || '').replace(/\n/g, '<br>')}</p>
         <div style="display:flex; justify-content:flex-end; align-items:center;
                     gap:3px; margin-top:4px;">
           <span style="font-size:11px; color:rgba(233,237,239,0.55);">${time}</span>

@@ -32,12 +32,16 @@ function renderDashboard() {
 
   if (!builder) return;
 
-  if (state.messages.length === 0) {
+  if (!state.messages || state.messages.length === 0) {
     builder.innerHTML = '';
     if (hint) hint.style.display = 'block';
   } else {
     if (hint) hint.style.display = 'none';
-    builder.innerHTML = state.messages.map((msg, idx) => dashboardItemHtml(msg, idx)).join('');
+    try {
+      builder.innerHTML = state.messages.map((msg, idx) => dashboardItemHtml(msg, idx)).join('');
+    } catch (e) {
+      console.error('Failed to render dashboard items:', e);
+    }
   }
 
   updateFrameButtons();
