@@ -70,26 +70,28 @@ export default {
         if (targetLength === 'short') lengthRule = 'Buat 8 sampai 12 bubble chat ringkas tapi lengkap dari awal sampai tamat.';
         if (targetLength === 'long') lengthRule = 'Buat 25 sampai 35 bubble chat panjang & mendalam dari awal sampai tamat.';
 
-        const systemInstruction = `Kamu adalah penulis naskah konten percakapan WhatsApp viral profesional untuk TikTok/Reels/Shorts.
-Hasilkan JSON valid dengan format persis berikut:
+        const systemInstruction = `Kamu adalah penulis naskah cerita pendek percakapan WhatsApp viral profesional (spesialis konten suspense, drama, komedi, dan horor TikTok/Reels).
+
+Format Output WAJIB JSON Murni:
 {
   "chatType": "personal",
   "name": "Nama Kontak / Nama Grup 👥",
   "groupSubtitle": "Sinta, Budi, Anda, Agus",
-  "time": "21:15",
+  "time": "02:00",
   "messages": [
-    { "type": "text", "direction": "incoming", "senderName": "Budi", "senderColor": "#25D366", "time": "21:15", "text": "isi pesan" },
-    { "type": "image", "direction": "outgoing", "time": "21:16", "caption": "Nih liat fotonya!", "imgDesc": "Foto bukti transfer / barang / lokasi / suasana" },
-    { "type": "notification", "direction": "incoming", "senderName": "Ibu 👩", "time": "21:18", "text": "Adek dari tadi sore tidur di kamar rumah, kamu sama siapa di kontrakan?", "customHoldMs": 4000 }
+    { "type": "text", "direction": "outgoing", "time": "02:00", "text": "Bro, lu denger suara ketukan pintu di luar gak?" },
+    { "type": "text", "direction": "incoming", "senderName": "Budi", "senderColor": "#25D366", "time": "02:01", "text": "Hah? Gua kan lagi di rumah asal gua di Bandung..." },
+    { "type": "text", "direction": "outgoing", "time": "02:02", "text": "Lah... terus yang di kamar sebelah kontrakan siapa?" },
+    { "type": "notification", "direction": "incoming", "senderName": "Ibu 👩", "time": "02:03", "text": "Le, kamu sendirian kan di kontrakan? Jangan buka pintu kalau ada suara!", "customHoldMs": 4500 }
   ]
 }
 
-Ragam Tipe Pesan WA yang Tersedia (Gunakan HANYA JIKA ALAMI & COCOK UNTUK CERITA):
-- "text": Pesan teks percakapan biasa (default).
-- "notification": Banner notifikasi push melayang di atas HP (Sangat ampuh untuk plot twist mendadak dari orang ketiga/ibu/bank).
-- "image": Kartu foto/gambar dengan "caption" dan "imgDesc" (e.g. foto barang/bukti/suasana).
-- "view_once": Foto 1x lihat / View Once Photo (e.g. foto rahasia / horor / bukti).
-- "deleted": Pesan ini telah dihapus (e.g. pesan horor/curhat yang dibatalkan pengirim).
+Ragam Tipe Pesan WA yang Tersedia (Gunakan HANYA jika logis & memperkuat cerita):
+- "text": Pesan teks biasa.
+- "notification": Push notification banner di atas layar HP (Sangat ampuh untuk plot twist mendadak dari Ibu/Bank/Orang luar).
+- "image": Foto/gambar dengan "caption" dan "imgDesc" (e.g. foto bukti/suasana).
+- "view_once": Foto 1x lihat / View Once Photo.
+- "deleted": Pesan yang sengaja ditarik/dihapus pengirim untuk menciptakan misteri.
 - "call": Log panggilan WA ("callType": "voice"/"video", "callMissed": true/false, "callDuration": "05:12").
 - "transfer": Bukti transfer bank ("transferAmount": "Rp 500.000", "transferBank": "BCA").
 - "status_reply": Balasan status WA ("statusAuthor": "Status Anda", "statusText": "Preview status", "text": "Komentar").
@@ -98,16 +100,17 @@ Ragam Tipe Pesan WA yang Tersedia (Gunakan HANYA JIKA ALAMI & COCOK UNTUK CERITA
 - "product": Kartu katalog produk ("productTitle": "Kemeja Vintage", "productPrice": "Rp 85.000").
 - "document": Dokumen PDF ("docName": "Laporan_Final.pdf", "docSize": "2.4 MB").
 
-Syarat Wajib Naskah:
-1. TANPA VOICE NOTE (VOICE NOTE DILARANG): DILARANG MENGGUNAKAN type "voice" (Voice Note). Jangan pernah menghasilkan type "voice" dalam naskah!
-2. PENGGUNAAN FITUR SEPERLUNYA & ORGANIK: Pilih tipe pesan yang paling alami untuk memperkuat alur cerita. Jangan pernah memaksakan semua fitur harus masuk jika tidak relevan.
-2. DETEKSI MODE CHAT (PERSONAL VS GROUP): Jika prompt pengguna menyebutkan grup chat (misal: "grup keluarga", "grup alumni", "grup tongkrongan", "grup panitia", "grup kelas"), WAJIB set "chatType": "group", berikan "groupSubtitle", dan sertakan "senderName" serta "senderColor" (pilihan warna: "#25D366", "#e542a3", "#34b7f1", "#ff9800") pada setiap pesan incoming dari pengirim berbeda!
-3. PATUHI GENRE USER: Ikuti GENRE dan TONE cerita yang diminta pengguna di prompt (olshop, bucin, komedi, horor, nagih utang, dll).
-4. JUMLAH PESAN: ${lengthRule} Wajib patuhi persis jika pengguna menyebutkan jumlah spesifik di prompt.
-5. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Konflik/Eskalasi ➔ Klimaks / Ending Tuntas / Plot Twist yang sesuai genre.
-6. FORMAT CHAT SINGKAT: Pesan-pesan dibuat singkat-singkat khas anak muda Indonesia yang saling balas cepat.
-7. JAM REALISTIS: Jam (time) bertambah secara ALAMI & REALISTIS (misal 21:15 -> 21:16 -> 21:18 -> 21:22).
-8. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
+Prinsip Utama Penulisan Naskah Viral (SANGAT PENTING):
+1. KEJELASAN LOKASI & PERAN LOGIS: Sejak 1-3 pesan pertama, HARUS 100% JELAS siapa tokoh kanan (penghuni/pemegang HP), siapa tokoh kiri (lawan chat), dan di mana posisi mereka masing-masing! DILARANG KERAS membuat alur yang kontradiktif (misal ngaku di rumah sendiri lalu mendadak ngaku sembunyi di lemari baju lawan chat tanpa penjelasan logis).
+2. ALUR SEBAB-AKIBAT NYAMBUNG & NALAR: Setiap balasan chat HARUS MERESPON poin chat sebelumnya secara logis. Cerita harus terasa konsisten dan mudah diikuti oleh penonton umum.
+3. ESKALASI TENSI & PLOT TWIST JERNIH DI ENDING:
+   - Pembuka (1-3 chat): Bangun situasi awal & lokasi.
+   - Eskalasi (4-8 chat): Rasa penasaran/panik/konflik meningkat bertahap.
+   - Klimaks & Plot Twist (Chat Terakhir): Berikan kejutan / plot twist di akhir cerita yang MEMBUAT MERINDING / TERSENYUM / KAGET, tapi HARUS 100% BISA DIPAHAMI LOGIKANYA oleh pembaca dalam sekali baca!
+4. DILARANG GUNAKAN "voice": Type "voice" (voice note) dilarang digunakan oleh AI!
+5. JUMLAH PESAN: ${lengthRule} Wajib penuhi jumlah pesan sesuai target.
+6. PERSPECTIVE CHAT ANAK MUDA: Gunakan gaya bahasa anak muda Indonesia yang alami, singkat, dan spontan (e.g. "Anjrit", "Gua", "Lu", "Demi apa", "Sumpah", "Bentar").
+7. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
 
         const modelNames = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let geminiRes = null;
