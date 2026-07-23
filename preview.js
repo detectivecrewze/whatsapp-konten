@@ -360,11 +360,13 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
     });
 
     if (!res.ok) {
-      console.warn('ElevenLabs API response not ok:', res.status, 'Falling back to Google TTS');
+      const errText = await res.text();
+      console.warn('ElevenLabs API response error:', res.status, errText);
       return fetchGoogleTtsBlobUrl(cleanText);
     }
 
     const blob = await res.blob();
+    console.log(`✅ ElevenLabs TTS Audio Blob fetched successfully! Size: ${blob.size} bytes`);
     return URL.createObjectURL(blob);
   } catch (err) {
     console.warn('ElevenLabs API fetch failed:', err);
@@ -522,13 +524,15 @@ async function startAnimation() {
         const isOut = msg.direction === 'outgoing';
         const defaultInVoice = 'EXAVITQu4vr4xnSDxMaL'; // Bella Female
         const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam Male
-        const voiceId = isOut ? (previewState.ttsVoiceOut || defaultOutVoice) : (previewState.ttsVoiceIn || defaultInVoice);
-
-        if (voiceId === 'google-mp3') {
-          ttsAudioMap[idx] = await fetchGoogleTtsBlobUrl(textToSpeak);
-        } else {
-          ttsAudioMap[idx] = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
+        let voiceId = isOut ? (previewState.ttsVoiceOut || defaultOutVoice) : (previewState.ttsVoiceIn || defaultInVoice);
+        
+        // Ensure ElevenLabs voice is used when TTS is enabled
+        if (!voiceId || voiceId === 'google-mp3') {
+          voiceId = isOut ? defaultOutVoice : defaultInVoice;
         }
+
+        console.log(`🎙️ Pre-fetching ElevenLabs Voice for Frame ${idx} (${isOut ? 'Outgoing' : 'Incoming'}): VoiceID=${voiceId}, Text="${textToSpeak}"`);
+        ttsAudioMap[idx] = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
       }
     }));
   }
