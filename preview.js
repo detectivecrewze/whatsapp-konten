@@ -34,7 +34,8 @@ function svgReadTicks() {
 
 function stripAudioTags(str) {
   if (!str) return '';
-  return str.replace(/\[(nervous|scared|angry|sad|excited|whispers|shouts|gasps|sighs|crying|quietly|tired|happy|laughing|fearful|panicked|desperate|[a-zA-Z0-9_\-\s]+)\]/gi, '').trim();
+  // Strip ANY [tag] up to 40 chars — catches all ElevenLabs audio tags regardless of name
+  return str.replace(/\[[^\]]{1,40}\]/g, '').replace(/^\s+/, '').trim();
 }
 
 /* ── Bubble renderer ─────────────────────────────────────── */
