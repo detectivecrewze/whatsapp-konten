@@ -27,13 +27,35 @@ function loadDraftFromLocalStorage() {
     const raw = localStorage.getItem('wa_autosave_draft');
     if (raw) {
       const data = JSON.parse(raw);
-      applyProjectPayload(data);
-      return true;
+      if (Array.isArray(data.messages) && data.messages.length > 0) {
+        applyProjectPayload(data);
+        return true;
+      }
     }
   } catch (e) {
     console.error('Failed to load auto-saved draft:', e);
   }
-  return false;
+
+  // Fallback to default starter project template so chat is never empty on launch
+  applyProjectPayload({
+    name: 'Sayang 💙',
+    pfp: null,
+    messages: [
+      { id: newId(), type: 'text', direction: 'outgoing', text: 'Kamu lagi di mana beb?' },
+      { id: newId(), type: 'text', direction: 'incoming', text: 'Lagi di rumah kok beb, baru selesai mandi.' },
+      { id: newId(), type: 'text', direction: 'outgoing', text: 'Oke deh, nanti malam kita jalan yuk! ❤️' }
+    ],
+    scale: 2,
+    time: '16:12',
+    phoneOs: 'ios',
+    chatType: 'personal',
+    groupSubtitle: 'Sinta, Budi, Anda, Agus',
+    batteryLevel: 85,
+    bgType: 'default',
+    bgColor: '#111B21',
+    bgImage: null
+  });
+  return true;
 }
 
 /* ============================================================
