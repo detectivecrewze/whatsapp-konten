@@ -1516,12 +1516,36 @@ function toggleTtsEnable(checked) {
 }
 
 function setTtsVoiceIn(val) {
-  state.ttsVoiceIn = val;
+  const customInp = document.getElementById('inp-custom-voice-in');
+  if (val === 'custom') {
+    if (customInp) customInp.classList.remove('hidden');
+    state.ttsVoiceIn = customInp?.value || 'EXAVITQu4vr4xnSDxMaL';
+  } else {
+    if (customInp) customInp.classList.add('hidden');
+    state.ttsVoiceIn = val;
+  }
+  triggerAutoSave();
+}
+
+function saveCustomVoiceIn(val) {
+  state.ttsVoiceIn = val.trim() || 'EXAVITQu4vr4xnSDxMaL';
   triggerAutoSave();
 }
 
 function setTtsVoiceOut(val) {
-  state.ttsVoiceOut = val;
+  const customInp = document.getElementById('inp-custom-voice-out');
+  if (val === 'custom') {
+    if (customInp) customInp.classList.remove('hidden');
+    state.ttsVoiceOut = customInp?.value || 'pNInz6obpgDQGcFmaJgB';
+  } else {
+    if (customInp) customInp.classList.add('hidden');
+    state.ttsVoiceOut = val;
+  }
+  triggerAutoSave();
+}
+
+function saveCustomVoiceOut(val) {
+  state.ttsVoiceOut = val.trim() || 'pNInz6obpgDQGcFmaJgB';
   triggerAutoSave();
 }
 
