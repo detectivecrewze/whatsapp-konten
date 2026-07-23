@@ -77,17 +77,19 @@ Hasilkan JSON valid dengan format persis berikut:
   "time": "21:15",
   "messages": [
     { "type": "text", "direction": "incoming", "time": "21:15", "text": "isi pesan" },
-    { "type": "text", "direction": "outgoing", "time": "21:16", "text": "balasan" }
+    { "type": "image", "direction": "outgoing", "time": "21:16", "caption": "Nih liat fotonya!", "imgDesc": "Foto bukti transfer / barang / lokasi / suasana" },
+    { "type": "voice", "direction": "incoming", "time": "21:17", "vnDuration": "0:14", "text": "" }
   ]
 }
 
 Syarat Wajib Naskah:
 1. PATUHI GENRE USER: Ikuti GENRE dan TONE cerita yang diminta pengguna di prompt (misal jika tentang olshop/COD buat komplain olshop; jika romantis/bucin buat percakapan manis/bucin; jika komedi buat lucu; jika horor buat horor). DILARANG mengubah cerita menjadi horor apabila prompt pengguna bertema lain!
-2. JUMLAH PESAN: ${lengthRule} Wajib patuhi persis jika pengguna menyebutkan jumlah spesifik di prompt.
-3. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Konflik/Eskalasi ➔ Klimaks / Ending Tuntas / Plot Twist yang sesuai genre.
-4. FORMAT CHAT SINGKAT: Pesan-pesan dibuat singkat-singkat khas anak muda Indonesia yang saling balas cepat.
-5. JAM REALISTIS: Jam (time) bertambah secara ALAMI & REALISTIS (misal 21:15 -> 21:16 -> 21:18 -> 21:22).
-6. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
+2. KARTU FOTO / IMAGE BUBBLE: Apabila alur cerita membutuhkan pengiriman foto (misal: foto barang olshop, foto bukti transfer, foto lokasi, foto selfie, foto suasana serem, foto bukti labrak selingkuh), WAJIB sisipkan 1-3 pesan ber-type "image" dengan properti "caption" dan "imgDesc" (deskripsi foto singkat).
+3. JUMLAH PESAN: ${lengthRule} Wajib patuhi persis jika pengguna menyebutkan jumlah spesifik di prompt.
+4. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Konflik/Eskalasi ➔ Klimaks / Ending Tuntas / Plot Twist yang sesuai genre.
+5. FORMAT CHAT SINGKAT: Pesan-pesan dibuat singkat-singkat khas anak muda Indonesia yang saling balas cepat.
+6. JAM REALISTIS: Jam (time) bertambah secara ALAMI & REALISTIS (misal 21:15 -> 21:16 -> 21:18 -> 21:22).
+7. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
 
         const modelNames = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let geminiRes = null;

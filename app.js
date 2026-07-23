@@ -3084,6 +3084,26 @@ function loadScriptPreset(scriptKey) {
    19. FULL AI SCRIPT GENERATOR ENGINE
    ============================================================ */
 
+function createImagePlaceholderSvg(desc, caption) {
+  const label = desc || caption || 'Foto Lampiran';
+  const cleanLabel = String(label).replace(/["'<>&]/g, '').slice(0, 35);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+    <defs>
+      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#1e1b4b"/>
+        <stop offset="50%" stop-color="#312e81"/>
+        <stop offset="100%" stop-color="#4c1d95"/>
+      </linearGradient>
+    </defs>
+    <rect width="600" height="400" fill="url(#g)"/>
+    <circle cx="300" cy="170" r="45" fill="none" stroke="#a78bfa" stroke-width="4" opacity="0.8"/>
+    <path d="M285 170 h30 m-15 -15 v30" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+    <text x="300" y="250" fill="#ffffff" font-family="sans-serif" font-size="22" font-weight="bold" text-anchor="middle">📷 ${cleanLabel}</text>
+    <text x="300" y="285" fill="#c084fc" font-family="sans-serif" font-size="14" text-anchor="middle">Klik untuk ganti foto di editor</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
 function setAiPrompt(text) {
   const inp = document.getElementById('inp-ai-prompt');
   if (inp) {
@@ -3155,13 +3175,20 @@ async function generateAiScript() {
       const payload = {
         name: aiData.name || 'Kontak WA',
         pfp: null,
-        messages: aiData.messages.map(m => ({
-          ...m,
-          id: newId(),
-          showAdvSettings: false,
-          enableZoom: m.enableZoom || false,
-          customScale: m.customScale || '1.20'
-        })),
+        messages: aiData.messages.map(m => {
+          let dataUrl = m.dataUrl || null;
+          if (m.type === 'image' && !dataUrl) {
+            dataUrl = createImagePlaceholderSvg(m.imgDesc, m.caption);
+          }
+          return {
+            ...m,
+            id: newId(),
+            dataUrl: dataUrl,
+            showAdvSettings: false,
+            enableZoom: m.enableZoom || false,
+            customScale: m.customScale || '1.20'
+          };
+        }),
         scale: 2,
         time: aiData.time || '21:15',
         phoneOs: 'ios',
