@@ -1012,6 +1012,35 @@ function setPinnedText(text) {
   triggerAutoSave();
 }
 
+/** Toggle Unread Chat Count Badge */
+function toggleUnreadBadge(enabled) {
+  state.showUnreadBadge = typeof enabled === 'boolean' ? enabled : !state.showUnreadBadge;
+  if (!state.unreadCount) state.unreadCount = '99+';
+
+  const chk = document.getElementById('inp-unread-enabled');
+  if (chk) chk.checked = !!state.showUnreadBadge;
+
+  const wrap = document.getElementById('wrap-unread-inputs');
+  if (wrap) wrap.classList.toggle('hidden', !state.showUnreadBadge);
+
+  if (typeof updateUnreadBadgeUI === 'function') {
+    updateUnreadBadgeUI(state);
+  }
+  triggerAutoSave();
+}
+
+/** Set Unread Chat Count value (e.g. "99+" or "14") */
+function setUnreadCount(count) {
+  state.unreadCount = count;
+  const inp = document.getElementById('inp-unread-count');
+  if (inp && inp.value !== count) inp.value = count;
+
+  if (typeof updateUnreadBadgeUI === 'function') {
+    updateUnreadBadgeUI(state);
+  }
+  triggerAutoSave();
+}
+
 /** Set Deleted Message Custom Text */
 function setMsgDeletedText(id, text) {
   const msg = state.messages.find(m => m.id === id);

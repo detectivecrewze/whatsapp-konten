@@ -376,6 +376,29 @@
           </div>
         </div>
 
+        <!-- Unread Chat Count Badge Settings -->
+        <div class="bg-gray-800/60 border border-gray-700/80 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs text-gray-300 font-semibold flex items-center gap-1">
+              🟢 Unread Chat Badge (&lt; 99+)
+            </label>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input id="inp-unread-enabled" type="checkbox" onchange="toggleUnreadBadge(this.checked)" class="sr-only peer">
+              <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-wa-accent"></div>
+            </label>
+          </div>
+          <div id="wrap-unread-inputs" class="hidden space-y-2 pt-1">
+            <label class="block text-[10px] text-gray-400 mb-1">Jumlah Pesan Belum Dibaca</label>
+            <div class="flex gap-2">
+              <input id="inp-unread-count" type="text" placeholder="99+" value="99+"
+                     oninput="setUnreadCount(this.value)"
+                     class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+              <button type="button" onclick="setUnreadCount('99+')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded-lg">99+</button>
+              <button type="button" onclick="setUnreadCount('14')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded-lg">14</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Clock Time -->
         <div>
           <label class="block text-xs text-gray-400 mb-1.5">Clock Time</label>
@@ -623,11 +646,16 @@
                 <col style="width:96px" />
               </colgroup>
               <tr>
-                <!-- Back arrow -->
-                <td style="padding:0; text-align:center; vertical-align:middle; color:#AEBAC1;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                  </svg>
+                <!-- Back arrow + Unread Badge -->
+                <td style="padding:0 0 0 8px; text-align:left; vertical-align:middle; color:#AEBAC1;">
+                  <div style="display:flex; align-items:center; gap:3px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+                      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                    <span id="wa-unread-badge"
+                          style="display:none; background:#00A884; color:white; font-size:11px; font-weight:700;
+                                 border-radius:12px; padding:2px 6px; line-height:1; flex-shrink:0;">99+</span>
+                  </div>
                 </td>
 
                 <!-- PFP -->
@@ -779,6 +807,7 @@
 <script src="js/modules/documentCard.js"></script>
 <script src="js/modules/callCards.js"></script>
 <script src="js/modules/statusReply.js"></script>
+<script src="js/modules/unreadBadge.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

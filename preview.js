@@ -519,6 +519,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     restoreStatusHeader(previewState);
   }
 
+  // Apply Unread Chat Badge (&lt; 99+)
+  if (typeof updateUnreadBadgeUI === 'function') {
+    updateUnreadBadgeUI(previewState);
+  }
+
   // Apply Pinned Message Banner
   if (typeof updatePinnedBannerUI === 'function') {
     updatePinnedBannerUI(previewState);
