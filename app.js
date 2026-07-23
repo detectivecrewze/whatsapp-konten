@@ -1508,11 +1508,70 @@ function toggleTtsEnable(checked) {
   triggerAutoSave();
 }
 
+function setTtsVoiceIn(val) {
+  state.ttsVoiceIn = val;
+  triggerAutoSave();
+}
+
+function setTtsVoiceOut(val) {
+  state.ttsVoiceOut = val;
+  triggerAutoSave();
+}
+
 function updateTtsSpeedValue(val) {
   const formatted = parseFloat(val).toFixed(2) + '×';
   const label = document.getElementById('tts-speed-val');
   if (label) label.textContent = formatted;
   triggerAutoSave();
+}
+
+function populateTtsVoicesDropdown() {
+  const selIn = document.getElementById('sel-tts-voice-in');
+  const selOut = document.getElementById('sel-tts-voice-out');
+  if (!selIn || !selOut) return;
+
+  const voices = ('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : [];
+  
+  let optionsHtml = `<option value="google-mp3">🎙️ Google TTS Audio (Standar)</option>`;
+  
+  const idVoices = voices.filter(v => v.lang.includes('id') || v.lang.includes('ID'));
+  const otherVoices = voices.filter(v => !v.lang.includes('id') && !v.lang.includes('ID'));
+
+  if (idVoices.length > 0) {
+    optionsHtml += `<optgroup label="Bahasa Indonesia Voices">`;
+    idVoices.forEach(v => {
+      const isMale = v.name.toLowerCase().includes('ardi') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('andika');
+      const isFemale = v.name.toLowerCase().includes('gadis') || v.name.toLowerCase().includes('female');
+      const icon = isMale ? '👨' : (isFemale ? '👩' : '🗣️');
+      optionsHtml += `<option value="${v.name}">${icon} ${v.name} (${v.lang})</option>`;
+    });
+    optionsHtml += `</optgroup>`;
+  }
+
+  if (otherVoices.length > 0) {
+    optionsHtml += `<optgroup label="Voices Lainnya">`;
+    otherVoices.slice(0, 10).forEach(v => {
+      optionsHtml += `<option value="${v.name}">🗣️ ${v.name} (${v.lang})</option>`;
+    });
+    optionsHtml += `</optgroup>`;
+  }
+
+  const prevIn = selIn.value || 'google-mp3';
+  const prevOut = selOut.value || 'google-mp3';
+
+  selIn.innerHTML = optionsHtml;
+  selOut.innerHTML = optionsHtml;
+
+  if (state.ttsVoiceIn) selIn.value = state.ttsVoiceIn;
+  else selIn.value = prevIn;
+
+  if (state.ttsVoiceOut) selOut.value = state.ttsVoiceOut;
+  else selOut.value = prevOut;
+}
+
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = populateTtsVoicesDropdown;
+  setTimeout(populateTtsVoicesDropdown, 500);
 }
 
 function setMsgCustomZoomScale(id, scaleVal) {
@@ -2301,6 +2360,8 @@ function getProjectPayload() {
     zoomScale:       zoomScale,
     zoomSpeed:       zoomSpeed,
     enableTts:       document.getElementById('chk-enable-tts')?.checked === true,
+    ttsVoiceIn:      document.getElementById('sel-tts-voice-in')?.value || 'google-mp3',
+    ttsVoiceOut:     document.getElementById('sel-tts-voice-out')?.value || 'google-mp3',
     ttsSpeed:        parseFloat(document.getElementById('inp-tts-speed')?.value || '1.00'),
     updatedAt:       Date.now()
   };

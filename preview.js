@@ -380,7 +380,36 @@ function playBlobAudio(blobUrl, speedRate = 1.0) {
   });
 }
 
-function speakBrowserFallbackClean(cleanText, speedRate = 1.0) {
+function speakSpecificVoice(rawText, voiceName, speedRate = 1.0) {
+  return new Promise((resolve) => {
+    if (!rawText) {
+      resolve();
+      return;
+    }
+
+    const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+
+    if (!cleanText) {
+      resolve();
+      return;
+    }
+
+    if (!voiceName || voiceName === 'google-mp3') {
+      fetchGoogleTtsBlobUrl(cleanText).then(blobUrl => {
+        if (blobUrl) {
+          playBlobAudio(blobUrl, speedRate).then(resolve);
+        } else {
+          speakBrowserFallbackClean(cleanText, voiceName, speedRate).then(resolve);
+        }
+      });
+      return;
+    }
+
+    speakBrowserFallbackClean(cleanText, voiceName, speedRate).then(resolve);
+  });
+}
+
+function speakBrowserFallbackClean(cleanText, targetVoiceName, speedRate = 1.0) {
   return new Promise((resolve) => {
     if (!('speechSynthesis' in window)) {
       resolve();
@@ -393,8 +422,11 @@ function speakBrowserFallbackClean(cleanText, speedRate = 1.0) {
     utter.rate = speedRate;
 
     const voices = window.speechSynthesis.getVoices();
+    const matchedVoice = voices.find(v => v.name === targetVoiceName);
     const idVoice = voices.find(v => v.lang.includes('id') || v.lang.includes('ID'));
-    if (idVoice) utter.voice = idVoice;
+
+    if (matchedVoice) utter.voice = matchedVoice;
+    else if (idVoice) utter.voice = idVoice;
 
     let done = false;
     const finish = () => {
@@ -406,7 +438,7 @@ function speakBrowserFallbackClean(cleanText, speedRate = 1.0) {
 
     utter.onend = finish;
     utter.onerror = finish;
-    setTimeout(finish, Math.max(1200, Math.round((cleanText.length / 10) * 1000)));
+    setTimeout(finish, Math.max(1200, Math.round((cleanText.length / 10) * 1000 / speedRate)));
 
     window.speechSynthesis.speak(utter);
   });
@@ -530,14 +562,14 @@ async function startAnimation() {
       : (messages[f].text || messages[f].caption || '');
 
     if (enableTts) {
-      const blobUrl = ttsAudioMap[f];
+      const selectedVoice = isOut ? (previewState.ttsVoiceOut || 'google-mp3') : (previewState.ttsVoiceIn || 'google-mp3');
       const speedRate = parseFloat(previewState.ttsSpeed || '1.00');
 
-      if (blobUrl) {
-        await playBlobAudio(blobUrl, speedRate);
+      if (selectedVoice === 'google-mp3' && ttsAudioMap[f]) {
+        await playBlobAudio(ttsAudioMap[f], speedRate);
         await sleep(250);
       } else if (textToSpeak) {
-        await speakBrowserFallbackClean(textToSpeak, speedRate);
+        await speakSpecificVoice(textToSpeak, selectedVoice, speedRate);
         await sleep(250);
       } else {
         const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
