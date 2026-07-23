@@ -102,11 +102,17 @@ Aturan Penulisan Gaya Chat WhatsApp (SANGAT PENTING):
      - Pembaca LANGSUNG SADAR SEKETIKA (INSTANT CHILLS! ⚡): Sosok yang dari tadi membalas chat di room WA itu BUKAN IBU!
      - Lalu pesan terakhir di room chat membalas singkat & dingin (misal: "Kok tau ibu baru sampe airport?").
 
-3. ATURAN FITUR:
+3. ELEVENLABS AUDIO EMOTION TAGS (SANGAT PENTING UNTUK SUARA AI ELEVENLABS):
+   - Sisipkan Audio Tag ElevenLabs ber-kurung siku di AWAL setiap properti "text" bubble pesan (seperti: [scared][whispers], [nervous], [angry], [gasps], [sighs], [crying], [excited]).
+   - Contoh:
+     { "type": "text", "direction": "outgoing", "time": "02:15", "text": "[scared][whispers] Bu... ada yang berdiri di luar kamar..." }
+     { "type": "text", "direction": "incoming", "time": "02:16", "text": "[nervous] Jangan dibuka! Kunci pintunya sekarang!" }
+
+4. ATURAN FITUR:
    - DILARANG MENGGUNAKAN type "voice" (Voice Note).
    - Gunakan type "notification", "image", "deleted", "view_once" HANYA jika relevan & memperkuat cerita.
-4. JUMLAH PESAN: ${lengthRule} Wajib penuhi target jumlah pesan.
-5. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
+5. JUMLAH PESAN: ${lengthRule} Wajib penuhi target jumlah pesan.
+6. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
 
         const modelNames = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let geminiRes = null;

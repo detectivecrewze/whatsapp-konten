@@ -32,6 +32,11 @@ function svgReadTicks() {
   </svg>`;
 }
 
+function stripAudioTags(str) {
+  if (!str) return '';
+  return str.replace(/\[(nervous|scared|angry|sad|excited|whispers|shouts|gasps|sighs|crying|quietly|tired|happy|laughing|fearful|panicked|desperate|[a-zA-Z0-9_\-\s]+)\]/gi, '').trim();
+}
+
 /* ── Bubble renderer ─────────────────────────────────────── */
 function createBubble(msg, idx) {
   const time  = msgTime(idx);
@@ -60,12 +65,13 @@ function createBubble(msg, idx) {
   if (msg.type === 'text') {
     const bg = isOut ? '#005C4B' : '#202C33';
     const br = isOut ? '12px 0 12px 12px' : '0 12px 12px 12px';
+    const visualText = stripAudioTags(msg.text || '');
     html = `
       <div style="background:${bg}; border-radius:${br}; max-width:270px;
                   padding:8px 10px 6px; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
         ${groupBadgeHtml}
         <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
-                  word-break:break-word; white-space:pre-wrap;">${escHtml(msg.text || '')}</p>
+                  word-break:break-word; white-space:pre-wrap;">${escHtml(visualText)}</p>
         <div style="display:flex; justify-content:flex-end; align-items:center;
                     gap:3px; margin-top:4px;">
           <span style="font-size:11px; color:rgba(233,237,239,0.55);">${time}</span>
@@ -161,7 +167,7 @@ function createBubble(msg, idx) {
           ${msg.caption ? `
           <div style="padding: 4px 6px 2px;">
             <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
-                      word-break:break-word; white-space:pre-wrap;">${escHtml(msg.caption)}</p>
+                      word-break:break-word; white-space:pre-wrap;">${escHtml(stripAudioTags(msg.caption))}</p>
           </div>
           ` : ''}
           <div style="display:flex; justify-content:flex-end; align-items:center;

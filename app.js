@@ -566,20 +566,27 @@ function createCanvasBubble(msg, idx) {
 
   let bubbleHtml = '';
 
-  // ── TEXT bubble ──────────────────────────────────────────
+  // ── TEXT bubble ───────────────────────────────────────────
   if (msg.type === 'text') {
     const bg = isOut ? '#005C4B' : '#202C33';
     const br = isOut ? '12px 0 12px 12px' : '0 12px 12px 12px';
     const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    const visualText = typeof stripAudioTags === 'function' ? stripAudioTags(msg.text || '') : (msg.text || '');
 
     bubbleHtml = `
       <div style="background:${bg}; border-radius:${br}; max-width:270px;
                   padding:8px 10px 6px; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
         ${groupSenderBadge}
         <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
-                  word-break:break-word; white-space:pre-wrap;">${escHtml(msg.text || '')}</p>
+                  word-break:break-word; white-space:pre-wrap;">${escHtml(visualText)}</p>
         <div style="display:flex; justify-content:flex-end; align-items:center;
                     gap:3px; margin-top:4px;">
+          <span style="font-size:11px; color:rgba(233,237,239,0.55);">${time}</span>
+          ${isOut ? svgReadTicks() : ''}
+        </div>
+      </div>
+    `;
+  }; margin-top:4px;">
           <span style="font-size:11px; color:rgba(233,237,239,0.55);">${time}</span>
           ${isOut ? svgReadTicks() : ''}
         </div>
