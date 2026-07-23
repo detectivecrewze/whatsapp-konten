@@ -334,25 +334,27 @@ function triggerAutoZoom(msgEl, isOut, customScaleOverride) {
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
-function speakGoogleTts(rawText, speedRate = 1.0) {
-  return new Promise((resolve) => {
-    if (!rawText) {
-      resolve();
-      return;
-    }
+async function fetchGoogleTtsBlobUrl(rawText) {
+  if (!rawText) return null;
+  const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+  if (!cleanText) return null;
 
-    // Strip emoticons & html/markdown for clean voiceover
-    const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
-
-    if (!cleanText) {
-      resolve();
-      return;
-    }
-
+  try {
     const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=id&client=tw-ob&q=${encodeURIComponent(cleanText)}`;
+    const res = await fetch(ttsUrl);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  } catch (err) {
+    console.warn('Failed to prefetch Google TTS Blob:', err);
+    return null;
+  }
+}
+
+function playBlobAudio(blobUrl, speedRate = 1.0) {
+  return new Promise((resolve) => {
     const audio = new Audio();
-    audio.crossOrigin = 'anonymous';
-    audio.src = ttsUrl;
+    audio.src = blobUrl;
     audio.playbackRate = speedRate;
 
     let finished = false;
@@ -364,20 +366,16 @@ function speakGoogleTts(rawText, speedRate = 1.0) {
     };
 
     audio.onended = finish;
-    audio.onerror = () => {
-      // Fallback: browser SpeechSynthesis if audio fetch fails
-      speakBrowserFallbackClean(cleanText, speedRate).then(finish);
+    audio.onerror = finish;
+
+    audio.onloadedmetadata = () => {
+      const durMs = Math.max(1200, Math.round((audio.duration / speedRate) * 1000));
+      setTimeout(finish, durMs + 500);
     };
 
-    const estDuration = Math.max(1400, Math.round((cleanText.length / 10) * 1000 / speedRate));
-    const safetyTimeout = setTimeout(finish, estDuration + 900);
-
-    audio.play().then(() => {
-      // Playing clean Google TTS audio
-    }).catch(err => {
-      console.log('Google Audio play blocked, using browser fallback:', err);
-      clearTimeout(safetyTimeout);
-      speakBrowserFallbackClean(cleanText, speedRate).then(finish);
+    audio.play().catch(err => {
+      console.warn('Blob audio play failed:', err);
+      finish();
     });
   });
 }
@@ -422,6 +420,7 @@ async function startAnimation() {
   const replyDelay = previewState.replyDelay || 1400;
   const useTyping  = previewState.useTyping !== false;
   const autoZoom   = previewState.autoZoom === true;
+  const enableTts  = previewState.enableTts === true;
   const totalF     = messages.length;
 
   const replayBtn = document.getElementById('btn-replay');
@@ -437,6 +436,21 @@ async function startAnimation() {
   const numEl   = document.getElementById('countdown-num');
   const lblEl   = document.getElementById('countdown-label');
   overlay.classList.remove('hidden');
+
+  // Pre-fetch Google TTS Audio Blobs in parallel if TTS enabled
+  const ttsAudioMap = {};
+  if (enableTts) {
+    lblEl.textContent = 'Mengunduh Suara Google TTS… 🎙️';
+    await Promise.all(messages.map(async (msg, idx) => {
+      const textToSpeak = msg.type === 'notification'
+        ? `${msg.senderName || 'Notifikasi'}: ${msg.text || ''}`
+        : (msg.text || msg.caption || '');
+      if (textToSpeak) {
+        ttsAudioMap[idx] = await fetchGoogleTtsBlobUrl(textToSpeak);
+      }
+    }));
+  }
+
   for (let i = 3; i >= 1; i--) {
     numEl.textContent  = i;
     lblEl.textContent  = 'Starting animation…';
@@ -511,15 +525,24 @@ async function startAnimation() {
     }
 
     // Google TTS Voice Over or Hold Duration
-    const enableTts = previewState.enableTts === true;
     const textToSpeak = messages[f].type === 'notification'
       ? `${messages[f].senderName || 'Notifikasi'}: ${messages[f].text || ''}`
       : (messages[f].text || messages[f].caption || '');
 
-    if (enableTts && textToSpeak) {
+    if (enableTts) {
+      const blobUrl = ttsAudioMap[f];
       const speedRate = parseFloat(previewState.ttsSpeed || '1.00');
-      await speakGoogleTts(textToSpeak, speedRate);
-      await sleep(250);
+
+      if (blobUrl) {
+        await playBlobAudio(blobUrl, speedRate);
+        await sleep(250);
+      } else if (textToSpeak) {
+        await speakBrowserFallbackClean(textToSpeak, speedRate);
+        await sleep(250);
+      } else {
+        const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
+        await sleep(frameHoldMs);
+      }
     } else {
       const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
       await sleep(frameHoldMs);
