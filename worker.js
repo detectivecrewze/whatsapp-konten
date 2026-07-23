@@ -66,27 +66,23 @@ export default {
           });
         }
         
-        const systemInstruction = `Kamu adalah penulis naskah konten drama & komedi WhatsApp viral profesional untuk TikTok/Reels/Shorts.
+        const systemInstruction = `Kamu adalah penulis naskah konten drama & horor WhatsApp viral profesional untuk TikTok/Reels/Shorts.
 Hasilkan JSON valid dengan format persis berikut:
 {
   "name": "Nama Kontak / Lawan Bicara 👻",
-  "time": "02:05",
+  "time": "02:00",
   "messages": [
-    { "type": "text", "direction": "incoming", "time": "02:05", "text": "Bro, kamu lagi denger suara orang ketuk pintu kamar ga?" },
-    { "type": "text", "direction": "outgoing", "time": "02:07", "text": "Gak ada tuh bro. Perasaan kamu aja kali." },
-    { "type": "voice", "direction": "incoming", "time": "02:09", "vnDuration": "0:14", "text": "" },
-    { "type": "text", "direction": "outgoing", "time": "02:12", "text": "Jangan nakut-nakutin jir!! Aku sendirian!" },
-    { "type": "text", "direction": "incoming", "time": "02:15", "text": "Wkwk kaget kan! Ini aku di teras depan bawa martabak manis! Buka pintu cepet!" }
+    { "type": "text", "direction": "incoming", "time": "02:00", "text": "Bro..." },
+    { "type": "text", "direction": "outgoing", "time": "02:01", "text": "Apaan?" }
   ]
 }
 
 Syarat Wajib Naskah:
-1. JUMLAH PESAN: Buat 8 sampai 14 bubble chat obrolan panjang, mendalam, dan lengkap dari awal sampai tamat!
-2. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Masalah/Drama ➔ Puncak Emosi/Puncak Ketegangan ➔ KLIMAKS / ENDING PLOT TWIST (Plot twist lucu, kaget, atau lega). Jangan gantung!
-3. TYPE VARIASI: Boleh gunakan type "text" dan sesekali "voice" (Voice Note dengan "vnDuration": "0:15").
-4. JAM REALISTIS: Jam (time) harus bertambah secara ALAMI & REALISTIS (misal 02:05 -> 02:07 -> 02:09 -> 02:12 -> 02:16).
-5. BAHASA: Gunakan bahasa gaul anak muda Indonesia yang sangat santai, natural, dan ekspresif.
-6. Respon HANYA string JSON murni tanpa pembungkus markdown.`;
+1. JUMLAH PESAN PATUHI PROMPT USER: WAJIB patuhi persis jumlah bubble chat yang diminta pengguna di prompt (misal jika user minta 25-35 bubble chat, WAJIB hasilkan 25 sampai 35 bubble chat lengkap dari awal, eskalasi konflik, hingga ending tuntas tanpa dipotong!). Jika user tidak menyebutkan jumlah, buat 15-25 bubble chat.
+2. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Eskalasi Rasa Takut / Panik ➔ Ketegangan Puncak ➔ KLIMAKS PLOT TWIST YANG MEMBUAT MERINDING DI AKHIR CERITA.
+3. FORMAT CHAT SINGKAT: Pesan-pesan dibuat singkat-singkat khas anak muda Indonesia yang sedang panik saling balas cepat.
+4. JAM REALISTIS: Jam (time) bertambah secara ALAMI & REALISTIS (misal 02:00 -> 02:01 -> 02:02 -> 02:04 -> 02:07).
+5. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
 
         const modelNames = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let geminiRes = null;
@@ -101,8 +97,12 @@ Syarat Wajib Naskah:
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 contents: [
-                  { role: 'user', parts: [{ text: `${systemInstruction}\n\nIde Cerita: ${prompt}` }] }
-                ]
+                  { role: 'user', parts: [{ text: `${systemInstruction}\n\nIde Cerita & Spesifikasi User:\n${prompt}` }] }
+                ],
+                generationConfig: {
+                  temperature: 0.85,
+                  maxOutputTokens: 8192
+                }
               })
             });
             if (res.ok) {
