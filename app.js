@@ -73,23 +73,38 @@ function svgReadTicks() {
    4. FILE → DATA URL
    ============================================================ */
 function fileToDataUrl(file, maxDim = 1000) {
+  console.log('[fileToDataUrl] Starting processing for file:', file?.name, file?.size, file?.type);
   return new Promise((resolve, reject) => {
+    if (!file) {
+      console.warn('[fileToDataUrl] No file provided');
+      reject(new Error('No file provided'));
+      return;
+    }
+
     // Preserve animated GIFs as raw data URL
     if (file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif')) {
+      console.log('[fileToDataUrl] Processing as GIF...');
       const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = reject;
+      reader.onload = (e) => {
+        console.log('[fileToDataUrl] GIF loaded successfully, length:', e.target.result?.length);
+        resolve(e.target.result);
+      };
+      reader.onerror = (e) => {
+        console.error('[fileToDataUrl] GIF reader error:', e);
+        reject(e);
+      };
       reader.readAsDataURL(file);
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (e) => {
+      console.log('[fileToDataUrl] FileReader loaded base dataUrl, length:', e.target.result?.length);
       const dataUrl = e.target.result;
       const img = new Image();
 
-      // Set onload & onerror BEFORE setting img.src to ensure event is caught
       img.onload = () => {
+        console.log('[fileToDataUrl] HTML Image loaded, original size:', img.width, 'x', img.height);
         let width = img.width || 300;
         let height = img.height || 300;
 
@@ -109,16 +124,27 @@ function fileToDataUrl(file, maxDim = 1000) {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+          console.log('[fileToDataUrl] Canvas compression complete, final length:', compressed.length);
+          resolve(compressed);
         } catch (err) {
+          console.warn('[fileToDataUrl] Canvas compression failed, falling back to raw dataUrl:', err);
           resolve(dataUrl);
         }
       };
 
-      img.onerror = () => resolve(dataUrl);
+      img.onerror = (err) => {
+        console.warn('[fileToDataUrl] HTML Image onError, falling back to raw dataUrl:', err);
+        resolve(dataUrl);
+      };
+
       img.src = dataUrl;
     };
-    reader.onerror = reject;
+
+    reader.onerror = (err) => {
+      console.error('[fileToDataUrl] FileReader error:', err);
+      reject(err);
+    };
 
     reader.readAsDataURL(file);
   });
@@ -253,6 +279,7 @@ function dashboardItemHtml(msg, idx) {
             📷 Upload / Sisipkan Gambar ke Pesan Ini
           </span>
           <input type="file" accept="image/*,.gif" class="hidden"
+                 onclick="this.value=null"
                  onchange="attachImageToTextMsg('${msg.id}', this)" />
         </label>
       </div>
@@ -581,17 +608,23 @@ function setMsgGifUrl(id, url) {
 
 /** Handle file upload for image/gif/qr messages */
 async function handleMsgFile(id, input) {
+  console.log('[handleMsgFile] Called for id:', id, 'input.files:', input?.files);
   const msg = state.messages.find(m => m.id === id);
-  if (!msg || !input.files?.[0]) return;
+  if (!msg || !input.files?.[0]) {
+    console.warn('[handleMsgFile] Aborted: msg found?', !!msg, 'file selected?', !!input?.files?.[0]);
+    return;
+  }
 
   const file = input.files[0];
+  console.log('[handleMsgFile] File selected:', file.name, file.size, file.type);
   msg.fileName = file.name.length > 30 ? file.name.slice(0, 27) + '…' : file.name;
   msg.isGif    = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
 
   try {
     msg.dataUrl = await fileToDataUrl(file);
+    console.log('[handleMsgFile] dataUrl assigned successfully, length:', msg.dataUrl?.length);
   } catch (e) {
-    console.error('File read error:', e);
+    console.error('[handleMsgFile] File read error:', e);
     return;
   }
 
@@ -600,10 +633,15 @@ async function handleMsgFile(id, input) {
 
 /** Directly attach an image file to a text message card */
 async function attachImageToTextMsg(id, input) {
+  console.log('[attachImageToTextMsg] Called for id:', id, 'input.files:', input?.files);
   const msg = state.messages.find(m => m.id === id);
-  if (!msg || !input.files?.[0]) return;
+  if (!msg || !input.files?.[0]) {
+    console.warn('[attachImageToTextMsg] Aborted: msg found?', !!msg, 'file selected?', !!input?.files?.[0]);
+    return;
+  }
 
   const file = input.files[0];
+  console.log('[attachImageToTextMsg] File selected:', file.name, file.size, file.type);
   msg.fileName = file.name.length > 30 ? file.name.slice(0, 27) + '…' : file.name;
   msg.isGif    = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
   msg.type     = 'image';
@@ -611,8 +649,9 @@ async function attachImageToTextMsg(id, input) {
 
   try {
     msg.dataUrl = await fileToDataUrl(file);
+    console.log('[attachImageToTextMsg] dataUrl assigned successfully, length:', msg.dataUrl?.length);
   } catch (e) {
-    console.error('File read error:', e);
+    console.error('[attachImageToTextMsg] File read error:', e);
     return;
   }
 
