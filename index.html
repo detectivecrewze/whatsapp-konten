@@ -463,19 +463,19 @@
             <p class="text-xs font-semibold text-gray-300 uppercase tracking-widest">Chat Sequence (Daftar Pesan)</p>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="event.stopPropagation(); autoSequenceMsgTimes(1)"
+            <button type="button" onclick="event.stopPropagation(); autoSequenceMsgTimes(1)"
                     title="Otomatis beri jeda +1 menit secara berurutan untuk semua pesan"
                     class="flex items-center gap-1 text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-400
-                           px-2.5 py-1.5 rounded-lg transition font-medium border border-amber-500/30">
+                           px-2.5 py-1.5 rounded-lg transition font-medium border border-amber-500/30 active:scale-95 cursor-pointer">
               ⚡ Auto Jeda +1 Mnt
             </button>
-            <button onclick="event.stopPropagation(); addMessage()"
+            <button type="button" onclick="event.stopPropagation(); addMessage()"
                     class="flex items-center gap-1 text-xs bg-wa-accent/20 hover:bg-wa-accent/30 text-wa-accent
-                           px-2.5 py-1.5 rounded-lg transition font-medium">
+                           px-2.5 py-1.5 rounded-lg transition font-medium active:scale-95 cursor-pointer">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              Add Message
+              + Add Message
             </button>
             <button type="button" class="text-gray-400 hover:text-white transition-transform duration-200" id="icon-sequence-arrow" style="transform: rotate(180deg);">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

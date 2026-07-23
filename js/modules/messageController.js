@@ -13,6 +13,13 @@ function addMessage() {
 }
 
 function addMsg(type = 'text', direction = 'outgoing') {
+  const seqBody = document.getElementById('sec-sequence-body');
+  const seqIcon = document.getElementById('icon-sequence-arrow');
+  if (seqBody && seqBody.classList.contains('hidden')) {
+    seqBody.classList.remove('hidden');
+    if (seqIcon) seqIcon.style.transform = 'rotate(180deg)';
+  }
+
   const msg = {
     id: newId(),
     type,
@@ -31,12 +38,16 @@ function addMsg(type = 'text', direction = 'outgoing') {
   if (type === 'location') { msg.locName = 'Monumen Nasional'; msg.address = 'Gambir, Jakarta Pusat'; }
 
   state.messages.push(msg);
-  renderDashboard();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  if (typeof renderCanvas === 'function') renderCanvas();
+  if (typeof triggerAutoSave === 'function') triggerAutoSave();
 
   setTimeout(() => {
     const builder = document.getElementById('msg-builder');
     if (builder) builder.scrollTop = builder.scrollHeight;
   }, 50);
+
+  if (typeof showToast === 'function') showToast('💬 Pesan baru ditambahkan!');
 }
 
 function autoSequenceMsgTimes(gapMinutes = 1) {
