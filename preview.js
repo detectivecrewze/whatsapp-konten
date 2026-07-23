@@ -342,6 +342,7 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
   let targetVoice = (!voiceId || voiceId === 'custom' || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
   const emotionMode = (previewState && previewState.ttsEmotion) ? previewState.ttsEmotion : 'horror';
+  const modelToUse = (previewState && previewState.elevenModel) ? previewState.elevenModel : 'eleven_v3';
 
   // Horror & Suspense settings: Low stability (0.25) + High style exaggeration (0.50)
   const settingsMap = {
@@ -351,7 +352,7 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   };
   const voiceSettings = settingsMap[emotionMode] || settingsMap.horror;
 
-  console.log(`🎙️ [ElevenLabs API] Generating ${emotionMode.toUpperCase()} voice for "${cleanText.slice(0, 30)}..." | VoiceID: ${targetVoice}`);
+  console.log(`🎙️ [ElevenLabs API] Generating ${emotionMode.toUpperCase()} voice (${modelToUse}) for "${cleanText.slice(0, 30)}..." | VoiceID: ${targetVoice}`);
 
   async function requestAudio(vId) {
     try {
@@ -363,7 +364,7 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
         },
         body: JSON.stringify({
           text: cleanText,
-          model_id: 'eleven_multilingual_v2',
+          model_id: modelToUse,
           voice_settings: voiceSettings
         })
       });

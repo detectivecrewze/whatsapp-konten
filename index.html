@@ -693,6 +693,19 @@
                          class="w-full bg-gray-900 border border-amber-500/40 text-amber-200 font-mono text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500" />
                 </div>
 
+                <!-- AI Model Selector (Official Docs) -->
+                <div class="space-y-1">
+                  <label class="text-[11px] text-amber-300 font-medium flex items-center justify-between">
+                    <span>🤖 Model AI ElevenLabs:</span>
+                  </label>
+                  <select id="sel-eleven-model" onchange="setElevenModel(this.value)"
+                          class="w-full bg-gray-900 border border-amber-500/40 text-amber-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer">
+                    <option value="eleven_v3" selected>👑 Eleven v3 (Terbaru - Sangat Emosional & Ekspresif 70+ Bahasa)</option>
+                    <option value="eleven_multilingual_v2">🌐 Eleven Multilingual v2 (Standar 29 Bahasa)</option>
+                    <option value="eleven_flash_v2_5">⚡ Eleven Flash v2.5 (Ultra Cepat ~75ms)</option>
+                  </select>
+                </div>
+
                 <!-- Incoming Voice (Pengirim Kiri) -->
                 <div class="space-y-1">
                   <label class="text-[11px] text-gray-300 font-medium flex items-center justify-between">

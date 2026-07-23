@@ -1509,6 +1509,11 @@ function saveElevenKey(keyVal) {
   triggerAutoSave();
 }
 
+function setElevenModel(val) {
+  state.elevenModel = val;
+  triggerAutoSave();
+}
+
 function toggleTtsEnable(checked) {
   const wrap = document.getElementById('wrap-tts-options');
   if (wrap) wrap.style.display = checked ? 'block' : 'none';
@@ -2348,6 +2353,7 @@ function getProjectPayload() {
     zoomSpeed:       zoomSpeed,
     enableTts:       document.getElementById('chk-enable-tts')?.checked === true,
     elevenKey:       document.getElementById('inp-eleven-key')?.value || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20',
+    elevenModel:     document.getElementById('sel-eleven-model')?.value || 'eleven_v3',
     ttsVoiceIn:      (document.getElementById('sel-tts-voice-in')?.value === 'custom') ? (document.getElementById('inp-custom-voice-in')?.value?.trim() || 'dvWFQHCY2Y64dYruqGaE') : (document.getElementById('sel-tts-voice-in')?.value || 'dvWFQHCY2Y64dYruqGaE'),
     ttsVoiceOut:     (document.getElementById('sel-tts-voice-out')?.value === 'custom') ? (document.getElementById('inp-custom-voice-out')?.value?.trim() || 'h9T2LVqn08GUmYXqjOIE') : (document.getElementById('sel-tts-voice-out')?.value || 'h9T2LVqn08GUmYXqjOIE'),
     ttsEmotion:      document.getElementById('sel-tts-emotion')?.value || 'horror',
