@@ -636,74 +636,59 @@
                  Col widths: 40px back | 56px pfp | auto name | 96px icons
                  Name gets: 390 - 40 - 56 - 96 = 198px. Impossible to crop.
             -->
-            <table id="wa-header"
-                   style="width:100%; height:62px; border-collapse:collapse; table-layout:fixed;
-                          background:#202C33; border-bottom:1px solid #1D282F;">
-              <colgroup>
-                <col style="width:40px" />
-                <col style="width:56px" />
-                <col /><!-- name takes remaining = 198px -->
-                <col style="width:96px" />
-              </colgroup>
-              <tr>
-                <!-- Back arrow + Unread Badge -->
-                <td style="padding:0 0 0 8px; text-align:left; vertical-align:middle; color:#AEBAC1;">
-                  <div style="display:flex; align-items:center; gap:3px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
-                      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                    </svg>
-                    <span id="wa-unread-badge"
-                          style="display:none; background:#00A884; color:white; font-size:11px; font-weight:700;
-                                 border-radius:12px; padding:2px 6px; line-height:1; flex-shrink:0;">99+</span>
-                  </div>
-                </td>
+            <div id="wa-header"
+                 style="width:100%; height:62px; background:#202C33; border-bottom:1px solid #1D282F;
+                        display:flex; align-items:center; padding:0 10px 0 6px; gap:8px; box-sizing:border-box;">
+              <!-- Back arrow + Unread Badge -->
+              <div style="display:flex; align-items:center; gap:2px; color:#AEBAC1; flex-shrink:0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+                  <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+                <span id="wa-unread-badge"
+                      style="display:none; background:#00A884; color:white; font-size:11px; font-weight:700;
+                             border-radius:12px; padding:2px 6px; line-height:1; flex-shrink:0; margin-left:1px;">99+</span>
+              </div>
 
-                <!-- PFP -->
-                <td style="padding:0; text-align:center; vertical-align:middle;">
-                  <div style="position:relative; width:44px; height:44px; display:inline-block;">
-                    <img id="wa-pfp" src=""
-                         style="width:44px; height:44px; border-radius:50%; object-fit:cover;
-                                border:2px solid #00A884; display:block;"
-                         onerror="this.style.display='none'; document.getElementById('wa-pfp-fallback').style.display='flex';" />
-                    <div id="wa-pfp-fallback"
-                         style="width:44px; height:44px; border-radius:50%; background:#00A884;
-                                align-items:center; justify-content:center;
-                                position:absolute; top:0; left:0; display:none;">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                      </svg>
-                    </div>
-                    <span style="position:absolute; bottom:0; right:0; width:12px; height:12px;
-                                 border-radius:50%; background:#00A884; border:2px solid #202C33;"></span>
-                  </div>
-                </td>
+              <!-- PFP -->
+              <div style="position:relative; width:42px; height:42px; flex-shrink:0;">
+                <img id="wa-pfp" src=""
+                     style="width:42px; height:42px; border-radius:50%; object-fit:cover;
+                            border:2px solid #00A884; display:block;"
+                     onerror="this.style.display='none'; document.getElementById('wa-pfp-fallback').style.display='flex';" />
+                <div id="wa-pfp-fallback"
+                     style="width:42px; height:42px; border-radius:50%; background:#00A884;
+                            align-items:center; justify-content:center;
+                            position:absolute; top:0; left:0; display:none;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <span style="position:absolute; bottom:0; right:0; width:11px; height:11px;
+                             border-radius:50%; background:#00A884; border:2px solid #202C33;"></span>
+              </div>
 
-                <!-- Name + Status (this cell gets all remaining width — guaranteed) -->
-                <td style="padding:0 6px 0 4px; vertical-align:middle;">
-                  <p id="wa-name"
-                     style="font-size:15px; font-weight:600; color:#E9EDEF;
-                            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-                            line-height:1.3; margin:0; padding:0;">Contact Name</p>
-                  <p id="wa-status-text" style="font-size:12px; color:#00A884; margin:0; padding:0; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">online</p>
-                </td>
+              <!-- Name + Status -->
+              <div style="flex:1; min-width:0; padding-left:2px;">
+                <p id="wa-name"
+                   style="font-size:15px; font-weight:600; color:#E9EDEF;
+                          white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+                          line-height:1.25; margin:0; padding:0;">Contact Name</p>
+                <p id="wa-status-text" style="font-size:12px; color:#00A884; margin:0; padding:0; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">online</p>
+              </div>
 
-                <!-- Action icons -->
-                <td style="padding:0 10px 0 0; vertical-align:middle;">
-                  <div style="display:flex; align-items:center; justify-content:flex-end;
-                              gap:10px; color:#AEBAC1;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-                    </svg>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                    </svg>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                    </svg>
-                  </div>
-                </td>
-              </tr>
-            </table><!-- end wa-header -->
+              <!-- Action icons -->
+              <div style="display:flex; align-items:center; justify-content:flex-end; gap:12px; color:#AEBAC1; flex-shrink:0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                </svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </div>
+            </div><!-- end wa-header --><!-- end wa-header -->
 
             <!-- ── CHAT AREA ── -->
             <div id="wa-chat-area"
