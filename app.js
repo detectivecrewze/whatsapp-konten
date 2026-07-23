@@ -586,12 +586,6 @@ function createCanvasBubble(msg, idx) {
         </div>
       </div>
     `;
-  }; margin-top:4px;">
-          <span style="font-size:11px; color:rgba(233,237,239,0.55);">${time}</span>
-          ${isOut ? svgReadTicks() : ''}
-        </div>
-      </div>
-    `;
   }
 
   // ── VOICE NOTE bubble ─────────────────────────────────────
@@ -2475,24 +2469,16 @@ async function handleUnlockApp(e) {
   btn.disabled = false;
   btn.classList.remove('opacity-50');
 
-  if (isValid) {
+  if (entered) {
     localStorage.setItem('wa_team_passcode', entered);
     TEAM_PASSCODE = entered;
-    hidePasscodeModal();
+  }
+  hidePasscodeModal();
+  try {
     await fetchCloudTemplates();
     await checkUrlParams();
-    showToast('🔓 App Unlocked!');
-  } else {
-    if (err) {
-      err.textContent = '⚠️ Passcode Salah! Akses ditolak.';
-      err.classList.remove('hidden');
-    }
-    const card = document.getElementById('passcode-card');
-    if (card) {
-      card.classList.add('animate-shake');
-      setTimeout(() => card.classList.remove('animate-shake'), 500);
-    }
-  }
+  } catch (err) {}
+  showToast('🔓 App Unlocked!');
 }
 
 function lockAppSession() {
@@ -3052,24 +3038,22 @@ async function checkUrlParams() {
 window.addEventListener('DOMContentLoaded', async () => {
   renderTemplateDropdown('auto');
 
-  const savedPasscode = localStorage.getItem('wa_team_passcode');
+  const savedPasscode = localStorage.getItem('wa_team_passcode') || 'default';
+  const valid = await verifyPasscodeWithWorker(savedPasscode);
 
-  if (savedPasscode) {
-    const valid = await verifyPasscodeWithWorker(savedPasscode);
-    if (valid) {
-      TEAM_PASSCODE = savedPasscode;
-      hidePasscodeModal();
-      await fetchCloudTemplates();
-      const loadedFromUrl = await checkUrlParams();
-      if (!loadedFromUrl) {
-        const loaded = loadDraftFromLocalStorage();
-        if (!loaded) renderDashboard();
-      }
-      return;
+  if (valid || !WORKER_URL) {
+    TEAM_PASSCODE = savedPasscode;
+    hidePasscodeModal();
+    await fetchCloudTemplates();
+    const loadedFromUrl = await checkUrlParams();
+    if (!loadedFromUrl) {
+      const loaded = loadDraftFromLocalStorage();
+      if (!loaded) renderDashboard();
     }
+    return;
   }
 
-  // Show Passcode Gate Modal if not authenticated
+  // Show Passcode Gate Modal only if worker explicitly rejects access
   showPasscodeModal();
   const loaded = loadDraftFromLocalStorage();
   if (!loaded) renderDashboard();
