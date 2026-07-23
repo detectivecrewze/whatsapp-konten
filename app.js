@@ -193,6 +193,11 @@ function dashboardItemHtml(msg, idx) {
   const isQr       = msg.type === 'qr';
   const isVoice    = msg.type === 'voice';
   const isTransfer = msg.type === 'transfer';
+  const isDeleted  = msg.type === 'deleted';
+  const isLocation = msg.type === 'location';
+  const isViewOnce = msg.type === 'view_once';
+  const isDocument = msg.type === 'document';
+  const isCall     = msg.type === 'call';
 
   const outActiveCls  = isOut  ? 'active-dir' : '';
   const inActiveCls   = !isOut ? 'active-dir' : '';
@@ -202,6 +207,11 @@ function dashboardItemHtml(msg, idx) {
   const qrHide       = isQr       ? '' : 'hidden';
   const voiceHide    = isVoice    ? '' : 'hidden';
   const transferHide = isTransfer ? '' : 'hidden';
+  const deletedHide  = isDeleted  ? '' : 'hidden';
+  const locationHide = isLocation ? '' : 'hidden';
+  const viewOnceHide = isViewOnce ? '' : 'hidden';
+  const documentHide = isDocument ? '' : 'hidden';
+  const callHide     = isCall     ? '' : 'hidden';
 
   // QR only available for outgoing
   const qrOption = msg.direction === 'outgoing'
@@ -244,10 +254,15 @@ function dashboardItemHtml(msg, idx) {
       <select onchange="setMsgType('${msg.id}', this.value)"
               class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5
                      text-base md:text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
-        <option value="text"     ${isText     ? 'selected' : ''}>✏️ Text</option>
-        <option value="voice"    ${isVoice    ? 'selected' : ''}>🎙️ Voice Note (VN)</option>
-        <option value="transfer" ${isTransfer ? 'selected' : ''}>💸 Bukti Transfer</option>
-        <option value="image"    ${isImg      ? 'selected' : ''}>🖼 Image / GIF</option>
+        <option value="text"      ${isText     ? 'selected' : ''}>✏️ Text</option>
+        <option value="voice"     ${isVoice    ? 'selected' : ''}>🎙️ Voice Note (VN)</option>
+        <option value="call"      ${isCall     ? 'selected' : ''}>📞/📹 Panggilan (Voice/Video Call)</option>
+        <option value="transfer"  ${isTransfer ? 'selected' : ''}>💸 Bukti Transfer</option>
+        <option value="view_once" ${isViewOnce ? 'selected' : ''}>① Foto Sekali Lihat</option>
+        <option value="document"  ${isDocument ? 'selected' : ''}>📄 Dokumen PDF</option>
+        <option value="location"  ${isLocation ? 'selected' : ''}>📍 Lokasi Langsung</option>
+        <option value="deleted"   ${isDeleted  ? 'selected' : ''}>🚫 Pesan Terhapus</option>
+        <option value="image"     ${isImg      ? 'selected' : ''}>🖼 Image / GIF</option>
         ${qrOption}
       </select>
 
@@ -356,6 +371,31 @@ function dashboardItemHtml(msg, idx) {
       ${renderTransferCardControlsHtml(msg)}
     </div>
 
+    <!-- PESAN TERHAPUS -->
+    <div class="${deletedHide}">
+      ${renderDeletedMessageControlsHtml(msg)}
+    </div>
+
+    <!-- LOKASI LANGSUNG -->
+    <div class="${locationHide}">
+      ${renderLocationCardControlsHtml(msg)}
+    </div>
+
+    <!-- FOTO SEKALI LIHAT -->
+    <div class="${viewOnceHide}">
+      ${renderViewOnceControlsHtml(msg)}
+    </div>
+
+    <!-- DOKUMEN PDF -->
+    <div class="${documentHide}">
+      ${renderDocumentCardControlsHtml(msg)}
+    </div>
+
+    <!-- RIWAYAT PANGGILAN (VOICE / VIDEO) -->
+    <div class="${callHide}">
+      ${renderCallCardControlsHtml(msg)}
+    </div>
+
     <!-- Group Member Sender Input (Group Mode only) -->
     ${state.chatType === 'group' && !isOut ? renderGroupSenderInputHtml(msg) : ''}
 
@@ -436,6 +476,36 @@ function createCanvasBubble(msg, idx) {
   else if (msg.type === 'transfer') {
     const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
     bubbleHtml = renderTransferCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
+  }
+
+  // ── DELETED MESSAGE bubble ────────────────────────────────
+  else if (msg.type === 'deleted') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderDeletedMessageBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
+  }
+
+  // ── VIEW ONCE PHOTO bubble ────────────────────────────────
+  else if (msg.type === 'view_once') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderViewOnceBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
+  }
+
+  // ── DOCUMENT PDF bubble ───────────────────────────────────
+  else if (msg.type === 'document') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderDocumentCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
+  }
+
+  // ── LIVE LOCATION bubble ──────────────────────────────────
+  else if (msg.type === 'location') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderLocationCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
+  }
+
+  // ── CALL LOG (VOICE / VIDEO) bubble ───────────────────────
+  else if (msg.type === 'call') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderCallCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
   }
 
   // ── IMAGE / GIF bubble ────────────────────────────────────
@@ -897,6 +967,141 @@ function setMsgTrNote(id, note) {
   renderCanvas();
 }
 
+/** Set Pinned Banner enabled / disabled */
+function setPinnedEnabled(val) {
+  state.pinnedEnabled = !!val;
+  const wrap = document.getElementById('wrap-pinned-inputs');
+  if (wrap) wrap.classList.toggle('hidden', !val);
+  if (typeof updatePinnedBannerUI === 'function') {
+    updatePinnedBannerUI(state);
+  }
+  triggerAutoSave();
+}
+
+/** Set Pinned Banner text */
+function setPinnedText(text) {
+  state.pinnedText = text;
+  if (typeof updatePinnedBannerUI === 'function') {
+    updatePinnedBannerUI(state);
+  }
+  triggerAutoSave();
+}
+
+/** Set Deleted Message Custom Text */
+function setMsgDeletedText(id, text) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.deletedText = text;
+  renderCanvas();
+}
+
+/** Set Last Seen Mode ('online' vs 'custom') */
+function setLastSeenMode(mode) {
+  state.lastSeenMode = mode;
+
+  const btnOnline = document.getElementById('btn-status-online');
+  const btnLast = document.getElementById('btn-status-lastseen');
+  const wrapInput = document.getElementById('wrap-lastseen-input');
+
+  const isCustom = mode === 'custom';
+
+  if (btnOnline) btnOnline.className = !isCustom
+    ? 'px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm'
+    : 'px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition';
+
+  if (btnLast) btnLast.className = isCustom
+    ? 'px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm'
+    : 'px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition';
+
+  if (wrapInput) wrapInput.classList.toggle('hidden', !isCustom);
+
+  if (typeof updateHeaderStatusUI === 'function') {
+    updateHeaderStatusUI(state);
+  }
+  triggerAutoSave();
+}
+
+/** Set Last Seen Text */
+function setLastSeenText(text) {
+  state.lastSeenText = text;
+  if (typeof updateHeaderStatusUI === 'function') {
+    updateHeaderStatusUI(state);
+  }
+  triggerAutoSave();
+}
+
+/** Set Live Location Title */
+function setMsgLocTitle(id, title) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.locTitle = title;
+  renderCanvas();
+}
+
+/** Set Live Location Subtitle */
+function setMsgLocSub(id, sub) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.locSub = sub;
+  renderCanvas();
+}
+
+/** Set Call Type ('voice' vs 'video') */
+function setMsgCallType(id, type) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.callType = type;
+  renderCanvas();
+}
+
+/** Set Call Missed Status (boolean) */
+function setMsgCallMissed(id, isMissed) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.callMissed = isMissed;
+  renderCanvas();
+}
+
+/** Set Call Duration string e.g. "12:34" */
+function setMsgCallDuration(id, duration) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.callDuration = duration;
+  renderCanvas();
+}
+
+/** Set View Once Photo Opened Status */
+function setMsgViewOnceOpened(id, isOpened) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.viewOnceOpened = isOpened;
+  renderCanvas();
+}
+
+/** Set View Once Photo Custom Text Label */
+function setMsgViewOnceText(id, text) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.viewOnceText = text;
+  renderCanvas();
+}
+
+/** Set Document File Name */
+function setMsgDocName(id, name) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.docName = name;
+  renderCanvas();
+}
+
+/** Set Document File Size & Meta */
+function setMsgDocSize(id, size) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.docSize = size;
+  renderCanvas();
+}
+
 /* ============================================================
    10. FRAME CONTROLLER
    Show only first N canvas messages for frame N.
@@ -960,6 +1165,16 @@ function syncBaseFields() {
       clockTime: state.time,
       batteryLevel: state.batteryLevel,
     });
+  }
+
+  // Render Pinned Message Banner if enabled
+  if (typeof updatePinnedBannerUI === 'function') {
+    updatePinnedBannerUI(state);
+  }
+
+  // Render Header Status Subtitle (Online vs Custom Last Seen)
+  if (typeof updateHeaderStatusUI === 'function') {
+    updateHeaderStatusUI(state);
   }
 
   const cPfp     = document.getElementById('wa-pfp');
@@ -1306,8 +1521,8 @@ async function generateVideo() {
 
     frameCanvases.push(await html2canvas(waTarget, H2C_OPTS));
 
-    // Capture typing frame between messages
-    if (useTyping && i < state.messages.length) {
+    // Capture typing frame between messages (only for text messages)
+    if (useTyping && i < state.messages.length && state.messages[i].type === 'text') {
       showTyping();
       await sleep(80);
       typingCanvases.push(await html2canvas(waTarget, H2C_OPTS));
@@ -1463,15 +1678,31 @@ function playPreview() {
       }
     };
 
-    if (useTyping && frame >= 1 && frame <= state.messages.length) {
+    const targetMsg = (frame >= 1 && frame <= state.messages.length) ? state.messages[frame - 1] : null;
+    const isTextMsg = targetMsg && targetMsg.type === 'text';
+
+    if (useTyping && isTextMsg) {
+      if (targetMsg.direction === 'incoming' && typeof showTypingIndicatorHeader === 'function') {
+        showTypingIndicatorHeader('mengetik');
+      }
       showTyping();
       setTimeout(() => { 
         hideTyping(); 
+        if (typeof updateHeaderStatusUI === 'function') {
+          updateHeaderStatusUI(state);
+        } else {
+          restoreStatusHeader(state);
+        }
         applyFrame(frame); 
         playSoundIfIncoming(frame);
       }, 800);
     } else {
       hideTyping();
+      if (typeof updateHeaderStatusUI === 'function') {
+        updateHeaderStatusUI(state);
+      } else {
+        restoreStatusHeader(state);
+      }
       applyFrame(frame);
       if (frame >= 1 && frame <= state.messages.length) {
         playSoundIfIncoming(frame);

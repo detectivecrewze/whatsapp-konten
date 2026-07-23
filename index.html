@@ -275,6 +275,27 @@
                    placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-wa-accent transition" />
         </div>
 
+        <!-- Status Header Mode (Online vs Last Seen Custom) -->
+        <div id="wrap-status-mode">
+          <label class="block text-xs text-gray-400 mb-1.5 font-medium">Status Header WA</label>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <button id="btn-status-online" type="button" onclick="setLastSeenMode('online')"
+                    class="px-3 py-2 bg-wa-accent text-white border border-wa-accent rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
+              🟢 Online
+            </button>
+            <button id="btn-status-lastseen" type="button" onclick="setLastSeenMode('custom')"
+                    class="px-3 py-2 bg-gray-800 text-gray-400 border border-gray-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 hover:text-white transition">
+              🕒 Terakhir Dilihat
+            </button>
+          </div>
+          <div id="wrap-lastseen-input" class="hidden">
+            <input id="inp-lastseen-text" type="text" placeholder="e.g. terakhir dilihat hari ini pukul 03:15"
+                   value="terakhir dilihat hari ini pukul 03:15"
+                   oninput="setLastSeenText(this.value)"
+                   class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+          </div>
+        </div>
+
         <!-- Group Members Subtitle (shown only in Group Mode) -->
         <div id="wrap-group-subtitle" class="hidden">
           <label class="block text-xs text-gray-400 mb-1.5">Daftar Anggota Group (Subtitle)</label>
@@ -328,8 +349,30 @@
                    class="w-full accent-emerald-500 bg-gray-800 rounded-lg cursor-pointer h-2" />
             <button type="button" onclick="setBatteryLevel(1)" title="Set Lowbat 1% (Horor/Darurat)"
                     class="px-2 py-1 bg-red-950 text-red-400 border border-red-800/80 rounded-lg text-[10px] font-bold whitespace-nowrap hover:bg-red-900 transition">
-              🪫 1% Lowbat
+              🔋 1% Lowbat
             </button>
+          </div>
+        </div>
+
+        <!-- Pinned Message Banner Settings -->
+        <div class="bg-gray-800/60 border border-gray-700/80 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs text-gray-300 font-semibold flex items-center gap-1">
+              📌 Banner Pesan Tersemat
+            </label>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input id="inp-pinned-enabled" type="checkbox" onchange="setPinnedEnabled(this.checked)" class="sr-only peer">
+              <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-wa-accent"></div>
+            </label>
+          </div>
+          <div id="wrap-pinned-inputs" class="hidden space-y-2 pt-1">
+            <div>
+              <label class="block text-[10px] text-gray-400 mb-1">Teks Pesan Tersemat</label>
+              <input id="inp-pinned-text" type="text" placeholder="e.g. Jangan lupa bayar uang kas ya guys!"
+                     value="Jangan lupa bayar uang kas ya guys!"
+                     oninput="setPinnedText(this.value)"
+                     class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-wa-accent" />
+            </div>
           </div>
         </div>
 
@@ -720,6 +763,13 @@
 <script src="js/modules/voiceNote.js"></script>
 <script src="js/modules/transferCard.js"></script>
 <script src="js/modules/typingIndicator.js"></script>
+<script src="js/modules/deletedMessage.js"></script>
+<script src="js/modules/pinnedBanner.js"></script>
+<script src="js/modules/locationCard.js"></script>
+<script src="js/modules/lastSeen.js"></script>
+<script src="js/modules/viewOnce.js"></script>
+<script src="js/modules/documentCard.js"></script>
+<script src="js/modules/callCards.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

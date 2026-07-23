@@ -84,6 +84,31 @@ function createBubble(msg, idx) {
     html = renderTransferCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
   }
 
+  // PESAN TERHAPUS
+  else if (msg.type === 'deleted' && typeof renderDeletedMessageBubble === 'function') {
+    html = renderDeletedMessageBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
+  // LOKASI LANGSUNG
+  else if (msg.type === 'location' && typeof renderLocationCardBubble === 'function') {
+    html = renderLocationCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
+  // FOTO SEKALI LIHAT
+  else if (msg.type === 'view_once' && typeof renderViewOnceBubble === 'function') {
+    html = renderViewOnceBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
+  // DOKUMEN PDF
+  else if (msg.type === 'document' && typeof renderDocumentCardBubble === 'function') {
+    html = renderDocumentCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
+  // RIWAYAT PANGGILAN (VOICE / VIDEO)
+  else if (msg.type === 'call' && typeof renderCallCardBubble === 'function') {
+    html = renderCallCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
   // IMAGE / GIF
   else if (msg.type === 'image') {
     const bg = isOut ? '#005C4B' : '#202C33';
@@ -307,14 +332,17 @@ async function startAnimation() {
 
     // Typing indicator / Reply delay before incoming replies
     if (f > 0 && messages[f].direction === 'incoming') {
-      if (useTyping) {
+      const isTextMsg = messages[f].type === 'text';
+      if (useTyping && isTextMsg) {
         if (typeof showTypingIndicatorHeader === 'function') {
           showTypingIndicatorHeader('mengetik');
         }
         showTyping();
         await sleep(replyDelay);
         hideTyping();
-        if (typeof restoreStatusHeader === 'function') {
+        if (typeof updateHeaderStatusUI === 'function') {
+          updateHeaderStatusUI(previewState);
+        } else if (typeof restoreStatusHeader === 'function') {
           restoreStatusHeader(previewState);
         }
         await sleep(120);
@@ -476,9 +504,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Apply Header Status Subtitle
-  if (typeof restoreStatusHeader === 'function') {
+  // Apply Header Status Subtitle (Online vs Custom Last Seen)
+  if (typeof updateHeaderStatusUI === 'function') {
+    updateHeaderStatusUI(previewState);
+  } else if (typeof restoreStatusHeader === 'function') {
     restoreStatusHeader(previewState);
+  }
+
+  // Apply Pinned Message Banner
+  if (typeof updatePinnedBannerUI === 'function') {
+    updatePinnedBannerUI(previewState);
   }
 
   // Apply name & PFP
