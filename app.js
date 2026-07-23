@@ -203,6 +203,7 @@ function dashboardItemHtml(msg, idx) {
   const isCall        = msg.type === 'call';
   const isStatusReply = msg.type === 'status_reply';
   const isProduct     = msg.type === 'product';
+  const isContact     = msg.type === 'contact';
 
   const outActiveCls  = isOut  ? 'active-dir' : '';
   const inActiveCls   = !isOut ? 'active-dir' : '';
@@ -219,6 +220,7 @@ function dashboardItemHtml(msg, idx) {
   const callHide        = isCall        ? '' : 'hidden';
   const statusReplyHide = isStatusReply ? '' : 'hidden';
   const productHide     = isProduct     ? '' : 'hidden';
+  const contactHide     = isContact     ? '' : 'hidden';
 
   // QR only available for outgoing
   const qrOption = msg.direction === 'outgoing'
@@ -262,6 +264,7 @@ function dashboardItemHtml(msg, idx) {
               class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5
                      text-base md:text-xs text-white focus:outline-none focus:ring-1 focus:ring-wa-accent">
         <option value="text"         ${isText        ? 'selected' : ''}>✏️ Text</option>
+        <option value="contact"      ${isContact     ? 'selected' : ''}>👤 Bagikan Kontak WA</option>
         <option value="product"      ${isProduct     ? 'selected' : ''}>🛍️ Kartu Produk Olshop</option>
         <option value="status_reply" ${isStatusReply ? 'selected' : ''}>💬 Balasan Status / Story</option>
         <option value="voice"        ${isVoice       ? 'selected' : ''}>🎙️ Voice Note (VN)</option>
@@ -423,6 +426,11 @@ function dashboardItemHtml(msg, idx) {
       ${renderProductCardControlsHtml(msg)}
     </div>
 
+    <!-- KARTU KONTAK WA -->
+    <div class="${contactHide}">
+      ${renderContactCardControlsHtml(msg)}
+    </div>
+
     <!-- Group Member Sender Input (Group Mode only) -->
     ${state.chatType === 'group' && !isOut ? renderGroupSenderInputHtml(msg) : ''}
 
@@ -545,6 +553,12 @@ function createCanvasBubble(msg, idx) {
   else if (msg.type === 'product') {
     const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
     bubbleHtml = renderProductCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
+  }
+
+  // ── CONTACT CARD bubble ───────────────────────────────────
+  else if (msg.type === 'contact') {
+    const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    bubbleHtml = renderContactCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupSenderBadge);
   }
 
   // ── IMAGE / GIF bubble ────────────────────────────────────
@@ -1202,6 +1216,37 @@ function handleProductImgUpload(id, input) {
     const msg = state.messages.find(m => m.id === id);
     if (!msg) return;
     msg.productDataUrl = e.target.result;
+    renderCanvas();
+    renderDashboard();
+  };
+  reader.readAsDataURL(file);
+}
+
+/** Set Contact Name */
+function setMsgContactName(id, name) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.contactName = name;
+  renderCanvas();
+}
+
+/** Set Contact Phone Number */
+function setMsgContactPhone(id, phone) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.contactPhone = phone;
+  renderCanvas();
+}
+
+/** Handle Contact PFP Image Upload */
+function handleContactPfpUpload(id, input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const msg = state.messages.find(m => m.id === id);
+    if (!msg) return;
+    msg.contactDataUrl = e.target.result;
     renderCanvas();
     renderDashboard();
   };

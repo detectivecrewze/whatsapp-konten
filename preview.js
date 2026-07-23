@@ -122,6 +122,11 @@ function createBubble(msg, idx) {
     html = renderProductCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
   }
 
+  // KARTU KONTAK WA (BAGIKAN KONTAK)
+  else if (msg.type === 'contact' && typeof renderContactCardBubble === 'function') {
+    html = renderContactCardBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
   // IMAGE / GIF
   else if (msg.type === 'image') {
     const bg = isOut ? '#005C4B' : '#202C33';
