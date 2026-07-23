@@ -141,14 +141,18 @@
         </div>
 
         <!-- Select Template -->
-        <div class="flex gap-1.5">
+        <div class="flex gap-1.5 flex-wrap sm:flex-nowrap">
           <select id="tpl-select" onchange="handleSelectTemplate(this.value)"
                   class="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-wa-accent">
             <option value="auto">Draft (Auto-saved)</option>
           </select>
-          <button onclick="saveCurrentTemplate(true)" title="Save & Sync to Team Cloud"
+          <button onclick="saveCurrentTemplate()" title="Update Current Preset"
                   class="px-2.5 py-2 bg-wa-accent hover:bg-[#009272] text-white text-xs font-medium rounded-xl transition flex items-center gap-1 whitespace-nowrap shadow-sm">
-            ☁️ Cloud
+            💾 Save
+          </button>
+          <button onclick="saveAsNewTemplate()" title="Simpan Sebagai Preset Baru"
+                  class="px-2.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 text-xs font-medium rounded-xl transition flex items-center gap-1 whitespace-nowrap">
+            ➕ Save As New
           </button>
           <button onclick="deleteCurrentTemplate()" title="Delete Template"
                   class="px-2 py-2 bg-gray-800 hover:bg-red-900/50 text-gray-400 hover:text-red-300 border border-gray-700 rounded-xl transition text-xs">

@@ -1583,59 +1583,124 @@ function handleSelectTemplate(val) {
 
 let _isNewBlankProject = false;
 
-async function saveCurrentTemplate(isCloud = true) {
-  const currentVal = document.getElementById('tpl-select')?.value || 'auto';
+async function saveAsNewTemplate() {
+  const defaultName = state.name ? state.name.trim() : 'My WA Preset';
+  const tplName = prompt('Masukkan Nama Preset Baru:', defaultName);
+  if (!tplName || !tplName.trim()) return;
+
+  const trimmedName = tplName.trim();
   const payload = getProjectPayload();
+  const cleanId = `${Date.now()}`;
 
-  if (!WORKER_URL) {
-    alert('⚠️ URL Cloudflare Worker belum dikonfigurasi!');
-    return;
-  }
-
-  let cleanId = null;
-  let tplName = '';
-
-  // 1. If an existing Cloud Preset is selected AND not a new blank project, update it DIRECTLY!
-  if (currentVal.startsWith('cloud_') && !_isNewBlankProject) {
-    cleanId = currentVal.replace('cloud_', '');
-    if (_cloudTemplates[cleanId]) {
-      tplName = _cloudTemplates[cleanId].name;
-    }
-  }
-
-  // 2. If in Draft mode or New Blank Project, prompt for a NEW Preset Name
-  if (!cleanId) {
-    const inputName = prompt('Nama Preset Cloud Baru:', state.name || '');
-    if (!inputName || !inputName.trim()) return;
-    tplName = inputName.trim();
-    cleanId = `${Date.now()}`;
-  }
-
-  _isNewBlankProject = false;
-
-  // Save/Overwrite preset in _cloudTemplates
-  _cloudTemplates[cleanId] = {
+  // 1. Always save locally to localStorage so it works 100% offline
+  const localTemplates = getSavedTemplates();
+  localTemplates[cleanId] = {
     id: cleanId,
-    name: tplName,
+    name: trimmedName,
     updatedAt: Date.now(),
     data: payload
   };
 
   try {
-    const res = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Team-Passcode': TEAM_PASSCODE
-      },
-      body: JSON.stringify({ templates: _cloudTemplates })
-    });
-    if (!res.ok) throw new Error('Cloud save failed');
-    renderTemplateDropdown(`cloud_${cleanId}`);
-    showToast(`☁️ Preset "${tplName}" tersimpan di Team Cloud!`);
+    localStorage.setItem(TPL_KEY, JSON.stringify(localTemplates));
   } catch (e) {
-    alert('⚠️ Gagal menyimpan ke Cloud Worker. Periksa koneksi atau Passcode Tim.');
+    console.warn('Local storage save issue:', e);
   }
+
+  // 2. Also sync to Cloud Worker if available
+  if (WORKER_URL && TEAM_PASSCODE) {
+    _cloudTemplates[cleanId] = {
+      id: cleanId,
+      name: trimmedName,
+      updatedAt: Date.now(),
+      data: payload
+    };
+
+    try {
+      await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Team-Passcode': TEAM_PASSCODE
+        },
+        body: JSON.stringify({ templates: _cloudTemplates })
+      });
+    } catch (e) {
+      console.warn('Cloud Worker sync issue:', e);
+    }
+  }
+
+  _isNewBlankProject = false;
+  renderTemplateDropdown(`local_${cleanId}`);
+  showToast(`💾 Preset "${trimmedName}" berhasil dibuat!`);
+}
+
+async function saveCurrentTemplate() {
+  const currentVal = document.getElementById('tpl-select')?.value || 'auto';
+  
+  if (currentVal === 'auto' || _isNewBlankProject) {
+    return saveAsNewTemplate();
+  }
+
+  const payload = getProjectPayload();
+  const isLocal = currentVal.startsWith('local_');
+  const isCloud = currentVal.startsWith('cloud_');
+  const cleanId = currentVal.replace(/^(local_|cloud_)/, '');
+
+  let tplName = state.name || 'Preset';
+
+  // 1. Update in Local Storage
+  const localTemplates = getSavedTemplates();
+  if (localTemplates[cleanId]) {
+    tplName = localTemplates[cleanId].name;
+    localTemplates[cleanId].data = payload;
+    localTemplates[cleanId].updatedAt = Date.now();
+    try {
+      localStorage.setItem(TPL_KEY, JSON.stringify(localTemplates));
+    } catch (e) {}
+  } else {
+    localTemplates[cleanId] = {
+      id: cleanId,
+      name: tplName,
+      updatedAt: Date.now(),
+      data: payload
+    };
+    try {
+      localStorage.setItem(TPL_KEY, JSON.stringify(localTemplates));
+    } catch (e) {}
+  }
+
+  // 2. Update in Cloud Storage
+  if (_cloudTemplates[cleanId]) {
+    tplName = _cloudTemplates[cleanId].name;
+    _cloudTemplates[cleanId].data = payload;
+    _cloudTemplates[cleanId].updatedAt = Date.now();
+  } else {
+    _cloudTemplates[cleanId] = {
+      id: cleanId,
+      name: tplName,
+      updatedAt: Date.now(),
+      data: payload
+    };
+  }
+
+  if (WORKER_URL && TEAM_PASSCODE) {
+    try {
+      await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Team-Passcode': TEAM_PASSCODE
+        },
+        body: JSON.stringify({ templates: _cloudTemplates })
+      });
+    } catch (e) {
+      console.warn('Cloud sync error:', e);
+    }
+  }
+
+  renderTemplateDropdown(currentVal);
+  showToast(`💾 Preset "${tplName}" berhasil di-update!`);
 }
 
 async function deleteCurrentTemplate() {
@@ -1645,25 +1710,21 @@ async function deleteCurrentTemplate() {
     return;
   }
 
-  if (currentVal.startsWith('local_')) {
-    const id = currentVal.replace('local_', '');
-    const templates = getSavedTemplates();
-    if (!templates[id]) return;
+  const cleanId = currentVal.replace(/^(local_|cloud_)/, '');
+  const localTemplates = getSavedTemplates();
+  const tplName = localTemplates[cleanId]?.name || _cloudTemplates[cleanId]?.name || 'Template';
 
-    if (confirm(`Hapus template lokal "${templates[id].name}"?`)) {
-      delete templates[id];
-      localStorage.setItem(TPL_KEY, JSON.stringify(templates));
-      loadDraftFromLocalStorage();
-      renderTemplateDropdown('auto');
+  if (confirm(`Hapus template "${tplName}"?`)) {
+    // Delete from Local
+    if (localTemplates[cleanId]) {
+      delete localTemplates[cleanId];
+      localStorage.setItem(TPL_KEY, JSON.stringify(localTemplates));
     }
-  } else if (currentVal.startsWith('cloud_')) {
-    const id = currentVal.replace('cloud_', '');
-    if (!_cloudTemplates[id]) return;
 
-    if (confirm(`Hapus template Cloud "${_cloudTemplates[id].name}" dari Team Cloud?`)) {
-      delete _cloudTemplates[id];
-
-      if (WORKER_URL) {
+    // Delete from Cloud
+    if (_cloudTemplates[cleanId]) {
+      delete _cloudTemplates[cleanId];
+      if (WORKER_URL && TEAM_PASSCODE) {
         try {
           await fetch(WORKER_URL, {
             method: 'POST',
@@ -1677,10 +1738,10 @@ async function deleteCurrentTemplate() {
           console.error(e);
         }
       }
-
-      loadDraftFromLocalStorage();
-      renderTemplateDropdown('auto');
     }
+
+    loadDraftFromLocalStorage();
+    renderTemplateDropdown('auto');
   }
 }
 
