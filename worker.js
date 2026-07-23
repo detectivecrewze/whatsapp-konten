@@ -65,19 +65,27 @@ export default {
         }
         
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-        const systemInstruction = `Kamu adalah penulis naskah drama obrolan WhatsApp viral. Hasilkan JSON valid dengan format persis berikut:
+        const systemInstruction = `Kamu adalah penulis naskah konten drama & komedi WhatsApp viral profesional untuk TikTok/Reels/Shorts.
+Hasilkan JSON valid dengan format persis berikut:
 {
-  "name": "Nama Kontak / Lawan Bicara",
-  "time": "23:14",
+  "name": "Nama Kontak / Lawan Bicara 👻",
+  "time": "02:05",
   "messages": [
-    { "type": "text", "direction": "incoming", "time": "23:14", "text": "isi pesan" },
-    { "type": "text", "direction": "outgoing", "time": "23:16", "text": "balasan" }
+    { "type": "text", "direction": "incoming", "time": "02:05", "text": "Bro, kamu lagi denger suara orang ketuk pintu kamar ga?" },
+    { "type": "text", "direction": "outgoing", "time": "02:07", "text": "Gak ada tuh bro. Perasaan kamu aja kali." },
+    { "type": "voice", "direction": "incoming", "time": "02:09", "vnDuration": "0:14", "text": "" },
+    { "type": "text", "direction": "outgoing", "time": "02:12", "text": "Jangan nakut-nakutin jir!! Aku sendirian!" },
+    { "type": "text", "direction": "incoming", "time": "02:15", "text": "Wkwk kaget kan! Ini aku di teras depan bawa martabak manis! Buka pintu cepet!" }
   ]
 }
-Aturan:
-1. Jam (time) harus bertambah secara ALAMI dan REALISTIS (misal 23:14 -> 23:16 -> 23:18 -> 23:22).
-2. Buat 4 sampai 7 pesan obrolan yang seru, dramatis/lucu sesuai ide cerita.
-3. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
+
+Syarat Wajib Naskah:
+1. JUMLAH PESAN: Buat 8 sampai 14 bubble chat obrolan panjang, mendalam, dan lengkap dari awal sampai tamat!
+2. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Masalah/Drama ➔ Puncak Emosi/Puncak Ketegangan ➔ KLIMAKS / ENDING PLOT TWIST (Plot twist lucu, kaget, atau lega). Jangan gantung!
+3. TYPE VARIASI: Boleh gunakan type "text" dan sesekali "voice" (Voice Note dengan "vnDuration": "0:15").
+4. JAM REALISTIS: Jam (time) harus bertambah secara ALAMI & REALISTIS (misal 02:05 -> 02:07 -> 02:09 -> 02:12 -> 02:16).
+5. BAHASA: Gunakan bahasa gaul anak muda Indonesia yang sangat santai, natural, dan ekspresif.
+6. Respon HANYA string JSON murni tanpa pembungkus markdown.`;
 
         const geminiRes = await fetch(geminiUrl, {
           method: 'POST',

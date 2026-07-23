@@ -3224,7 +3224,9 @@ function generateSmartAiStory(prompt) {
       { type: 'text', direction: 'incoming', time: '23:16', text: 'Jujur aku kangen banget sama kamu yang dulu...' },
       { type: 'voice', direction: 'incoming', time: '23:17', vnDuration: '0:18', text: '' },
       { type: 'text', direction: 'outgoing', time: '23:19', text: 'Telat mas/mba, foto profil ku berdua sama pacar baru udah keliatan kan? 😌' },
-      { type: 'text', direction: 'incoming', time: '23:22', text: 'Maaf... salah tempat kangen 😭' }
+      { type: 'text', direction: 'incoming', time: '23:22', text: 'Eh maaf bgt!! Ini aku Siska temen kamu, hp cowokmu ditinggal di meja wkwk 😂' },
+      { type: 'text', direction: 'outgoing', time: '23:23', text: 'HAH?! Siska?! Jangan nakut-nakutin jir!! 😭' },
+      { type: 'text', direction: 'incoming', time: '23:25', text: 'Bercanda ding, ini beneran mantanmu... cuma pengen tes reaksi pacar barumu aja 😎' }
     ];
   } else if (p.includes('utang') || p.includes('hutang') || p.includes('tf') || p.includes('duit')) {
     name = 'Budi Teman 💸';
@@ -3233,7 +3235,10 @@ function generateSmartAiStory(prompt) {
       { type: 'text', direction: 'outgoing', time: '19:05', text: 'Bud, inget ga janji bulan lalu mau balikin sisa 300rb?' },
       { type: 'text', direction: 'incoming', time: '19:08', text: 'Waduh bro, suer lg seret banget nih belum gajian 😭' },
       { type: 'text', direction: 'outgoing', time: '19:09', text: 'Seret gimana, itu Story IG kamu baru aja upload foto sepatu Adidas baru?!' },
-      { type: 'text', direction: 'incoming', time: '19:12', text: 'Eh wkwk ketauan... yaudah besok tak TF 150rb dulu ya bro 🙏' }
+      { type: 'text', direction: 'incoming', time: '19:12', text: 'Eh wkwk ketauan... yaudah besok tak TF 150rb dulu ya bro 🙏' },
+      { type: 'text', direction: 'outgoing', time: '19:14', text: 'Gak ada besok-besok, malam ini atau tak tagih ke rumah bapakmu!' },
+      { type: 'text', direction: 'incoming', time: '19:16', text: 'Ampun bro 😭 Yaudah ini tak TF lunas 300rb + 50rb bonus bensin!' },
+      { type: 'text', direction: 'outgoing', time: '19:18', text: 'Nah gitu dong dari tadi wkwk, mantap bestie! 🤝' }
     ];
   } else if (p.includes('olshop') || p.includes('cod') || p.includes('paket') || p.includes('baju')) {
     name = 'Seller Olshop 🛍️';
@@ -3243,16 +3248,22 @@ function generateSmartAiStory(prompt) {
       { type: 'text', direction: 'outgoing', time: '14:22', text: 'Min kok bajunya pas dicoba sempit banget?! Saya minta L dikirim S!' },
       { type: 'text', direction: 'incoming', time: '14:25', text: 'Coba foto resi dan tag ukuran di kerahnya kak?' },
       { type: 'text', direction: 'outgoing', time: '14:27', text: 'Eh maaf min... ternyata baju adek saya yang kepakai 🙈' },
-      { type: 'text', direction: 'incoming', time: '14:28', text: 'Gapapa kak, untung belum terlanjur emosi wkwk 😂' }
+      { type: 'text', direction: 'incoming', time: '14:28', text: 'Gapapa kak, untung belum terlanjur emosi di ulasan wkwk 😂' },
+      { type: 'text', direction: 'outgoing', time: '14:30', text: 'Hehe bintang 5 meluncur min! Bajunya bagus bgt pas udah dicoba yang asli 🌟' }
     ];
   } else if (p.includes('horor') || p.includes('pintu') || p.includes('malam') || p.includes('suara')) {
     name = 'Tetangga Kamar 👻';
     startTime = '02:05';
     messages = [
       { type: 'text', direction: 'incoming', time: '02:05', text: 'Bro, kamu lagi denger suara orang ketuk pintu kamar ga?' },
-      { type: 'text', direction: 'outgoing', time: '02:07', text: 'Gak ada tuh bro. Perasaan kamu aja kali' },
-      { type: 'text', direction: 'incoming', time: '02:08', text: 'Suaranya dari depan pintu kamar kamu bro... coba intip lewat ventilasi' },
-      { type: 'text', direction: 'outgoing', time: '02:11', text: 'Jangan nakut-nakutin jir!! Aku sendirian di rumah! 😭' }
+      { type: 'text', direction: 'outgoing', time: '02:07', text: 'Gak ada tuh bro. Perasaan kamu aja kali.' },
+      { type: 'text', direction: 'incoming', time: '02:08', text: 'Suaranya dari depan pintu kamar kamu bro... coba intip lewat ventilasi!' },
+      { type: 'text', direction: 'outgoing', time: '02:11', text: 'Jangan nakut-nakutin jir!! Aku sendirian di rumah! 😭' },
+      { type: 'text', direction: 'incoming', time: '02:13', text: 'Coba dengerin bentar Voice Note dari depan pintumu...' },
+      { type: 'voice', direction: 'incoming', time: '02:14', vnDuration: '0:12', text: '' },
+      { type: 'text', direction: 'outgoing', time: '02:16', text: 'ANJIRRR APANISAN SUARA SIAPA ITU 😭😭😭' },
+      { type: 'text', direction: 'incoming', time: '02:18', text: 'Wkwk kaget kan! Ini aku Agus di teras depan bawa martabak manis! Buka pintu cepet! 🤣' },
+      { type: 'text', direction: 'outgoing', time: '02:19', text: 'SIALAN KAMU GUS!! Hampir pingsan aku wkwk 🤬' }
     ];
   } else {
     name = 'Kolega / Teman 💬';
@@ -3261,7 +3272,8 @@ function generateSmartAiStory(prompt) {
       { type: 'text', direction: 'incoming', time: '16:10', text: `Bro, terkait "${prompt.slice(0, 30)}..." gmn kelanjutannya?` },
       { type: 'text', direction: 'outgoing', time: '16:12', text: 'Bentar bro, ini lg tak proses siapin datanya 🚀' },
       { type: 'text', direction: 'incoming', time: '16:15', text: 'Siap mantap, nanti infoin ya kalau udah kelar!' },
-      { type: 'text', direction: 'outgoing', time: '16:18', text: 'Aman sentosa, santai aja bro 👍' }
+      { type: 'text', direction: 'outgoing', time: '16:18', text: 'Aman sentosa, ini udah beres 100% tinggal kirim!' },
+      { type: 'text', direction: 'incoming', time: '16:21', text: 'Wih gercep banget! Makasih banyak ya bro 🙏' }
     ];
   }
 
