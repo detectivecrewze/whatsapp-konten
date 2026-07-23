@@ -3172,8 +3172,9 @@ async function generateAiScript() {
     }
 
     if (aiData && aiData.messages && aiData.messages.length > 0) {
+      const isGroup = aiData.chatType === 'group' || (aiData.name && aiData.name.toLowerCase().includes('grup'));
       const payload = {
-        name: aiData.name || 'Kontak WA',
+        name: aiData.name || (isGroup ? 'Grup WA 👥' : 'Kontak WA'),
         pfp: null,
         messages: aiData.messages.map(m => {
           let dataUrl = m.dataUrl || null;
@@ -3192,7 +3193,7 @@ async function generateAiScript() {
         scale: 2,
         time: aiData.time || '21:15',
         phoneOs: 'ios',
-        chatType: aiData.chatType || 'personal',
+        chatType: isGroup ? 'group' : 'personal',
         groupSubtitle: aiData.groupSubtitle || 'Sinta, Budi, Anda, Agus',
         batteryLevel: 85,
         bgType: 'default',
