@@ -353,34 +353,55 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
 
   console.log(`🎙️ [ElevenLabs API] Generating ${emotionMode.toUpperCase()} voice for "${cleanText.slice(0, 30)}..." | VoiceID: ${targetVoice}`);
 
-  try {
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${targetVoice}`, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': keyToUse,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        text: cleanText,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: voiceSettings
-      })
-    });
+  async function requestAudio(vId) {
+    try {
+      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${vId}`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': keyToUse,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: cleanText,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: voiceSettings
+        })
+      });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error(`❌ ElevenLabs API Error (${res.status}):`, errText);
-      alert(`⚠️ ElevenLabs API Error (${res.status}): ${errText}`);
-      return null;
+      if (res.status === 402) {
+        console.warn(`⚠️ [ElevenLabs 402] Free account cannot use library voice (${vId}). Auto-falling back...`);
+        return { status: 402, blob: null };
+      }
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`❌ ElevenLabs API Error (${res.status}):`, errText);
+        return { status: res.status, blob: null };
+      }
+
+      const blob = await res.blob();
+      return { status: 200, blob };
+    } catch (err) {
+      console.error('❌ ElevenLabs fetch exception:', err);
+      return { status: 500, blob: null };
     }
-
-    const blob = await res.blob();
-    console.log(`✅ ElevenLabs AI Audio fetched! Size: ${blob.size} bytes`);
-    return URL.createObjectURL(blob);
-  } catch (err) {
-    console.error('❌ ElevenLabs fetch exception:', err);
-    return null;
   }
+
+  let result = await requestAudio(targetVoice);
+
+  // If 402 Payment Required (Free tier API key calling Library voices), fallback to default premade voice
+  if (result.status === 402 && targetVoice !== 'EXAVITQu4vr4xnSDxMaL' && targetVoice !== 'pNInz6obpgDQGcFmaJgB') {
+    const fallbackVoice = 'EXAVITQu4vr4xnSDxMaL';
+    console.log(`🔄 Retrying with premade voice ${fallbackVoice}...`);
+    result = await requestAudio(fallbackVoice);
+  }
+
+  if (result.blob) {
+    console.log(`✅ ElevenLabs AI Audio fetched! Size: ${result.blob.size} bytes`);
+    return URL.createObjectURL(result.blob);
+  }
+
+  return null;
 }
 
 function playBlobAudio(blobUrl, speedRate = 1.0) {
