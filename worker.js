@@ -80,21 +80,35 @@ Hasilkan JSON valid dengan format persis berikut:
   "messages": [
     { "type": "text", "direction": "incoming", "senderName": "Budi", "senderColor": "#25D366", "time": "21:15", "text": "isi pesan" },
     { "type": "image", "direction": "outgoing", "time": "21:16", "caption": "Nih liat fotonya!", "imgDesc": "Foto bukti transfer / barang / lokasi / suasana" },
-    { "type": "notification", "direction": "incoming", "senderName": "Ibu 👩", "time": "21:17", "text": "Adek dari tadi sore tidur di kamar rumah, kamu sama siapa di kontrakan?", "customHoldMs": 4000 },
-    { "type": "voice", "direction": "incoming", "senderName": "Sinta", "senderColor": "#e542a3", "time": "21:18", "vnDuration": "0:14", "text": "" }
+    { "type": "voice", "direction": "incoming", "senderName": "Sinta", "senderColor": "#e542a3", "time": "21:17", "vnDuration": "0:14", "text": "" },
+    { "type": "notification", "direction": "incoming", "senderName": "Ibu 👩", "time": "21:18", "text": "Adek dari tadi sore tidur di kamar rumah, kamu sama siapa di kontrakan?", "customHoldMs": 4000 }
   ]
 }
 
+Ragam Tipe Pesan WA yang Tersedia (Gunakan HANYA JIKA ALAMI & COCOK UNTUK CERITA, DILARANG MEMAKSAKAN HARUS PAKAI SEMUA!):
+- "text": Pesan teks percakapan biasa (default).
+- "notification": Banner notifikasi push melayang di atas HP (Sangat ampuh untuk plot twist mendadak dari orang ketiga/ibu/bank).
+- "image": Kartu foto/gambar dengan "caption" dan "imgDesc" (e.g. foto barang/bukti/suasana).
+- "voice": Voice note dengan "vnDuration": "0:14" (e.g. pesan suara panik/marah/menjelaskan).
+- "view_once": Foto 1x lihat / View Once Photo (e.g. foto rahasia / horor / bukti).
+- "deleted": Pesan ini telah dihapus (e.g. pesan horor/curhat yang dibatalkan pengirim).
+- "call": Log panggilan WA ("callType": "voice"/"video", "callMissed": true/false, "callDuration": "05:12").
+- "transfer": Bukti transfer bank ("transferAmount": "Rp 500.000", "transferBank": "BCA").
+- "status_reply": Balasan status WA ("statusAuthor": "Status Anda", "statusText": "Preview status", "text": "Komentar").
+- "location": Berbagi lokasi ("locationName": "Depan Kontrakan Pak Haji", "locationAddress": "Jl. Mawar No. 12").
+- "contact": Kartu kontak ("contactName": "Dodi Mekanik", "contactPhone": "0812-3456-7890").
+- "product": Kartu katalog produk ("productTitle": "Kemeja Vintage", "productPrice": "Rp 85.000").
+- "document": Dokumen PDF ("docName": "Laporan_Final.pdf", "docSize": "2.4 MB").
+
 Syarat Wajib Naskah:
-1. STRATEGI NOTIFIKASI POPUP (PUSH NOTIFICATION & PLOT TWIST): Gunakan "type": "notification" secara STRATEGIS di momen KLIMAKS / PLOT TWIST / KEJUTAN MENDADAK! Sangat disarankan dipakai di cerita Horor (misal notifikasi dari Ibu/Teman di luar obrolan yang memberikan fakta mengejutkan), Cerita Labrak/Bucin (notifikasi mantan/orang ketiga), atau Olshop (notifikasi transfer bank). Wajib isi "senderName", "text", dan "customHoldMs": 3500-5000 agar penonton sempat membaca plot twistnya!
+1. PENGGUNAAN FITUR SEPERLUNYA & ORGANIK: Pilih tipe pesan yang paling alami untuk memperkuat alur cerita (misal: horor pakai notification/deleted/view_once; olshop pakai product/transfer; bucin pakai status_reply/voice/contact). Jangan pernah memaksakan semua fitur harus masuk jika tidak relevan.
 2. DETEKSI MODE CHAT (PERSONAL VS GROUP): Jika prompt pengguna menyebutkan grup chat (misal: "grup keluarga", "grup alumni", "grup tongkrongan", "grup panitia", "grup kelas"), WAJIB set "chatType": "group", berikan "groupSubtitle", dan sertakan "senderName" serta "senderColor" (pilihan warna: "#25D366", "#e542a3", "#34b7f1", "#ff9800") pada setiap pesan incoming dari pengirim berbeda!
-3. PATUHI GENRE USER: Ikuti GENRE dan TONE cerita yang diminta pengguna di prompt (misal jika tentang olshop/COD buat komplain olshop; jika romantis/bucin buat percakapan manis/bucin; jika komedi buat lucu; jika horor buat horor). DILARANG mengubah cerita menjadi horor apabila prompt pengguna bertema lain!
-4. KARTU FOTO / IMAGE BUBBLE: Apabila alur cerita membutuhkan pengiriman foto (misal: foto barang olshop, foto bukti transfer, foto lokasi, foto selfie, foto suasana serem, foto bukti labrak selingkuh), WAJIB sisipkan 1-3 pesan ber-type "image" dengan properti "caption" dan "imgDesc" (deskripsi foto singkat).
-5. JUMLAH PESAN: ${lengthRule} Wajib patuhi persis jika pengguna menyebutkan jumlah spesifik di prompt.
-6. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Konflik/Eskalasi ➔ Klimaks / Ending Tuntas / Plot Twist yang sesuai genre.
-7. FORMAT CHAT SINGKAT: Pesan-pesan dibuat singkat-singkat khas anak muda Indonesia yang saling balas cepat.
-8. JAM REALISTIS: Jam (time) bertambah secara ALAMI & REALISTIS (misal 21:15 -> 21:16 -> 21:18 -> 21:22).
-9. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
+3. PATUHI GENRE USER: Ikuti GENRE dan TONE cerita yang diminta pengguna di prompt (olshop, bucin, komedi, horor, nagih utang, dll).
+4. JUMLAH PESAN: ${lengthRule} Wajib patuhi persis jika pengguna menyebutkan jumlah spesifik di prompt.
+5. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Konflik/Eskalasi ➔ Klimaks / Ending Tuntas / Plot Twist yang sesuai genre.
+6. FORMAT CHAT SINGKAT: Pesan-pesan dibuat singkat-singkat khas anak muda Indonesia yang saling balas cepat.
+7. JAM REALISTIS: Jam (time) bertambah secara ALAMI & REALISTIS (misal 21:15 -> 21:16 -> 21:18 -> 21:22).
+8. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
 
         const modelNames = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let geminiRes = null;
