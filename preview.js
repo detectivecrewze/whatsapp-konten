@@ -436,18 +436,19 @@ async function startAnimation() {
   const lblEl   = document.getElementById('countdown-label');
   overlay.classList.remove('hidden');
 
-  // Pre-fetch ElevenLabs Audio Blobs in parallel if TTS enabled
+  // Pre-fetch ElevenLabs Audio Blobs sequentially to strictly obey rate limits (max 2 parallel)
   const ttsAudioMap = {};
   if (enableTts) {
-    lblEl.textContent = 'Mengunduh Suara ElevenLabs AI… 🎙️✨';
     const apiKey = previewState.elevenKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
 
-    await Promise.all(messages.map(async (msg, idx) => {
+    for (let idx = 0; idx < messages.length; idx++) {
+      const msg = messages[idx];
       const textToSpeak = msg.type === 'notification'
         ? `${msg.senderName || 'Notifikasi'}: ${msg.text || ''}`
         : (msg.text || msg.caption || '');
 
       if (textToSpeak) {
+        lblEl.textContent = `Mengunduh ElevenLabs AI (${idx + 1}/${messages.length})… 🎙️✨`;
         const isOut = msg.direction === 'outgoing';
         const defaultInVoice  = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Female)
         const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam (Male)
@@ -457,8 +458,9 @@ async function startAnimation() {
           : (previewState.ttsVoiceIn  && previewState.ttsVoiceIn  !== 'google-mp3' ? previewState.ttsVoiceIn  : defaultInVoice);
 
         ttsAudioMap[idx] = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
+        await sleep(150); // Short delay to prevent ElevenLabs concurrent limit 429
       }
-    }));
+    }
   }
 
   for (let i = 3; i >= 1; i--) {
