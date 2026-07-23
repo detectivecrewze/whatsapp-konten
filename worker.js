@@ -15,18 +15,20 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Security Check: Verify Team Passcode from Cloudflare Environment Secret (env.TEAM_SECRET)
-    const passcode = request.headers.get('X-Team-Passcode') || new URL(request.url).searchParams.get('passcode');
-    const validSecret = env.TEAM_SECRET;
-
-    if (!validSecret || !passcode || passcode !== validSecret) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or missing Team Passcode' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
     const url = new URL(request.url);
+
+    // Security Check: Verify Team Passcode for /templates routes
+    if (url.pathname === '/templates' || url.pathname === '/') {
+      const passcode = request.headers.get('X-Team-Passcode') || url.searchParams.get('passcode');
+      const validSecret = env.TEAM_SECRET;
+
+      if (validSecret && (!passcode || passcode !== validSecret)) {
+        return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or missing Team Passcode' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
 
     // GET /templates — Fetch all shared team templates
     if (request.method === 'GET' && (url.pathname === '/templates' || url.pathname === '/')) {
@@ -86,8 +88,11 @@ Syarat Wajib Naskah:
 5. BAHASA: Gunakan bahasa gaul anak muda Indonesia yang sangat santai, natural, dan ekspresif.
 6. Respon HANYA string JSON murni tanpa pembungkus markdown.`;
 
-        const modelNames = ['gemini-2.0-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+        const modelNames = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let geminiRes = null;
+        let successfulModel = '';
+        let lastErrorDetails = '';
+
         for (const m of modelNames) {
           const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
           try {
@@ -102,21 +107,36 @@ Syarat Wajib Naskah:
             });
             if (res.ok) {
               geminiRes = res;
+              successfulModel = m;
               break;
+            } else {
+              const errText = await res.text();
+              lastErrorDetails = `Model ${m} HTTP ${res.status}: ${errText}`;
             }
           } catch (e) {
-            console.warn(`Model ${m} failed, trying next...`);
+            lastErrorDetails = `Model ${m} fetch exception: ${e.message}`;
           }
         }
 
         if (!geminiRes) {
-          throw new Error('Semua endpoint Gemini AI gagal dihubungi.');
+          return new Response(JSON.stringify({ error: `Semua endpoint Gemini AI gagal dihubungi. Error: ${lastErrorDetails}` }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
         }
 
         const geminiJson = await geminiRes.json();
         const rawText = geminiJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const cleanedText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        let cleanedText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const firstBrace = cleanedText.indexOf('{');
+        const lastBrace = cleanedText.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          cleanedText = cleanedText.substring(firstBrace, lastBrace + 1);
+        }
+
         const parsed = JSON.parse(cleanedText);
+        parsed._modelUsed = successfulModel;
+        parsed._timestamp = new Date().toISOString();
 
         return new Response(JSON.stringify(parsed), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }

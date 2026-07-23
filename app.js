@@ -3117,6 +3117,8 @@ async function generateAiScript() {
 
   try {
     let aiData = null;
+    let isRealAiCall = false;
+    let modelUsed = '';
 
     // 1. Try Cloudflare Worker Gemini AI Endpoint first
     const workerAiUrl = 'https://wa-templates-worker.aldoramadhan16.workers.dev/ai-script';
@@ -3130,7 +3132,12 @@ async function generateAiScript() {
         const json = await res.json();
         if (json && json.messages && json.messages.length > 0) {
           aiData = json;
+          isRealAiCall = true;
+          modelUsed = json._modelUsed || 'gemini-2.0-flash-lite';
         }
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        console.warn('Worker AI Endpoint error:', res.status, errJson);
       }
     } catch (e) {
       console.warn('Worker AI Endpoint unavailable, falling back to smart local engine:', e);
@@ -3174,7 +3181,13 @@ async function generateAiScript() {
 
       applyProjectPayload(payload);
       if (typeof showToast === 'function') {
-        showToast('✨ Naskah AI berhasil dibuat & disesuaikan!');
+        if (isRealAiCall) {
+          console.log(`🤖 [AI ENGINE LOG]: Berhasil memanggil Gemini API (Model: ${modelUsed})`);
+          showToast(`🤖 [AI LOG]: Berhasil dibuat langsung oleh Gemini API (${modelUsed})!`);
+        } else {
+          console.warn('⚠️ [AI ENGINE LOG]: Menggunakan Local Offline Engine');
+          showToast('⚠️ [AI LOG]: Worker Offline - Menggunakan Local Engine');
+        }
       }
     }
   } catch (err) {
