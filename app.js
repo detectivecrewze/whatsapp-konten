@@ -1466,25 +1466,17 @@ function resetZoomEditor() {
 function triggerAutoZoomEditor(msgEl, isOut, customScaleOverride) {
   if (!msgEl) return;
   const messagesContainer = document.getElementById('wa-messages');
-  const canvasEl          = document.getElementById('wa-canvas');
-  if (!messagesContainer || !canvasEl) return;
+  if (!messagesContainer) return;
 
   const scaleInput    = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.15');
   const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.15');
   const zoomSpeed     = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
 
-  // Calculate untransformed Y of the message bubble relative to #wa-canvas
-  const msgYInCanvas = messagesContainer.offsetTop + msgEl.offsetTop + (msgEl.offsetHeight / 2);
-  const canvasHeight = canvasEl.clientHeight || 844;
-  const centerY      = canvasHeight / 2;
-  const deltaY       = centerY - msgYInCanvas;
-
-  // Subtle X offset
-  const deltaX       = isOut ? -15 : 15;
+  const originX = isOut ? '85%' : '15%';
 
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = '50% 50%';
-  messagesContainer.style.transform = `scale(${zoomIntensity}) translate(${deltaX}px, ${deltaY / zoomIntensity}px)`;
+  messagesContainer.style.transformOrigin = `${originX} bottom`;
+  messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
 function updateZoomScaleValue(val) {

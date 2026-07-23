@@ -314,32 +314,24 @@ function resetZoom() {
   if (!messagesContainer) return;
   const zoomSpeed = previewState ? (previewState.zoomSpeed || 0.45) : 0.45;
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = '50% 50%';
-  messagesContainer.style.transform = 'scale(1) translate(0px, 0px)';
+  messagesContainer.style.transformOrigin = 'bottom center';
+  messagesContainer.style.transform = 'scale(1)';
 }
 
 function triggerAutoZoom(msgEl, isOut, customScaleOverride) {
   if (!previewState || !msgEl) return;
   const messagesContainer = document.getElementById('wa-messages');
-  const canvasEl          = document.getElementById('wa-canvas');
-  if (!messagesContainer || !canvasEl) return;
+  if (!messagesContainer) return;
 
   const scaleInput    = (previewState && previewState.zoomScale) ? previewState.zoomScale : 1.15;
   const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.15');
   const zoomSpeed     = (previewState && previewState.zoomSpeed) ? previewState.zoomSpeed : 0.45;
 
-  // Calculate untransformed Y of the message bubble relative to #wa-canvas
-  const msgYInCanvas = messagesContainer.offsetTop + msgEl.offsetTop + (msgEl.offsetHeight / 2);
-  const canvasHeight = canvasEl.clientHeight || 844;
-  const centerY      = canvasHeight / 2;
-  const deltaY       = centerY - msgYInCanvas;
-
-  // Subtle X offset to keep incoming vs outgoing bubble beautifully in frame
-  const deltaX       = isOut ? -15 : 15;
+  const originX = isOut ? '85%' : '15%';
 
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = '50% 50%';
-  messagesContainer.style.transform = `scale(${zoomIntensity}) translate(${deltaX}px, ${deltaY / zoomIntensity}px)`;
+  messagesContainer.style.transformOrigin = `${originX} bottom`;
+  messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
 async function startAnimation() {
