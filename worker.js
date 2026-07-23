@@ -57,7 +57,7 @@ export default {
     // POST /ai-script — Proxy request to Gemini API securely
     if (request.method === 'POST' && url.pathname === '/ai-script') {
       try {
-        const { prompt } = await request.json();
+        const { prompt, targetLength } = await request.json();
         const apiKey = env.GEMINI_API_KEY;
         if (!apiKey) {
           return new Response(JSON.stringify({ error: 'GEMINI_API_KEY secret not set' }), {
@@ -66,23 +66,28 @@ export default {
           });
         }
         
-        const systemInstruction = `Kamu adalah penulis naskah konten drama & horor WhatsApp viral profesional untuk TikTok/Reels/Shorts.
+        let lengthRule = 'Buat 15 sampai 20 bubble chat lengkap dari awal sampai tamat.';
+        if (targetLength === 'short') lengthRule = 'Buat 8 sampai 12 bubble chat ringkas tapi lengkap dari awal sampai tamat.';
+        if (targetLength === 'long') lengthRule = 'Buat 25 sampai 35 bubble chat panjang & mendalam dari awal sampai tamat.';
+
+        const systemInstruction = `Kamu adalah penulis naskah konten percakapan WhatsApp viral profesional untuk TikTok/Reels/Shorts.
 Hasilkan JSON valid dengan format persis berikut:
 {
-  "name": "Nama Kontak / Lawan Bicara 👻",
-  "time": "02:00",
+  "name": "Nama Kontak / Lawan Bicara 💬",
+  "time": "21:15",
   "messages": [
-    { "type": "text", "direction": "incoming", "time": "02:00", "text": "Bro..." },
-    { "type": "text", "direction": "outgoing", "time": "02:01", "text": "Apaan?" }
+    { "type": "text", "direction": "incoming", "time": "21:15", "text": "isi pesan" },
+    { "type": "text", "direction": "outgoing", "time": "21:16", "text": "balasan" }
   ]
 }
 
 Syarat Wajib Naskah:
-1. JUMLAH PESAN PATUHI PROMPT USER: WAJIB patuhi persis jumlah bubble chat yang diminta pengguna di prompt (misal jika user minta 25-35 bubble chat, WAJIB hasilkan 25 sampai 35 bubble chat lengkap dari awal, eskalasi konflik, hingga ending tuntas tanpa dipotong!). Jika user tidak menyebutkan jumlah, buat 15-25 bubble chat.
-2. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Eskalasi Rasa Takut / Panik ➔ Ketegangan Puncak ➔ KLIMAKS PLOT TWIST YANG MEMBUAT MERINDING DI AKHIR CERITA.
-3. FORMAT CHAT SINGKAT: Pesan-pesan dibuat singkat-singkat khas anak muda Indonesia yang sedang panik saling balas cepat.
-4. JAM REALISTIS: Jam (time) bertambah secara ALAMI & REALISTIS (misal 02:00 -> 02:01 -> 02:02 -> 02:04 -> 02:07).
-5. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
+1. PATUHI GENRE USER: Ikuti GENRE dan TONE cerita yang diminta pengguna di prompt (misal jika tentang olshop/COD buat komplain olshop; jika romantis/bucin buat percakapan manis/bucin; jika komedi buat lucu; jika horor buat horor). DILARANG mengubah cerita menjadi horor apabila prompt pengguna bertema lain!
+2. JUMLAH PESAN: ${lengthRule} Wajib patuhi persis jika pengguna menyebutkan jumlah spesifik di prompt.
+3. STRUKTUR CERITA LENGKAP: Harus ada Pembuka ➔ Konflik/Eskalasi ➔ Klimaks / Ending Tuntas / Plot Twist yang sesuai genre.
+4. FORMAT CHAT SINGKAT: Pesan-pesan dibuat singkat-singkat khas anak muda Indonesia yang saling balas cepat.
+5. JAM REALISTIS: Jam (time) bertambah secara ALAMI & REALISTIS (misal 21:15 -> 21:16 -> 21:18 -> 21:22).
+6. Respon HANYA string JSON murni tanpa pembungkus markdown backtick.`;
 
         const modelNames = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let geminiRes = null;
