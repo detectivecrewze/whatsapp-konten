@@ -340,7 +340,9 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   if (!cleanText) return null;
 
   const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
-  const targetVoice = (!voiceId || voiceId === 'google-mp3') ? 'pNInz6obpgDQGcFmaJgB' : voiceId;
+  const targetVoice = (!voiceId || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
+
+  console.log(`🎙️ [ElevenLabs API] Generating voice for "${cleanText.slice(0, 30)}..." | VoiceID: ${targetVoice}`);
 
   try {
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${targetVoice}`, {
@@ -353,7 +355,7 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
         text: cleanText,
         model_id: 'eleven_multilingual_v2',
         voice_settings: {
-          stability: 0.50,
+          stability: 0.45,
           similarity_boost: 0.75
         }
       })
@@ -361,38 +363,27 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
 
     if (!res.ok) {
       const errText = await res.text();
-      console.warn('ElevenLabs API response error:', res.status, errText);
-      return fetchGoogleTtsBlobUrl(cleanText);
+      console.error(`❌ ElevenLabs API Error (${res.status}):`, errText);
+      alert(`⚠️ ElevenLabs API Error (${res.status}): ${errText}`);
+      return null;
     }
 
     const blob = await res.blob();
-    console.log(`✅ ElevenLabs TTS Audio Blob fetched successfully! Size: ${blob.size} bytes`);
+    console.log(`✅ ElevenLabs AI Audio fetched! Size: ${blob.size} bytes`);
     return URL.createObjectURL(blob);
   } catch (err) {
-    console.warn('ElevenLabs API fetch failed:', err);
-    return fetchGoogleTtsBlobUrl(cleanText);
-  }
-}
-
-async function fetchGoogleTtsBlobUrl(rawText) {
-  if (!rawText) return null;
-  const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
-  if (!cleanText) return null;
-
-  try {
-    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=id&client=tw-ob&q=${encodeURIComponent(cleanText)}`;
-    const res = await fetch(ttsUrl);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return URL.createObjectURL(blob);
-  } catch (err) {
-    console.warn('Failed to prefetch Google TTS Blob:', err);
+    console.error('❌ ElevenLabs fetch exception:', err);
     return null;
   }
 }
 
 function playBlobAudio(blobUrl, speedRate = 1.0) {
   return new Promise((resolve) => {
+    if (!blobUrl) {
+      resolve();
+      return;
+    }
+
     const audio = new Audio();
     audio.src = blobUrl;
     audio.playbackRate = speedRate;
@@ -410,77 +401,13 @@ function playBlobAudio(blobUrl, speedRate = 1.0) {
 
     audio.onloadedmetadata = () => {
       const durMs = Math.max(1200, Math.round((audio.duration / speedRate) * 1000));
-      setTimeout(finish, durMs + 500);
+      setTimeout(finish, durMs + 400);
     };
 
     audio.play().catch(err => {
-      console.warn('Blob audio play failed:', err);
+      console.warn('Audio playback error:', err);
       finish();
     });
-  });
-}
-
-function speakSpecificVoice(rawText, voiceName, speedRate = 1.0) {
-  return new Promise((resolve) => {
-    if (!rawText) {
-      resolve();
-      return;
-    }
-
-    const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
-
-    if (!cleanText) {
-      resolve();
-      return;
-    }
-
-    if (!voiceName || voiceName === 'google-mp3') {
-      fetchGoogleTtsBlobUrl(cleanText).then(blobUrl => {
-        if (blobUrl) {
-          playBlobAudio(blobUrl, speedRate).then(resolve);
-        } else {
-          speakBrowserFallbackClean(cleanText, voiceName, speedRate).then(resolve);
-        }
-      });
-      return;
-    }
-
-    speakBrowserFallbackClean(cleanText, voiceName, speedRate).then(resolve);
-  });
-}
-
-function speakBrowserFallbackClean(cleanText, targetVoiceName, speedRate = 1.0) {
-  return new Promise((resolve) => {
-    if (!('speechSynthesis' in window)) {
-      resolve();
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(cleanText);
-    utter.lang = 'id-ID';
-    utter.rate = speedRate;
-
-    const voices = window.speechSynthesis.getVoices();
-    const matchedVoice = voices.find(v => v.name === targetVoiceName);
-    const idVoice = voices.find(v => v.lang.includes('id') || v.lang.includes('ID'));
-
-    if (matchedVoice) utter.voice = matchedVoice;
-    else if (idVoice) utter.voice = idVoice;
-
-    let done = false;
-    const finish = () => {
-      if (!done) {
-        done = true;
-        resolve();
-      }
-    };
-
-    utter.onend = finish;
-    utter.onerror = finish;
-    setTimeout(finish, Math.max(1200, Math.round((cleanText.length / 10) * 1000 / speedRate)));
-
-    window.speechSynthesis.speak(utter);
   });
 }
 
@@ -509,7 +436,7 @@ async function startAnimation() {
   const lblEl   = document.getElementById('countdown-label');
   overlay.classList.remove('hidden');
 
-  // Pre-fetch ElevenLabs / Google TTS Audio Blobs in parallel if TTS enabled
+  // Pre-fetch ElevenLabs Audio Blobs in parallel if TTS enabled
   const ttsAudioMap = {};
   if (enableTts) {
     lblEl.textContent = 'Mengunduh Suara ElevenLabs AI… 🎙️✨';
@@ -522,16 +449,13 @@ async function startAnimation() {
 
       if (textToSpeak) {
         const isOut = msg.direction === 'outgoing';
-        const defaultInVoice = 'EXAVITQu4vr4xnSDxMaL'; // Bella Female
-        const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam Male
-        let voiceId = isOut ? (previewState.ttsVoiceOut || defaultOutVoice) : (previewState.ttsVoiceIn || defaultInVoice);
-        
-        // Ensure ElevenLabs voice is used when TTS is enabled
-        if (!voiceId || voiceId === 'google-mp3') {
-          voiceId = isOut ? defaultOutVoice : defaultInVoice;
-        }
+        const defaultInVoice  = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Female)
+        const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam (Male)
 
-        console.log(`🎙️ Pre-fetching ElevenLabs Voice for Frame ${idx} (${isOut ? 'Outgoing' : 'Incoming'}): VoiceID=${voiceId}, Text="${textToSpeak}"`);
+        let voiceId = isOut
+          ? (previewState.ttsVoiceOut && previewState.ttsVoiceOut !== 'google-mp3' ? previewState.ttsVoiceOut : defaultOutVoice)
+          : (previewState.ttsVoiceIn  && previewState.ttsVoiceIn  !== 'google-mp3' ? previewState.ttsVoiceIn  : defaultInVoice);
+
         ttsAudioMap[idx] = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
       }
     }));
@@ -542,9 +466,6 @@ async function startAnimation() {
     lblEl.textContent  = 'Starting animation…';
     await sleep(900);
   }
-  numEl.textContent = '▶';
-  lblEl.textContent = 'Recording!';
-  await sleep(400);
   overlay.classList.add('hidden');
 
   // Animate frame by frame
@@ -554,11 +475,6 @@ async function startAnimation() {
     // Check if any message has explicit selective zoom enabled (msg.enableZoom === true)
     const hasSelectiveZoom = messages.some(m => m.enableZoom === true);
     const shouldZoomThisMsg = hasSelectiveZoom ? !!messages[f].enableZoom : autoZoom;
-
-    // Reset zoom before transition if current message is not zoomed
-    if (f > 0 && !shouldZoomThisMsg) {
-      resetZoom();
-    }
 
     // Typing indicator / Reply delay before incoming replies
     if (f > 0 && messages[f].direction === 'incoming') {
@@ -610,20 +526,13 @@ async function startAnimation() {
       setTimeout(() => msgEl.classList.remove(animClass), 400);
     }
 
-    // Google TTS Voice Over or Hold Duration
-    const textToSpeak = messages[f].type === 'notification'
-      ? `${messages[f].senderName || 'Notifikasi'}: ${messages[f].text || ''}`
-      : (messages[f].text || messages[f].caption || '');
-
+    // ElevenLabs AI Voice Over Playback
     if (enableTts) {
-      const selectedVoice = isOut ? (previewState.ttsVoiceOut || 'google-mp3') : (previewState.ttsVoiceIn || 'google-mp3');
+      const blobUrl = ttsAudioMap[f];
       const speedRate = parseFloat(previewState.ttsSpeed || '1.00');
 
-      if (selectedVoice === 'google-mp3' && ttsAudioMap[f]) {
-        await playBlobAudio(ttsAudioMap[f], speedRate);
-        await sleep(250);
-      } else if (textToSpeak) {
-        await speakSpecificVoice(textToSpeak, selectedVoice, speedRate);
+      if (blobUrl) {
+        await playBlobAudio(blobUrl, speedRate);
         await sleep(250);
       } else {
         const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);

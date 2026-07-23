@@ -1532,55 +1532,6 @@ function updateTtsSpeedValue(val) {
   triggerAutoSave();
 }
 
-function populateTtsVoicesDropdown() {
-  const selIn = document.getElementById('sel-tts-voice-in');
-  const selOut = document.getElementById('sel-tts-voice-out');
-  if (!selIn || !selOut) return;
-
-  const voices = ('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : [];
-  
-  let optionsHtml = `<option value="google-mp3">🎙️ Google TTS Audio (Standar)</option>`;
-  
-  const idVoices = voices.filter(v => v.lang.includes('id') || v.lang.includes('ID'));
-  const otherVoices = voices.filter(v => !v.lang.includes('id') && !v.lang.includes('ID'));
-
-  if (idVoices.length > 0) {
-    optionsHtml += `<optgroup label="Bahasa Indonesia Voices">`;
-    idVoices.forEach(v => {
-      const isMale = v.name.toLowerCase().includes('ardi') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('andika');
-      const isFemale = v.name.toLowerCase().includes('gadis') || v.name.toLowerCase().includes('female');
-      const icon = isMale ? '👨' : (isFemale ? '👩' : '🗣️');
-      optionsHtml += `<option value="${v.name}">${icon} ${v.name} (${v.lang})</option>`;
-    });
-    optionsHtml += `</optgroup>`;
-  }
-
-  if (otherVoices.length > 0) {
-    optionsHtml += `<optgroup label="Voices Lainnya">`;
-    otherVoices.slice(0, 10).forEach(v => {
-      optionsHtml += `<option value="${v.name}">🗣️ ${v.name} (${v.lang})</option>`;
-    });
-    optionsHtml += `</optgroup>`;
-  }
-
-  const prevIn = selIn.value || 'google-mp3';
-  const prevOut = selOut.value || 'google-mp3';
-
-  selIn.innerHTML = optionsHtml;
-  selOut.innerHTML = optionsHtml;
-
-  if (state.ttsVoiceIn) selIn.value = state.ttsVoiceIn;
-  else selIn.value = prevIn;
-
-  if (state.ttsVoiceOut) selOut.value = state.ttsVoiceOut;
-  else selOut.value = prevOut;
-}
-
-if ('speechSynthesis' in window) {
-  window.speechSynthesis.onvoiceschanged = populateTtsVoicesDropdown;
-  setTimeout(populateTtsVoicesDropdown, 500);
-}
-
 function setMsgCustomZoomScale(id, scaleVal) {
   const msg = state.messages.find(m => m.id === id);
   if (!msg) return;
