@@ -1231,7 +1231,7 @@ function openCleanPreview() {
     return;
   }
 
-  window.open('preview.html', '_blank');
+  window.open('preview', '_blank');
 }
 
 /* ============================================================
@@ -1715,8 +1715,8 @@ async function copyShareLink(targetType = 'preview') {
   const cleanPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
   const cleanBase = window.location.origin + (cleanPath.endsWith('/') ? cleanPath : cleanPath + '/');
 
-  const previewUrl = `${cleanBase}preview.html?preset=${cloudId}`;
-  const editorUrl  = `${cleanBase}index.html?preset=${cloudId}`;
+  const previewUrl = `${cleanBase}preview?preset=${cloudId}`;
+  const editorUrl  = `${cleanBase}?preset=${cloudId}`;
   const shareUrl   = targetType === 'editor' ? editorUrl : previewUrl;
 
   try {
