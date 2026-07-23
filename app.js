@@ -1959,33 +1959,7 @@ function openCleanPreview() {
     return;
   }
 
-  const holdMs     = parseInt(document.getElementById('inp-hold-duration')?.value || '2000', 10);
-  const replyDelay = parseInt(document.getElementById('inp-reply-delay')?.value || '1400', 10);
-  const useTyping  = document.getElementById('inp-typing')?.checked ?? true;
-  const useSoundIn   = document.getElementById('inp-sound-in')?.checked ?? true;
-  const useSoundOut  = document.getElementById('inp-sound-out')?.checked ?? false;
-  const autoZoom    = document.getElementById('inp-auto-zoom')?.checked ?? false;
-  const zoomScale   = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.20');
-  const zoomSpeed   = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
-
-  // Serialize state to localStorage
-  const payload = {
-    name:      state.name,
-    pfp:       state.pfp,
-    messages:  state.messages,
-    time:      state.time,
-    bgType:    state.bgType,
-    bgColor:   state.bgColor,
-    bgImage:   state.bgImage,
-    holdMs,
-    replyDelay,
-    useTyping,
-    useSoundIn,
-    useSoundOut,
-    autoZoom,
-    zoomScale,
-    zoomSpeed,
-  };
+  const payload = getProjectPayload();
 
   try {
     localStorage.setItem('wa_preview', JSON.stringify(payload));
@@ -2023,18 +1997,24 @@ function getProjectPayload() {
   const zoomSpeed    = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
 
   return {
-    name:        state.name,
-    pfp:         state.pfp,
-    messages:    state.messages,
-    scale:       state.scale,
-    time:          state.time,
-    phoneOs:       state.phoneOs || 'ios',
-    chatType:      state.chatType || 'personal',
-    groupSubtitle: state.groupSubtitle || 'Sinta, Budi, Anda, Agus',
-    batteryLevel:  state.batteryLevel || 85,
-    bgType:        state.bgType,
-    bgColor:     state.bgColor,
-    bgImage:     state.bgImage,
+    name:            state.name,
+    pfp:             state.pfp,
+    messages:        state.messages,
+    scale:           state.scale,
+    time:            state.time,
+    phoneOs:         state.phoneOs || 'ios',
+    chatType:        state.chatType || 'personal',
+    groupSubtitle:   state.groupSubtitle || 'Sinta, Budi, Anda, Agus',
+    batteryLevel:    state.batteryLevel || 85,
+    lastSeenMode:    state.lastSeenMode || 'online',
+    lastSeenText:    state.lastSeenText || '',
+    pinnedEnabled:   !!state.pinnedEnabled,
+    pinnedText:      state.pinnedText || '',
+    showUnreadBadge: !!state.showUnreadBadge,
+    unreadCount:     state.unreadCount || '99+',
+    bgType:          state.bgType,
+    bgColor:         state.bgColor,
+    bgImage:         state.bgImage,
     holdMs,
     replyDelay,
     useTyping,
@@ -2043,7 +2023,7 @@ function getProjectPayload() {
     autoZoom,
     zoomScale,
     zoomSpeed,
-    updatedAt:   Date.now()
+    updatedAt:       Date.now()
   };
 }
 
