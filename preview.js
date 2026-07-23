@@ -314,26 +314,32 @@ function resetZoom() {
   if (!messagesContainer) return;
   const zoomSpeed = previewState ? (previewState.zoomSpeed || 0.45) : 0.45;
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = 'center center';
-  messagesContainer.style.transform = 'scale(1)';
+  messagesContainer.style.transformOrigin = '50% 50%';
+  messagesContainer.style.transform = 'scale(1) translate(0px, 0px)';
 }
 
 function triggerAutoZoom(msgEl, isOut, customScaleOverride) {
   if (!previewState || !msgEl) return;
   const messagesContainer = document.getElementById('wa-messages');
-  if (!messagesContainer) return;
-
-  // Exact untransformed Y and X center of the message bubble relative to container
-  const bubbleCenterY = msgEl.offsetTop + Math.round(msgEl.offsetHeight / 2);
-  const bubbleCenterX = msgEl.offsetLeft + Math.round(msgEl.offsetWidth / 2);
+  const canvasEl          = document.getElementById('wa-canvas');
+  if (!messagesContainer || !canvasEl) return;
 
   const scaleInput    = (previewState && previewState.zoomScale) ? previewState.zoomScale : 1.15;
   const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.15');
   const zoomSpeed     = (previewState && previewState.zoomSpeed) ? previewState.zoomSpeed : 0.45;
 
-  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = `${bubbleCenterX}px ${bubbleCenterY}px`;
-  messagesContainer.style.transform = `scale(${zoomIntensity})`;
+  // Calculate untransformed Y of the message bubble relative to #wa-canvas
+  const msgYInCanvas = messagesContainer.offsetTop + msgEl.offsetTop + (msgEl.offsetHeight / 2);
+  const canvasHeight = canvasEl.clientHeight || 844;
+  const centerY      = canvasHeight / 2;
+  const deltaY       = centerY - msgYInCanvas;
+
+  // Subtle X offset to keep incoming vs outgoing bubble beautifully in frame
+  const deltaX       = isOut ? -15 : 15;
+
+  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
+  messagesContainer.style.transformOrigin = '50% 50%';
+  messagesContainer.style.transform = `scale(${zoomIntensity}) translate(${deltaX}px, ${deltaY / zoomIntensity}px)`;
 }
 
 async function startAnimation() {
