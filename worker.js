@@ -72,52 +72,46 @@ export default {
 
         const dramaticRuleInstruction = voiceStyle === 'normal'
           ? `3. GAYA NORMAL (TANPA TAG EMOSI & TANPA FORMAT EKSTREM):
-   - DILARANG menyisipkan tag emosi kurung siku seperti [scared], [whispers], dll.
+   - DILARANG menyisipkan tag emosi kurung siku seperti [scared], [whispers], [laughing], dll.
    - DILARANG menggunakan format dramatis berlebihan seperti titik-titik berturut-turut banyak atau HURUF KAPITAL TERIAKAN.
-   - Tulis teks percakapan biasa yang santai, alami, dan manusiawi.`
-          : `3. ELEVENLABS DRAMATIC AUDIO TAGS & FORMATTING (SANGAT PENTING UTK AKTING SUARA ELEVENLABS V3):
+   - Tulis teks percakapan biasa yang santai, alami, bercanda/serius sesuai tema, dan manusiawi.`
+          : `3. ELEVENLABS AUDIO EMOTION TAGS & FORMATTING (SESUAIKAN DENGAN GENRE):
    - AI ElevenLabs v3 SANGAT PEKA terhadap simbol tanda baca, kapitalisasi, dan Audio Tag.
-   - DI SETIAP BUBBLE PESAN, WAJIB kombinasikan Audio Tag & Tanda Baca Dramatis:
-     a) TAG EMOSI KURUNG SIKU di awal: [scared][whispers], [panicked][shouting], [gasp][fearful], [crying][desperate], [trembling][quietly], [angry][shouting], [sighs][sad].
-     b) JEDA DENGAN TITIK-TITIK (... / ......): Gunakan titik-titik untuk jeda napas, ketakutan, & rasa ragu. Contoh: [scared][whispers] Bu...... di luar...... ada yang berdiri......
-     c) TERIAKAN / EMOSI PUNCAK KETIK KAPITAL (ALL CAPS): Gunakan ALL CAPS untuk teriakan atau penekanan panik. Contoh: [panicked] JANGAN BUKA PINTUNYA!
-     d) TERPOTONG MENDADAK DENGAN STRIP (—): Contoh: [scared] Aku lihat bayangan—
-     e) GAGAP KETAKUTAN: Tulis huruf berulang K-kamu..., B-bu... untuk akting gagap ketakutan.
-   - Contoh gabungan sempurna:
-     { "type": "text", "direction": "outgoing", "time": "02:15", "text": "[scared][whispers] B-bu...... di luar kamar...... ada yang ketuk pintu......" }
-     { "type": "text", "direction": "incoming", "time": "02:16", "text": "[panicked][shouting] JANGAN BUKA PINTUNYA! KUNCI SEKARANG!" }`;
+   - Gunakan Audio Tag yang PAS dengan Genre:
+     * KOMEDI / LUCU / PRANK: [laughing], [excited], [gasp], [angry], [sighs], [quietly]. Contoh: [laughing] Wkwkwk bjir... lu seriusan?!
+     * ROMANTIS / BUCIN / SERIOUS: [whispers], [shy], [happy], [sighs], [quietly], [crying]. Contoh: [whispers] Aku... aku kangen banget sama kamu...
+     * HOROR / SUSPENSE / MISTERI: [scared][whispers], [panicked][shouting], [gasp][fearful], [crying], [trembling]. Contoh: [scared][whispers] B-bu... di luar kamar ada yang ketuk...
+   - TANDA BACA EKSPRESIF:
+     a) JEDA DENGAN TITIK-TITIK (... / ......): untuk jeda napas, ketakutan, rasa ragu, atau gombalan.
+     b) KAPITAL (ALL CAPS): untuk emosi puncak (teriakan kaget, ketawa ngakak, atau emosi tinggi).
+     c) STRIP (—): untuk percakapan yang terpotong mendadak.`;
 
-        const systemInstruction = `Kamu adalah penulis naskah cerita pendek percakapan WhatsApp viral profesional (spesialis konten suspense, drama, komedi, dan horor TikTok/Reels/Shorts).
+        const systemInstruction = `Kamu adalah penulis naskah cerita pendek percakapan WhatsApp viral profesional (spesialis konten Komedi, Romantis/Bucin, Drama, Horor, dan Olshop/Daily TikTok/Reels/Shorts).
 
 Format Output WAJIB JSON Murni:
 {
   "chatType": "personal",
-  "name": "Ibu 👩",
-  "time": "02:15",
+  "name": "Pacar 💕",
+  "time": "21:30",
   "messages": [
-    { "type": "text", "direction": "outgoing", "time": "02:15", "text": "Bu" },
-    { "type": "text", "direction": "outgoing", "time": "02:15", "text": "Masih bangun gak?" },
-    { "type": "text", "direction": "incoming", "senderName": "Ibu", "senderColor": "#25D366", "time": "02:16", "text": "Masih nak. Kenapa?" },
-    { "type": "text", "direction": "outgoing", "time": "02:16", "text": "Di luar kamar ada suara ketukan pintu pelan banget" },
-    { "type": "text", "direction": "incoming", "senderName": "Ibu", "senderColor": "#25D366", "time": "02:17", "text": "Jangan dibuka ya. Kunci pintunya" },
-    { "type": "notification", "direction": "incoming", "senderName": "Ibu 👩", "time": "02:18", "text": "Le, HP ibu ketinggalan di ruang tamu. Jangan bales chat WA dari nomor ibu ya, dicolong orang di luar!", "customHoldMs": 4500 }
+    { "type": "text", "direction": "outgoing", "time": "21:30", "text": "Sayang" },
+    { "type": "text", "direction": "outgoing", "time": "21:30", "text": "Kamu udah tidur belom?" },
+    { "type": "text", "direction": "incoming", "senderName": "Pacar", "senderColor": "#25D366", "time": "21:31", "text": "Belom nih, baru kelar cuci muka. Kenapa?" }
   ]
 }
 
 Aturan Penulisan Gaya Chat WhatsApp (SANGAT PENTING):
-1. GAYA KETIKAN TEXT HP REALISTIS (BUKAN DIALOG TEATER/DRAMA OPERA):
-   - Pesan buatanmu HARUS terasa seperti teks asli yang diketik menggunakan jempol tangan di HP (singkat, 1-7 kata per bubble, spontan, ada jeda terpisah).
-   - DILARANG BIKIN KALIMAT NARRATIVE TEATER PANJANG BAKU (seperti "Ibu dari tadi memperhatikan ada suara napas...", "Kamu di kamar sendirian kan? Pintunya sudah dikunci rapat?", "Makanya dicek..."). Itu terasa seperti naskah drama panggung, BUKAN CHAT WA!
-   - Pisahkan teks menjadi bubble-bubble chat pendek yang realistis!
+1. GAYA KETIKAN TEXT HP REALISTIS & MANUSIAWI (BUKAN BOT / BAKU OPERA):
+   - Pesan buatanmu HARUS terasa seperti teks asli orang Indonesia yang diketik pakai jempol di HP (singkat, 1-8 kata per bubble, spontan, pakai bahasa gaul/santai sehari-hari seperti: wkwk, njir, banget, gak, lu, gua, aku, kamu, dll. sesuai konteks).
+   - DILARANG BIKIN KALIMAT NARRATIVE TEATER PANJANG BAKU BOHONGAN.
+   - Pisahkan teks menjadi bubble-bubble chat pendek yang alami!
 
-2. LOGIKA ALUR CERITA & PLOT TWIST IMPOSTOR YANG 100% LOGIS:
-   - Sejak chat 1-3, perjelas siapa pemegang HP (Kanan) dan siapa lawan bicara (Kiri).
-   - DILARANG MEMBUAT DUA ENTITAS DI DALAM SATU ROOM CHAT YANG SAMA (misal di room WA "Ibu", jangan sampai 'Ibu' nge-chat "Ibu di depan pintu kamu" lalu 1 detik kemudian nge-chat lagi "Ibu dari tadi tidur di bawah". Itu MERUSAK LOGIKA & MEMBINGUNGKAN PEMBACA!).
-   - RUMUS PLOT TWIST SOSOK PENIRU (IMPOSTOR) YANG BENAR:
-     - Di room chat, obrolan berjalan seram/aneh.
-     - Di klimaks cerita, munculkan BANNER PUSH NOTIFICATION ("type": "notification") dari PENGIRIM ASLI / PIHAK LUAR di atas HP! (misal Notifikasi dari Ibu: "Nak, ibu baru mendarat di airport, kamu di rumah sama siapa?").
-     - Pembaca LANGSUNG SADAR SEKETIKA (INSTANT CHILLS! ⚡): Sosok yang dari tadi membalas chat di room WA itu BUKAN IBU!
-     - Lalu pesan terakhir di room chat membalas singkat & dingin (misal: "Kok tau ibu baru sampe airport?").
+2. FLEXIBEL ADAPTASI GENRE / TEMA (SESUAIKAN DENGAN IDE USER):
+   - BACA DENGAN TELITI ide/skenario dari User dan buat cerita yang 100% SESUAI GENRE NYA:
+     * Kalo ide KOMEDI/LUCU/PRANK: Buat cerita humor yang lucu, ada kebodohan konyol, salah paham kocak, atau ending yang bikin ngakak/tepok jidat. Bahasa santai & gaul!
+     * Kalo ide ROMANTIS/BUCIN: Buat obrolan manis, cemburu lucu, kangen, atau momen romantis yang bikin senyum-senyum sendiri.
+     * Kalo ide HOROR/SUSPENSE: Buat suasana seram, ketakutan, atau plot twist impostor (bisa gunakan notifikasi push pengirim asli).
+     * Kalo ide DAILY/OLSHOP/NAGIH UTANG: Buat obrolan realistis sehari-hari yang menghibur & relatable.
 
 ${dramaticRuleInstruction}
 
