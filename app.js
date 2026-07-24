@@ -2377,7 +2377,7 @@ function getProjectPayload() {
     zoomScale:       zoomScale,
     zoomSpeed:       zoomSpeed,
     enableTts:       document.getElementById('chk-enable-tts')?.checked === true,
-    elevenKey:       document.getElementById('inp-eleven-key')?.value || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20',
+    elevenKey:       document.getElementById('inp-eleven-key')?.value || localStorage.getItem('wa_eleven_api_key') || 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45',
     elevenModel:     document.getElementById('sel-eleven-model')?.value || 'eleven_v3',
     ttsVoiceIn:      (document.getElementById('sel-tts-voice-in')?.value === 'custom') ? (document.getElementById('inp-custom-voice-in')?.value?.trim() || 'EXAVITQu4vr4xnSDxMaL') : (document.getElementById('sel-tts-voice-in')?.value || 'EXAVITQu4vr4xnSDxMaL'),
     ttsVoiceOut:     (document.getElementById('sel-tts-voice-out')?.value === 'custom') ? (document.getElementById('inp-custom-voice-out')?.value?.trim() || 'pNInz6obpgDQGcFmaJgB') : (document.getElementById('sel-tts-voice-out')?.value || 'pNInz6obpgDQGcFmaJgB'),

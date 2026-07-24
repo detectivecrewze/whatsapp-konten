@@ -347,7 +347,7 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
   if (!cleanText) return null;
 
-  const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+  const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
   let targetVoice = (!voiceId || voiceId === 'custom' || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
   const modelToUse = (previewState && previewState.elevenModel) ? previewState.elevenModel : 'eleven_v3';
 
@@ -479,7 +479,7 @@ async function startAnimation() {
   const ttsAudioCache = window.__ttsAudioCache || (window.__ttsAudioCache = {});
 
   if (enableTts) {
-    const apiKey = previewState.elevenKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+    const apiKey = previewState.elevenKey || localStorage.getItem('wa_eleven_api_key') || 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
     const modelToUse = previewState.elevenModel || 'eleven_v3';
     const stability  = previewState.ttsStability != null ? previewState.ttsStability : 0.25;
     const style      = previewState.ttsStyle != null ? previewState.ttsStyle : 0.50;
