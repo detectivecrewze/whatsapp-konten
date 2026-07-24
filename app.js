@@ -3049,13 +3049,21 @@ async function preRenderTtsAudioForCloud(payload) {
       if (blobUrl) {
         const res = await fetch(blobUrl);
         const blob = await res.blob();
-        const dataUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-        payload.ttsAudioMap[idx] = dataUrl;
+        
+        // Upload binary MP3 to Worker CDN Storage endpoint (/upload-audio)
+        if (WORKER_URL) {
+          const uploadRes = await fetch(`${WORKER_URL}/upload-audio?key=audio_${Date.now()}_${idx}.mp3`, {
+            method: 'POST',
+            body: blob
+          });
+          if (uploadRes.ok) {
+            const uploadJson = await uploadRes.json();
+            if (uploadJson.url) {
+              payload.ttsAudioMap[idx] = uploadJson.url;
+              console.log(`☁️ [Cloud Storage Audio] Uploaded MP3 for msg #${idx + 1}:`, uploadJson.url);
+            }
+          }
+        }
       }
     } catch (e) {
       console.warn('Pre-rendering audio error for msg #' + idx, e);

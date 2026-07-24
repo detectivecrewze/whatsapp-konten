@@ -54,6 +54,65 @@ export default {
       }
     }
 
+    // POST /upload-audio — Upload MP3 audio binary (R2 / Storage) and return public CDN URL
+    if (request.method === 'POST' && url.pathname === '/upload-audio') {
+      try {
+        const audioBuffer = await request.arrayBuffer();
+        const customKey = url.searchParams.get('key');
+        const key = customKey || `audio_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.mp3`;
+
+        if (env.WA_AUDIO_R2) {
+          await env.WA_AUDIO_R2.put(key, audioBuffer, {
+            httpMetadata: { contentType: 'audio/mpeg' }
+          });
+        } else if (env.WA_TEMPLATES_KV) {
+          await env.WA_TEMPLATES_KV.put(key, audioBuffer);
+        }
+
+        const publicUrl = `${url.origin}/audio/${key}`;
+        return new Response(JSON.stringify({ url: publicUrl, key }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), {
+          status: 500,
+          headers: corsHeaders
+        });
+      }
+    }
+
+    // GET /audio/:key — Serve MP3 audio file with CDN caching
+    if (request.method === 'GET' && url.pathname.startsWith('/audio/')) {
+      const key = url.pathname.replace('/audio/', '');
+      let audioStream = null;
+
+      if (env.WA_AUDIO_R2) {
+        const object = await env.WA_AUDIO_R2.get(key);
+        if (object) {
+          audioStream = object.body;
+        }
+      }
+
+      if (!audioStream && env.WA_TEMPLATES_KV) {
+        const data = await env.WA_TEMPLATES_KV.get(key, 'arrayBuffer');
+        if (data) {
+          audioStream = data;
+        }
+      }
+
+      if (!audioStream) {
+        return new Response('Audio file not found', { status: 404, headers: corsHeaders });
+      }
+
+      return new Response(audioStream, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'audio/mpeg',
+          'Cache-Control': 'public, max-age=31536000, immutable'
+        }
+      });
+    }
+
     // POST /ai-script — Proxy request to Gemini API securely
     if (request.method === 'POST' && url.pathname === '/ai-script') {
       try {
