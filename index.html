@@ -243,10 +243,17 @@
           </div>
 
           <!-- Generate Action Button -->
-          <button id="btn-generate-ai" onclick="generateAiScript()"
-                  class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-lg hover:shadow-purple-900/40 flex items-center justify-center gap-2 transition transform active:scale-95">
-            <span>✨ Tulis Naskah Otomatis dengan AI</span>
-          </button>
+          <div class="space-y-2">
+            <button id="btn-generate-ai" onclick="generateAiScript()"
+                    class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-lg hover:shadow-purple-900/40 flex items-center justify-center gap-2 transition transform active:scale-95">
+              <span>✨ Tulis Naskah Otomatis dengan AI</span>
+            </button>
+            <button onclick="reverseAllMsgDirections()"
+                    title="Balikkan posisi pengirim semua pesan jika AI keliru mendeteksi pengirim"
+                    class="w-full bg-gray-800/80 hover:bg-gray-700 text-indigo-300 border border-indigo-500/30 font-medium text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition">
+              <span>🔄 Balikkan Semua Pesan (In ↔ Out)</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -536,7 +543,13 @@
             <span class="text-base">💬</span>
             <p class="text-xs font-semibold text-gray-300 uppercase tracking-widest">Chat Sequence (Daftar Pesan)</p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="event.stopPropagation(); reverseAllMsgDirections()"
+                    title="Tukar posisi semua pesan (Incoming ↔ Outgoing) secara otomatis"
+                    class="flex items-center gap-1 text-xs bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300
+                           px-2.5 py-1.5 rounded-lg transition font-medium border border-indigo-500/30">
+              🔄 Balikkan In ↔ Out
+            </button>
             <button onclick="event.stopPropagation(); autoSequenceMsgTimes(1)"
                     title="Otomatis beri jeda +1 menit secara berurutan untuk semua pesan"
                     class="flex items-center gap-1 text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-400

@@ -825,6 +825,28 @@ function setMsgDir(id, direction) {
   renderDashboard();
 }
 
+/** Swap direction (Incoming ↔ Outgoing) for all messages in the project */
+function reverseAllMsgDirections() {
+  if (!state.messages || state.messages.length === 0) {
+    showToast('⚠️ Belum ada pesan untuk dibalikkan!');
+    return;
+  }
+
+  let swappedCount = 0;
+  state.messages.forEach(msg => {
+    if (msg.direction === 'incoming') {
+      msg.direction = 'outgoing';
+      swappedCount++;
+    } else if (msg.direction === 'outgoing') {
+      msg.direction = 'incoming';
+      swappedCount++;
+    }
+  });
+
+  renderDashboard();
+  showToast(`🔄 Berhasil menukar posisi ${swappedCount} pesan (Incoming ↔ Outgoing)!`);
+}
+
 /** Change type (text / image / qr) */
 function setMsgType(id, type) {
   const msg = state.messages.find(m => m.id === id);
