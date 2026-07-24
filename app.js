@@ -3007,11 +3007,11 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
 
   const provider = (options && options.ttsProvider) || (document.getElementById('sel-tts-provider')?.value) || 'elevenlabs';
 
-  // FREE NEURAL VOICE ENGINE (Google / Free Audio - Unlimited 100% Free)
+  // FREE NEURAL VOICE ENGINE (Cloud Worker Proxy - Unlimited 100% Free)
   if (provider === 'free_neural' || apiKey === 'free_neural') {
     try {
       console.log(`🌐 [Free Neural Voice Engine] Generating free audio: "${cleanText.substring(0, 30)}..."`);
-      const freeUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText)}&tl=id&client=tw-ob`;
+      const freeUrl = `https://wa-templates-worker.aldoramadhan16.workers.dev/free-tts?text=${encodeURIComponent(cleanText)}`;
       const res = await fetch(freeUrl);
       if (res.ok) {
         const blob = await res.blob();

@@ -350,11 +350,11 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
 
   const provider = (previewState && previewState.ttsProvider) || 'elevenlabs';
 
-  // FREE NEURAL VOICE ENGINE (Google / Free Audio - Unlimited 100% Free)
+  // FREE NEURAL VOICE ENGINE (Cloud Worker Proxy - Unlimited 100% Free)
   if (provider === 'free_neural' || apiKey === 'free_neural') {
     try {
       console.log(`🌐 [Free Neural Voice Engine] Generating free audio: "${cleanText.substring(0, 30)}..."`);
-      const freeUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText)}&tl=id&client=tw-ob`;
+      const freeUrl = `https://wa-templates-worker.aldoramadhan16.workers.dev/free-tts?text=${encodeURIComponent(cleanText)}`;
       const res = await fetch(freeUrl);
       if (res.ok) {
         const blob = await res.blob();
@@ -649,7 +649,10 @@ async function startAnimation() {
           console.log(`⚡ [TTS Cache Hit] Reusing audio for message #${idx + 1}`);
           ttsAudioMap[idx] = ttsAudioCache[cacheKey];
         } else {
-          lblEl.textContent = `Mengunduh ElevenLabs AI (${idx + 1}/${messages.length})… 🎙️✨`;
+          const isFreeNeural = (previewState && previewState.ttsProvider) === 'free_neural';
+          lblEl.textContent = isFreeNeural
+            ? `Menyiapkan Suara AI Gratis (${idx + 1}/${messages.length})… 🌐✨`
+            : `Mengunduh ElevenLabs AI (${idx + 1}/${messages.length})… 🎙️✨`;
           const blobUrl = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
           if (blobUrl) {
             ttsAudioCache[cacheKey] = blobUrl;

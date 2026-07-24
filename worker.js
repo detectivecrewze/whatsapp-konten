@@ -54,6 +54,39 @@ export default {
       }
     }
 
+    // GET /free-tts — Proxy Free Neural Speech / Google TTS without CORS issues
+    if (request.method === 'GET' && url.pathname === '/free-tts') {
+      try {
+        const text = url.searchParams.get('text') || '';
+        const lang = url.searchParams.get('lang') || 'id';
+        if (!text) {
+          return new Response('Missing text', { status: 400, headers: corsHeaders });
+        }
+
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${lang}&client=tw-ob`;
+        const res = await fetch(ttsUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+
+        if (!res.ok) {
+          return new Response('TTS upstream error', { status: res.status, headers: corsHeaders });
+        }
+
+        const audioBuf = await res.arrayBuffer();
+        return new Response(audioBuf, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'audio/mpeg',
+            'Cache-Control': 'public, max-age=86400'
+          }
+        });
+      } catch (err) {
+        return new Response(err.message, { status: 500, headers: corsHeaders });
+      }
+    }
+
     // POST /upload-audio — Upload MP3 audio binary (R2 / Storage) and return public CDN URL
     if (request.method === 'POST' && url.pathname === '/upload-audio') {
       try {
