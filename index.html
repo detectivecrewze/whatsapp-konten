@@ -706,6 +706,18 @@
               </div>
 
               <div id="wrap-tts-options" class="space-y-2.5 pt-2 border-t border-gray-700/60">
+                <!-- Voice Provider Engine Selector -->
+                <div class="space-y-1">
+                  <label class="text-[11px] text-amber-300 font-medium flex items-center justify-between">
+                    <span>⚙️ Provider Voice Engine:</span>
+                  </label>
+                  <select id="sel-tts-provider" onchange="setTtsProvider(this.value)"
+                          class="w-full bg-gray-900 border border-amber-500/40 text-amber-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer font-semibold">
+                    <option value="elevenlabs" selected>👑 ElevenLabs AI (v3) — Ultra Realistis (Pakai API Key & Kuota)</option>
+                    <option value="free_neural">🌐 Google & Free Neural Voice — 100% Gratis & Unlimited (Tanpa Kuota/Key)</option>
+                  </select>
+                </div>
+
                 <!-- API Key Field -->
                 <div class="space-y-1">
                   <label class="text-[10px] text-amber-400 font-semibold flex items-center justify-between">

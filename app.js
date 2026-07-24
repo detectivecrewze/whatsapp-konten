@@ -2361,6 +2361,42 @@ function triggerAutoSave() {
   }, 400);
 }
 
+function setTtsProvider(val) {
+  state.ttsProvider = val;
+  const keyInp = document.getElementById('inp-eleven-key');
+  const keyWrap = keyInp ? keyInp.closest('.space-y-1') : null;
+  const modelWrap = document.getElementById('sel-eleven-model')?.closest('.space-y-1');
+
+  if (val === 'free_neural') {
+    if (keyWrap) keyWrap.style.opacity = '0.4';
+    if (modelWrap) modelWrap.style.opacity = '0.4';
+    showToast('🌐 Provider diganti: Free Neural Voice (100% Gratis & Unlimited)!');
+  } else {
+    if (keyWrap) keyWrap.style.opacity = '1';
+    if (modelWrap) modelWrap.style.opacity = '1';
+    showToast('👑 Provider diganti: ElevenLabs AI Engine');
+  }
+  saveDraftToLocalStorage();
+}
+
+function applyProjectPayload(data) {
+  // Restore TTS Options
+  const chkTts = document.getElementById('chk-enable-tts');
+  if (chkTts) {
+    chkTts.checked = data.enableTts === true;
+    toggleTtsEnable(chkTts.checked);
+  }
+
+  const selProvider = document.getElementById('sel-tts-provider');
+  if (selProvider && data.ttsProvider) {
+    selProvider.value = data.ttsProvider;
+    state.ttsProvider = data.ttsProvider;
+  }
+
+  const selModel = document.getElementById('sel-eleven-model');
+  if (selModel && data.elevenModel) selModel.value = data.elevenModel;
+}
+
 function getProjectPayload() {
   const holdMs       = parseInt(document.getElementById('inp-hold-duration')?.value || '2500', 10);
   const replyDelay   = parseInt(document.getElementById('inp-reply-delay')?.value || '1400', 10);
@@ -2398,6 +2434,7 @@ function getProjectPayload() {
     autoZoom:        autoZoom,
     zoomScale:       zoomScale,
     zoomSpeed:       zoomSpeed,
+    ttsProvider:     document.getElementById('sel-tts-provider')?.value || 'elevenlabs',
     enableTts:       document.getElementById('chk-enable-tts')?.checked === true,
     elevenKey:       document.getElementById('inp-eleven-key')?.value || localStorage.getItem('wa_eleven_api_key') || 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45',
     elevenModel:     document.getElementById('sel-eleven-model')?.value || 'eleven_v3',
@@ -2967,6 +3004,24 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   if (!rawText) return null;
   const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
   if (!cleanText) return null;
+
+  const provider = (options && options.ttsProvider) || (document.getElementById('sel-tts-provider')?.value) || 'elevenlabs';
+
+  // FREE NEURAL VOICE ENGINE (Google / Free Audio - Unlimited 100% Free)
+  if (provider === 'free_neural' || apiKey === 'free_neural') {
+    try {
+      console.log(`🌐 [Free Neural Voice Engine] Generating free audio: "${cleanText.substring(0, 30)}..."`);
+      const freeUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText)}&tl=id&client=tw-ob`;
+      const res = await fetch(freeUrl);
+      if (res.ok) {
+        const blob = await res.blob();
+        console.log(`✅ Free Neural Audio fetched! Size: ${blob.size} bytes`);
+        return URL.createObjectURL(blob);
+      }
+    } catch (e) {
+      console.warn('Free Neural Voice fetch error:', e);
+    }
+  }
 
   const DEFAULT_KEY = 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
   const OLD_KEY = 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';

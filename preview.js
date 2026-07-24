@@ -348,6 +348,24 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
   if (!cleanText) return null;
 
+  const provider = (previewState && previewState.ttsProvider) || 'elevenlabs';
+
+  // FREE NEURAL VOICE ENGINE (Google / Free Audio - Unlimited 100% Free)
+  if (provider === 'free_neural' || apiKey === 'free_neural') {
+    try {
+      console.log(`🌐 [Free Neural Voice Engine] Generating free audio: "${cleanText.substring(0, 30)}..."`);
+      const freeUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText)}&tl=id&client=tw-ob`;
+      const res = await fetch(freeUrl);
+      if (res.ok) {
+        const blob = await res.blob();
+        console.log(`✅ Free Neural Audio fetched! Size: ${blob.size} bytes`);
+        return URL.createObjectURL(blob);
+      }
+    } catch (e) {
+      console.warn('Free Neural Voice fetch error:', e);
+    }
+  }
+
   const DEFAULT_KEY = 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
   const OLD_KEY = 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
 
