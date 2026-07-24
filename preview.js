@@ -32,6 +32,13 @@ function svgReadTicks() {
   </svg>`;
 }
 
+function stripAudioTags(str) {
+  if (!str) return '';
+  // Strip ANY [tag] up to 40 chars & limit consecutive dots to max 2 for visual aesthetics
+  let cleaned = str.replace(/\[[^\]]{1,40}\]/g, '').replace(/^\s+/, '').trim();
+  return cleaned.replace(/\.{3,}/g, '..');
+}
+
 /* ── Bubble renderer ─────────────────────────────────────── */
 function createBubble(msg, idx) {
   const time  = msgTime(idx);
@@ -60,12 +67,13 @@ function createBubble(msg, idx) {
   if (msg.type === 'text') {
     const bg = isOut ? '#005C4B' : '#202C33';
     const br = isOut ? '12px 0 12px 12px' : '0 12px 12px 12px';
+    const visualText = stripAudioTags(msg.text || '');
     html = `
       <div style="background:${bg}; border-radius:${br}; max-width:270px;
                   padding:8px 10px 6px; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
         ${groupBadgeHtml}
         <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
-                  word-break:break-word; white-space:pre-wrap;">${escHtml(msg.text || '')}</p>
+                  word-break:break-word; white-space:pre-wrap;">${escHtml(visualText)}</p>
         <div style="display:flex; justify-content:flex-end; align-items:center;
                     gap:3px; margin-top:4px;">
           <span style="font-size:11px; color:rgba(233,237,239,0.55);">${time}</span>
@@ -77,6 +85,12 @@ function createBubble(msg, idx) {
   // VOICE NOTE
   else if (msg.type === 'voice' && typeof renderVoiceNoteBubble === 'function') {
     html = renderVoiceNoteBubble(msg, isOut, time, escHtml, svgReadTicks, groupBadgeHtml);
+  }
+
+  // NOTIFICATION PUSH BANNER (Floating overlay, hidden from message stream)
+  else if (msg.type === 'notification') {
+    wrapper.style.display = 'none';
+    return wrapper;
   }
 
   // BUKTI TRANSFER
@@ -155,7 +169,7 @@ function createBubble(msg, idx) {
           ${msg.caption ? `
           <div style="padding: 4px 6px 2px;">
             <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
-                      word-break:break-word; white-space:pre-wrap;">${escHtml(msg.caption)}</p>
+                      word-break:break-word; white-space:pre-wrap;">${escHtml(stripAudioTags(msg.caption))}</p>
           </div>
           ` : ''}
           <div style="display:flex; justify-content:flex-end; align-items:center;
@@ -209,6 +223,31 @@ function loadState() {
   }
 }
 
+function updatePushNotifOverlay(msg) {
+  const overlay = document.getElementById('wa-push-notif-overlay');
+  if (!overlay) return;
+  if (msg && msg.type === 'notification') {
+    const senderEl = document.getElementById('wa-notif-overlay-sender');
+    const textEl   = document.getElementById('wa-notif-overlay-text');
+    const timeEl   = document.getElementById('wa-notif-overlay-time');
+    if (senderEl) senderEl.textContent = msg.senderName || 'Notifikasi Baru';
+    if (textEl) textEl.textContent = msg.text || '';
+    if (timeEl) timeEl.textContent = msg.time || (previewState ? previewState.time : '20:00');
+
+    overlay.style.display = 'block';
+    requestAnimationFrame(() => {
+      overlay.style.transform = 'translateY(0)';
+      overlay.style.opacity = '1';
+    });
+  } else {
+    overlay.style.transform = 'translateY(-25px)';
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      if (overlay.style.opacity === '0') overlay.style.display = 'none';
+    }, 350);
+  }
+}
+
 function applyFrame(n) {
   document.querySelectorAll('#wa-messages > div[data-frame-index]').forEach(el => {
     const idx = parseInt(el.getAttribute('data-frame-index'), 10);
@@ -218,6 +257,9 @@ function applyFrame(n) {
       el.style.display = 'none';
     }
   });
+
+  const currentMsg = (n > 0 && previewState && previewState.messages) ? previewState.messages[n - 1] : null;
+  updatePushNotifOverlay(currentMsg);
 
   // Trigger VN animation if newly revealed message is a Voice Note
   if (n > 0 && previewState && previewState.messages && previewState.messages[n - 1]?.type === 'voice') {
@@ -280,7 +322,7 @@ function resetZoom() {
   if (!messagesContainer) return;
   const zoomSpeed = previewState ? (previewState.zoomSpeed || 0.45) : 0.45;
   messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = 'center center';
+  messagesContainer.style.transformOrigin = 'bottom center';
   messagesContainer.style.transform = 'scale(1)';
 }
 
@@ -289,21 +331,122 @@ function triggerAutoZoom(msgEl, isOut, customScaleOverride) {
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
 
-  // Force layout reflow so dimensions are accurate
-  void msgEl.offsetHeight;
-
-  const containerRect = messagesContainer.getBoundingClientRect();
-  const msgRect       = msgEl.getBoundingClientRect();
-  const bubbleCenterY = (msgRect.top - containerRect.top) + (msgRect.height / 2);
-  const originX       = isOut ? '85%' : '15%';
-
-  const scaleInput    = (previewState && previewState.zoomScale) ? previewState.zoomScale : 1.35;
-  const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.35');
+  const scaleInput    = (previewState && previewState.zoomScale) ? previewState.zoomScale : 1.15;
+  const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.15');
   const zoomSpeed     = (previewState && previewState.zoomSpeed) ? previewState.zoomSpeed : 0.45;
 
-  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = `${originX} ${Math.round(bubbleCenterY)}px`;
+  const originX = isOut ? '85%' : '15%';
+
+  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
+  messagesContainer.style.transformOrigin = `${originX} bottom`;
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
+}
+
+async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB', apiKey = '') {
+  if (!rawText) return null;
+  const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+  if (!cleanText) return null;
+
+  const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+  let targetVoice = (!voiceId || voiceId === 'custom' || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
+  const modelToUse = (previewState && previewState.elevenModel) ? previewState.elevenModel : 'eleven_v3';
+
+  // Use manual sliders if set, otherwise extreme horror defaults
+  const stability  = (previewState && previewState.ttsStability != null) ? previewState.ttsStability : 0.15;
+  const style      = (previewState && previewState.ttsStyle      != null) ? previewState.ttsStyle      : 0.65;
+
+  const voiceSettings = {
+    stability:          stability,
+    similarity_boost:   0.85,
+    style:              style,
+    use_speaker_boost:  true
+  };
+
+  console.log(`🎙️ [ElevenLabs] model=${modelToUse} stability=${stability} style=${style} voice=${targetVoice}`);
+
+  async function requestAudio(vId) {
+    try {
+      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${vId}`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': keyToUse,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: cleanText,
+          model_id: modelToUse,
+          voice_settings: voiceSettings
+        })
+      });
+
+      if (res.status === 402) {
+        console.warn(`⚠️ [ElevenLabs 402] Free account cannot use library voice (${vId}). Auto-falling back...`);
+        return { status: 402, blob: null };
+      }
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`❌ ElevenLabs API Error (${res.status}):`, errText);
+        return { status: res.status, blob: null };
+      }
+
+      const blob = await res.blob();
+      return { status: 200, blob };
+    } catch (err) {
+      console.error('❌ ElevenLabs fetch exception:', err);
+      return { status: 500, blob: null };
+    }
+  }
+
+  let result = await requestAudio(targetVoice);
+
+  // If 402 Payment Required (Free tier API key calling Library voices), fallback to default premade voice
+  if (result.status === 402 && targetVoice !== 'EXAVITQu4vr4xnSDxMaL' && targetVoice !== 'pNInz6obpgDQGcFmaJgB') {
+    const fallbackVoice = 'EXAVITQu4vr4xnSDxMaL';
+    console.log(`🔄 Retrying with premade voice ${fallbackVoice}...`);
+    result = await requestAudio(fallbackVoice);
+  }
+
+  if (result.blob) {
+    console.log(`✅ ElevenLabs AI Audio fetched! Size: ${result.blob.size} bytes`);
+    return URL.createObjectURL(result.blob);
+  }
+
+  return null;
+}
+
+function playBlobAudio(blobUrl, speedRate = 1.0) {
+  return new Promise((resolve) => {
+    if (!blobUrl) {
+      resolve();
+      return;
+    }
+
+    const audio = new Audio();
+    audio.src = blobUrl;
+    audio.playbackRate = speedRate;
+
+    let finished = false;
+    const finish = () => {
+      if (!finished) {
+        finished = true;
+        resolve();
+      }
+    };
+
+    audio.onended = finish;
+    audio.onerror = finish;
+
+    audio.onloadedmetadata = () => {
+      const durMs = Math.max(1200, Math.round((audio.duration / speedRate) * 1000));
+      setTimeout(finish, durMs + 400);
+    };
+
+    audio.play().catch(err => {
+      console.warn('Audio playback error:', err);
+      finish();
+    });
+  });
 }
 
 async function startAnimation() {
@@ -314,6 +457,7 @@ async function startAnimation() {
   const replyDelay = previewState.replyDelay || 1400;
   const useTyping  = previewState.useTyping !== false;
   const autoZoom   = previewState.autoZoom === true;
+  const enableTts  = previewState.enableTts === true;
   const totalF     = messages.length;
 
   const replayBtn = document.getElementById('btn-replay');
@@ -329,28 +473,65 @@ async function startAnimation() {
   const numEl   = document.getElementById('countdown-num');
   const lblEl   = document.getElementById('countdown-label');
   overlay.classList.remove('hidden');
+
+  // Pre-fetch ElevenLabs Audio Blobs sequentially (cached across Replays)
+  const ttsAudioMap = {};
+  const ttsAudioCache = window.__ttsAudioCache || (window.__ttsAudioCache = {});
+
+  if (enableTts) {
+    const apiKey = previewState.elevenKey || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+    const modelToUse = previewState.elevenModel || 'eleven_v3';
+    const stability  = previewState.ttsStability != null ? previewState.ttsStability : 0.25;
+    const style      = previewState.ttsStyle != null ? previewState.ttsStyle : 0.50;
+
+    for (let idx = 0; idx < messages.length; idx++) {
+      const msg = messages[idx];
+      const textToSpeak = msg.type === 'notification'
+        ? `${msg.senderName || 'Notifikasi'}: ${msg.text || ''}`
+        : (msg.text || msg.caption || '');
+
+      if (textToSpeak) {
+        const isOut = msg.direction === 'outgoing';
+        const defaultInVoice  = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Female - 200 OK Free plan)
+        const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam (Male - 200 OK Free plan)
+
+        let voiceId = isOut
+          ? (previewState.ttsVoiceOut && previewState.ttsVoiceOut !== 'google-mp3' && previewState.ttsVoiceOut !== 'custom' ? previewState.ttsVoiceOut : defaultOutVoice)
+          : (previewState.ttsVoiceIn  && previewState.ttsVoiceIn  !== 'google-mp3' && previewState.ttsVoiceIn  !== 'custom' ? previewState.ttsVoiceIn  : defaultInVoice);
+
+        const cacheKey = `${textToSpeak}_${voiceId}_${modelToUse}_${stability}_${style}`;
+
+        if (ttsAudioCache[cacheKey]) {
+          console.log(`⚡ [TTS Cache Hit] Reusing audio for message #${idx + 1}`);
+          ttsAudioMap[idx] = ttsAudioCache[cacheKey];
+        } else {
+          lblEl.textContent = `Mengunduh ElevenLabs AI (${idx + 1}/${messages.length})… 🎙️✨`;
+          const blobUrl = await fetchElevenLabsAudioBlob(textToSpeak, voiceId, apiKey);
+          if (blobUrl) {
+            ttsAudioCache[cacheKey] = blobUrl;
+          }
+          ttsAudioMap[idx] = blobUrl;
+          await sleep(150); // Short delay to prevent ElevenLabs concurrent limit 429
+        }
+      }
+    }
+  }
+
   for (let i = 3; i >= 1; i--) {
     numEl.textContent  = i;
     lblEl.textContent  = 'Starting animation…';
     await sleep(900);
   }
-  numEl.textContent = '▶';
-  lblEl.textContent = 'Recording!';
-  await sleep(400);
   overlay.classList.add('hidden');
 
   // Animate frame by frame
   for (let f = 0; f < totalF; f++) {
     const isOut = messages[f].direction === 'outgoing';
+    const isNotification = messages[f].type === 'notification';
 
     // Check if any message has explicit selective zoom enabled (msg.enableZoom === true)
     const hasSelectiveZoom = messages.some(m => m.enableZoom === true);
-    const shouldZoomThisMsg = hasSelectiveZoom ? !!messages[f].enableZoom : autoZoom;
-
-    // Reset zoom before transition if current message is not zoomed
-    if (f > 0 && !shouldZoomThisMsg) {
-      resetZoom();
-    }
+    const shouldZoomThisMsg = isNotification ? false : (hasSelectiveZoom ? !!messages[f].enableZoom : autoZoom);
 
     // Typing indicator / Reply delay before incoming replies
     if (f > 0 && messages[f].direction === 'incoming') {
@@ -376,9 +557,9 @@ async function startAnimation() {
     // Reveal this message with slide-in animation
     applyFrame(f + 1);
     
-    // Auto-Zoom Punch-In Camera Effect to new message
+    // Auto-Zoom Punch-In Camera Effect (Disabled for Floating Notification Banners)
     const msgEl = document.querySelector(`#wa-messages > div[data-frame-index="${f}"]`);
-    if (shouldZoomThisMsg && msgEl) {
+    if (shouldZoomThisMsg && msgEl && !isNotification) {
       triggerAutoZoom(msgEl, isOut, messages[f].customScale);
     } else {
       resetZoom();
@@ -402,12 +583,33 @@ async function startAnimation() {
       setTimeout(() => msgEl.classList.remove(animClass), 400);
     }
 
-    // Hold
-    await sleep(holdMs);
+    // ElevenLabs AI Voice Over Playback
+    if (enableTts) {
+      const blobUrl = ttsAudioMap[f];
+      const speedRate = parseFloat(previewState.ttsSpeed || '1.00');
+
+      if (blobUrl) {
+        await playBlobAudio(blobUrl, speedRate);
+        await sleep(250);
+      } else {
+        const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
+        await sleep(frameHoldMs);
+      }
+    } else {
+      const frameHoldMs = (messages[f].customHoldMs ? parseInt(messages[f].customHoldMs, 10) : holdMs);
+      await sleep(frameHoldMs);
+    }
+
+    // Zoom OUT back to full screen view after message hold, before next frame/typing starts
+    if (shouldZoomThisMsg && f < totalF - 1) {
+      resetZoom();
+      const zoomOutDelay = Math.min(350, Math.round((previewState.zoomSpeed || 0.45) * 1000 * 0.7));
+      await sleep(zoomOutDelay);
+    }
   }
 
   // End: reset camera zoom to full view
-  if (autoZoom) resetZoom();
+  resetZoom();
 
   if (replayBtn) {
     replayBtn.style.display = 'flex';
@@ -556,7 +758,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     pfpEl.style.display = 'block';
     if (pfpFallback) pfpFallback.style.display = 'none';
   } else if (pfpEl) {
-    pfpEl.dispatchEvent(new Event('error'));
+    pfpEl.style.display = 'none';
+    if (pfpFallback) pfpFallback.style.display = 'flex';
   }
 
   // Render all bubbles (hidden, applyFrame reveals them)

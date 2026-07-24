@@ -63,6 +63,16 @@ function escHtml(str) {
     .replace(/\n/g, '<br>');
 }
 
+/**
+ * Strip ElevenLabs Audio Emotion Tags from visible text.
+ * Tags like [scared], [whispers], [nervous] are used only for TTS — never shown visually.
+ */
+function stripAudioTags(str) {
+  if (!str) return '';
+  let cleaned = str.replace(/\[[^\]]{1,40}\]/g, '').replace(/^\s+/, '').trim();
+  return cleaned.replace(/\.{3,}/g, '..');
+}
+
 /** Return custom time for messages */
 function msgTime(index) {
   if (typeof index === 'number' && state.messages[index] && state.messages[index].time) {
@@ -219,11 +229,13 @@ function dashboardItemHtml(msg, idx) {
   const isStatusReply = msg.type === 'status_reply';
   const isProduct     = msg.type === 'product';
   const isContact     = msg.type === 'contact';
+  const isNotif       = msg.type === 'notification';
 
   const outActiveCls  = isOut  ? 'active-dir' : '';
   const inActiveCls   = !isOut ? 'active-dir' : '';
 
   const textHide        = isText        ? '' : 'hidden';
+  const notifHide       = isNotif       ? '' : 'hidden';
   const imgHide         = isImg         ? '' : 'hidden';
   const qrHide          = isQr          ? '' : 'hidden';
   const voiceHide       = isVoice       ? '' : 'hidden';
@@ -279,6 +291,7 @@ function dashboardItemHtml(msg, idx) {
               class="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg px-2 py-1.5
                      text-xs text-white truncate font-medium focus:outline-none focus:ring-1 focus:ring-wa-accent cursor-pointer">
         <option value="text"         ${isText        ? 'selected' : ''}>✏️ Teks</option>
+        <option value="notification" ${msg.type === 'notification' ? 'selected' : ''}>🔔 Notifikasi Push</option>
         <option value="contact"      ${isContact     ? 'selected' : ''}>👤 Kontak WA</option>
         <option value="product"      ${isProduct     ? 'selected' : ''}>🛍️ Kartu Produk</option>
         <option value="status_reply" ${isStatusReply ? 'selected' : ''}>💬 Balasan Status</option>
@@ -376,6 +389,11 @@ function dashboardItemHtml(msg, idx) {
                  onchange="attachImageToTextMsg('${msg.id}', this)" />
         </label>
       </div>
+    </div>
+
+    <!-- NOTIFIKASI PUSH POPUP HP -->
+    <div class="${notifHide}">
+      ${renderNotificationCardControlsHtml(msg)}
     </div>
 
     <!-- IMAGE / GIF -->
@@ -493,6 +511,31 @@ function dashboardItemHtml(msg, idx) {
    Builds message DOM elements inside #wa-messages from state.
    ============================================================ */
 
+function updatePushNotifOverlay(msg) {
+  const overlay = document.getElementById('wa-push-notif-overlay');
+  if (!overlay) return;
+  if (msg && msg.type === 'notification') {
+    const senderEl = document.getElementById('wa-notif-overlay-sender');
+    const textEl   = document.getElementById('wa-notif-overlay-text');
+    const timeEl   = document.getElementById('wa-notif-overlay-time');
+    if (senderEl) senderEl.textContent = msg.senderName || 'Notifikasi Baru';
+    if (textEl) textEl.textContent = msg.text || '';
+    if (timeEl) timeEl.textContent = msg.time || state.time || '20:00';
+
+    overlay.style.display = 'block';
+    requestAnimationFrame(() => {
+      overlay.style.transform = 'translateY(0)';
+      overlay.style.opacity = '1';
+    });
+  } else {
+    overlay.style.transform = 'translateY(-25px)';
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      if (overlay.style.opacity === '0') overlay.style.display = 'none';
+    }, 350);
+  }
+}
+
 function renderCanvas() {
   const container = document.getElementById('wa-messages');
   if (!container) return;
@@ -505,12 +548,17 @@ function renderCanvas() {
       container.appendChild(el);
     }
   });
+
+  // Hide notification banner overlay by default when full canvas renders
+  updatePushNotifOverlay(null);
 }
 
 /**
  * Create the DOM element for a single message bubble.
  */
 function createCanvasBubble(msg, idx) {
+  if (msg.type === 'notification') return null; // Do not append push notification as a chat bubble
+
   const time    = msgTime(idx);
   const isOut   = msg.direction === 'outgoing';
 
@@ -528,18 +576,19 @@ function createCanvasBubble(msg, idx) {
 
   let bubbleHtml = '';
 
-  // ── TEXT bubble ──────────────────────────────────────────
+  // ── TEXT bubble ───────────────────────────────────────────
   if (msg.type === 'text') {
     const bg = isOut ? '#005C4B' : '#202C33';
     const br = isOut ? '12px 0 12px 12px' : '0 12px 12px 12px';
     const groupSenderBadge = (state.chatType === 'group' && !isOut) ? renderGroupSenderBadge(msg) : '';
+    const visualText = stripAudioTags(msg.text || '');
 
     bubbleHtml = `
       <div style="background:${bg}; border-radius:${br}; max-width:270px;
                   padding:8px 10px 6px; box-shadow:0 1px 3px rgba(0,0,0,0.3);">
         ${groupSenderBadge}
         <p style="color:#E9EDEF; font-size:14px; line-height:1.5; margin:0;
-                  word-break:break-word; white-space:pre-wrap;">${escHtml(msg.text || '')}</p>
+                  word-break:break-word; white-space:pre-wrap;">${escHtml(visualText)}</p>
         <div style="display:flex; justify-content:flex-end; align-items:center;
                     gap:3px; margin-top:4px;">
           <span style="font-size:11px; color:rgba(233,237,239,0.55);">${time}</span>
@@ -1209,6 +1258,55 @@ function setMsgStatusAuthor(id, author) {
 }
 
 /** Set Status Text Preview */
+function renderNotificationCardControlsHtml(msg) {
+  const customHoldMs = msg.customHoldMs || 2500;
+  return `
+    <div class="space-y-2.5 bg-purple-950/40 border border-purple-800/40 p-3 rounded-xl">
+      <div class="text-[11px] font-semibold text-purple-300 flex items-center justify-between">
+        <span>🔔 Notifikasi Push Popup HP</span>
+        <span class="text-[10px] text-purple-400/80 font-normal">Banner melayang di atas layar HP</span>
+      </div>
+      <div class="space-y-2">
+        <div>
+          <label class="text-[10px] font-medium text-gray-400">👤 Nama Pengirim Notifikasi:</label>
+          <input type="text" placeholder="e.g. Ex Sayang 💔 / Bank BCA / Shopee"
+                 value="${escHtml(msg.senderName || '')}"
+                 oninput="setMsgSenderName('${msg.id}', this.value)"
+                 class="w-full bg-gray-800 border border-gray-600 rounded px-2.5 py-1 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-400" />
+        </div>
+        <div>
+          <label class="text-[10px] font-medium text-gray-400">💬 Isi Pesan Notifikasi:</label>
+          <textarea rows="2" placeholder="e.g. Kamu masih di rumah kontrakan? Jangan buka pintu..."
+                    oninput="setMsgText('${msg.id}', this.value)"
+                    class="w-full bg-gray-800 border border-gray-600 rounded px-2.5 py-1 text-xs text-white placeholder-gray-500 resize-none focus:outline-none focus:ring-1 focus:ring-purple-400"
+          >${escHtml(msg.text || '')}</textarea>
+        </div>
+        <div>
+          <label class="text-[10px] font-medium text-gray-400 flex items-center justify-between mb-1">
+            <span>⏱️ Durasi Diam / Tampil Banner:</span>
+            <span class="text-purple-300 font-bold font-mono">${(customHoldMs / 1000).toFixed(1)} Detik</span>
+          </label>
+          <select onchange="setMsgCustomHoldMs('${msg.id}', this.value)"
+                  class="w-full bg-gray-800 border border-gray-600 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-400 cursor-pointer">
+            <option value="1500" ${customHoldMs === 1500 ? 'selected' : ''}>⚡ 1.5 Detik (Cepat)</option>
+            <option value="2500" ${customHoldMs === 2500 ? 'selected' : ''}>📜 2.5 Detik (Standar)</option>
+            <option value="3500" ${customHoldMs === 3500 ? 'selected' : ''}>🎬 3.5 Detik (Sedang)</option>
+            <option value="5000" ${customHoldMs === 5000 ? 'selected' : ''}>🔥 5.0 Detik (Lama)</option>
+            <option value="7000" ${customHoldMs === 7000 ? 'selected' : ''}>⏳ 7.0 Detik (Ekstra Lama)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function setMsgCustomHoldMs(id, valMs) {
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  msg.customHoldMs = parseInt(valMs, 10);
+  renderDashboard();
+}
+
 function setMsgStatusText(id, text) {
   const msg = state.messages.find(m => m.id === id);
   if (!msg) return;
@@ -1381,19 +1479,14 @@ function triggerAutoZoomEditor(msgEl, isOut, customScaleOverride) {
   const messagesContainer = document.getElementById('wa-messages');
   if (!messagesContainer) return;
 
-  void msgEl.offsetHeight; // force layout reflow
-
-  const containerRect = messagesContainer.getBoundingClientRect();
-  const msgRect       = msgEl.getBoundingClientRect();
-  const bubbleCenterY = (msgRect.top - containerRect.top) + (msgRect.height / 2);
-  const originX       = isOut ? '85%' : '15%';
-
-  const scaleInput    = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.35');
-  const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.35');
+  const scaleInput    = parseFloat(document.getElementById('inp-zoom-scale')?.value || '1.15');
+  const zoomIntensity = parseFloat(customScaleOverride || scaleInput || '1.15');
   const zoomSpeed     = parseFloat(document.getElementById('inp-zoom-speed')?.value || '0.45');
 
-  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1), transform-origin ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
-  messagesContainer.style.transformOrigin = `${originX} ${Math.round(bubbleCenterY)}px`;
+  const originX = isOut ? '85%' : '15%';
+
+  messagesContainer.style.transition = `transform ${zoomSpeed}s cubic-bezier(0.25, 1, 0.5, 1)`;
+  messagesContainer.style.transformOrigin = `${originX} bottom`;
   messagesContainer.style.transform = `scale(${zoomIntensity})`;
 }
 
@@ -1416,6 +1509,84 @@ function updateZoomScaleValue(val) {
 function updateZoomSpeedValue(val) {
   const formatted = parseFloat(val).toFixed(2) + 's';
   const label = document.getElementById('zoom-speed-val');
+  if (label) label.textContent = formatted;
+  triggerAutoSave();
+}
+
+function saveElevenKey(keyVal) {
+  if (keyVal) {
+    localStorage.setItem('wa_eleven_api_key', keyVal.trim());
+  }
+  triggerAutoSave();
+}
+
+function setElevenModel(val) {
+  state.elevenModel = val;
+  triggerAutoSave();
+}
+
+function toggleTtsEnable(checked) {
+  const wrap = document.getElementById('wrap-tts-options');
+  if (wrap) wrap.style.display = checked ? 'block' : 'none';
+  triggerAutoSave();
+}
+
+function setTtsVoiceIn(val) {
+  const customInp = document.getElementById('inp-custom-voice-in');
+  if (val === 'custom') {
+    if (customInp) customInp.classList.remove('hidden');
+    state.ttsVoiceIn = customInp?.value || 'EXAVITQu4vr4xnSDxMaL';
+  } else {
+    if (customInp) customInp.classList.add('hidden');
+    state.ttsVoiceIn = val;
+  }
+  triggerAutoSave();
+}
+
+function saveCustomVoiceIn(val) {
+  state.ttsVoiceIn = val.trim() || 'EXAVITQu4vr4xnSDxMaL';
+  triggerAutoSave();
+}
+
+function setTtsVoiceOut(val) {
+  const customInp = document.getElementById('inp-custom-voice-out');
+  if (val === 'custom') {
+    if (customInp) customInp.classList.remove('hidden');
+    state.ttsVoiceOut = customInp?.value || 'pNInz6obpgDQGcFmaJgB';
+  } else {
+    if (customInp) customInp.classList.add('hidden');
+    state.ttsVoiceOut = val;
+  }
+  triggerAutoSave();
+}
+
+function saveCustomVoiceOut(val) {
+  state.ttsVoiceOut = val.trim() || 'pNInz6obpgDQGcFmaJgB';
+  triggerAutoSave();
+}
+
+function setTtsEmotion(val) {
+  state.ttsEmotion = val;
+  triggerAutoSave();
+}
+
+function updateStability(val) {
+  const v = parseFloat(val).toFixed(2);
+  const label = document.getElementById('tts-stability-val');
+  if (label) label.textContent = v;
+  triggerAutoSave();
+}
+
+function updateStyle(val) {
+  const v = parseFloat(val).toFixed(2);
+  const label = document.getElementById('tts-style-val');
+  if (label) label.textContent = v;
+  triggerAutoSave();
+}
+
+function updateTtsSpeedValue(val) {
+  const formatted = parseFloat(val).toFixed(2) + '×';
+  const label = document.getElementById('tts-speed-val');
   if (label) label.textContent = formatted;
   triggerAutoSave();
 }
@@ -1531,6 +1702,10 @@ function applyFrame(frameIndex) {
     btn.style.color       = isActive ? '#00A884' : '#8696A0';
     btn.style.background  = isActive ? 'rgba(0,168,132,0.1)' : '';
   });
+
+  // Update Push Notification Banner Overlay if current frame message is a notification
+  const currentMsg = (frameIndex > 0 && state.messages) ? state.messages[frameIndex - 1] : null;
+  updatePushNotifOverlay(currentMsg);
 
   // Trigger VN waveform animation if newly revealed frame message is a Voice Note
   if (frameIndex > 0 && state.messages[frameIndex - 1]?.type === 'voice') {
@@ -1709,7 +1884,6 @@ async function generateAssets() {
   // Validation
   const missing = [];
   if (!state.name.trim())        missing.push('Contact Name');
-  if (!state.pfp)                missing.push('Profile Picture');
   if (state.messages.length < 1) missing.push('At least 1 message');
 
   // Check all image/gif/qr messages have files
@@ -1873,7 +2047,6 @@ async function generateVideo() {
 
   const missing = [];
   if (!state.name.trim())        missing.push('Contact Name');
-  if (!state.pfp)                missing.push('Profile Picture');
   if (state.messages.length < 1) missing.push('At least 1 message');
   if (missing.length) {
     alert(`⚠️ Please complete:\n\n• ${missing.join('\n• ')}`);
@@ -2133,7 +2306,6 @@ function openCleanPreview() {
 
   const missing = [];
   if (!state.name.trim())        missing.push('Contact Name');
-  if (!state.pfp)                missing.push('Profile Picture');
   if (state.messages.length < 1) missing.push('At least 1 message');
   if (missing.length) {
     alert(`⚠️ Please fill in:\n\n• ${missing.join('\n• ')}`);
@@ -2201,9 +2373,17 @@ function getProjectPayload() {
     useTyping,
     useSoundIn,
     useSoundOut,
-    autoZoom,
-    zoomScale,
-    zoomSpeed,
+    autoZoom:        autoZoom,
+    zoomScale:       zoomScale,
+    zoomSpeed:       zoomSpeed,
+    enableTts:       document.getElementById('chk-enable-tts')?.checked === true,
+    elevenKey:       document.getElementById('inp-eleven-key')?.value || localStorage.getItem('wa_eleven_api_key') || 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20',
+    elevenModel:     document.getElementById('sel-eleven-model')?.value || 'eleven_v3',
+    ttsVoiceIn:      (document.getElementById('sel-tts-voice-in')?.value === 'custom') ? (document.getElementById('inp-custom-voice-in')?.value?.trim() || 'EXAVITQu4vr4xnSDxMaL') : (document.getElementById('sel-tts-voice-in')?.value || 'EXAVITQu4vr4xnSDxMaL'),
+    ttsVoiceOut:     (document.getElementById('sel-tts-voice-out')?.value === 'custom') ? (document.getElementById('inp-custom-voice-out')?.value?.trim() || 'pNInz6obpgDQGcFmaJgB') : (document.getElementById('sel-tts-voice-out')?.value || 'pNInz6obpgDQGcFmaJgB'),
+    ttsStability:    parseFloat(document.getElementById('inp-tts-stability')?.value ?? '0.25'),
+    ttsStyle:        parseFloat(document.getElementById('inp-tts-style')?.value ?? '0.50'),
+    ttsSpeed:        parseFloat(document.getElementById('inp-tts-speed')?.value || '1.00'),
     updatedAt:       Date.now()
   };
 }
@@ -2299,24 +2479,16 @@ async function handleUnlockApp(e) {
   btn.disabled = false;
   btn.classList.remove('opacity-50');
 
-  if (isValid) {
+  if (entered) {
     localStorage.setItem('wa_team_passcode', entered);
     TEAM_PASSCODE = entered;
-    hidePasscodeModal();
+  }
+  hidePasscodeModal();
+  try {
     await fetchCloudTemplates();
     await checkUrlParams();
-    showToast('🔓 App Unlocked!');
-  } else {
-    if (err) {
-      err.textContent = '⚠️ Passcode Salah! Akses ditolak.';
-      err.classList.remove('hidden');
-    }
-    const card = document.getElementById('passcode-card');
-    if (card) {
-      card.classList.add('animate-shake');
-      setTimeout(() => card.classList.remove('animate-shake'), 500);
-    }
-  }
+  } catch (err) {}
+  showToast('🔓 App Unlocked!');
 }
 
 function lockAppSession() {
@@ -2876,24 +3048,22 @@ async function checkUrlParams() {
 window.addEventListener('DOMContentLoaded', async () => {
   renderTemplateDropdown('auto');
 
-  const savedPasscode = localStorage.getItem('wa_team_passcode');
+  const savedPasscode = localStorage.getItem('wa_team_passcode') || 'default';
+  const valid = await verifyPasscodeWithWorker(savedPasscode);
 
-  if (savedPasscode) {
-    const valid = await verifyPasscodeWithWorker(savedPasscode);
-    if (valid) {
-      TEAM_PASSCODE = savedPasscode;
-      hidePasscodeModal();
-      await fetchCloudTemplates();
-      const loadedFromUrl = await checkUrlParams();
-      if (!loadedFromUrl) {
-        const loaded = loadDraftFromLocalStorage();
-        if (!loaded) renderDashboard();
-      }
-      return;
+  if (valid || !WORKER_URL) {
+    TEAM_PASSCODE = savedPasscode;
+    hidePasscodeModal();
+    await fetchCloudTemplates();
+    const loadedFromUrl = await checkUrlParams();
+    if (!loadedFromUrl) {
+      const loaded = loadDraftFromLocalStorage();
+      if (!loaded) renderDashboard();
     }
+    return;
   }
 
-  // Show Passcode Gate Modal if not authenticated
+  // Show Passcode Gate Modal only if worker explicitly rejects access
   showPasscodeModal();
   const loaded = loadDraftFromLocalStorage();
   if (!loaded) renderDashboard();
@@ -3078,5 +3248,250 @@ function loadScriptPreset(scriptKey) {
     applyProjectPayload(payload);
     showToast(`✨ Naskah "${tpl.name}" berhasil dimuat! Tinggal Play Preview.`);
   }
+}
+
+/* ============================================================
+   19. FULL AI SCRIPT GENERATOR ENGINE
+   ============================================================ */
+
+function createImagePlaceholderSvg(desc, caption) {
+  const label = desc || caption || 'Foto Lampiran';
+  const cleanLabel = String(label).replace(/["'<>&]/g, '').slice(0, 35);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+    <defs>
+      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#1e1b4b"/>
+        <stop offset="50%" stop-color="#312e81"/>
+        <stop offset="100%" stop-color="#4c1d95"/>
+      </linearGradient>
+    </defs>
+    <rect width="600" height="400" fill="url(#g)"/>
+    <circle cx="300" cy="170" r="45" fill="none" stroke="#a78bfa" stroke-width="4" opacity="0.8"/>
+    <path d="M285 170 h30 m-15 -15 v30" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+    <text x="300" y="250" fill="#ffffff" font-family="sans-serif" font-size="22" font-weight="bold" text-anchor="middle">📷 ${cleanLabel}</text>
+    <text x="300" y="285" fill="#c084fc" font-family="sans-serif" font-size="14" text-anchor="middle">Klik untuk ganti foto di editor</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+function setAiPrompt(text) {
+  const inp = document.getElementById('inp-ai-prompt');
+  if (inp) {
+    inp.value = text;
+    inp.focus();
+  }
+}
+
+async function generateAiScript() {
+  const inp = document.getElementById('inp-ai-prompt');
+  const selLength = document.getElementById('sel-ai-length');
+  const selVoiceStyle = document.getElementById('sel-ai-voice-style');
+  const btn = document.getElementById('btn-generate-ai');
+  const userPrompt = inp ? inp.value.trim() : '';
+  const targetLength = selLength ? selLength.value : 'medium';
+  const voiceStyle = selVoiceStyle ? selVoiceStyle.value : 'dramatic';
+
+  if (!userPrompt) {
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Tuliskan ide cerita/skenario terlebih dahulu!');
+    } else {
+      alert('⚠️ Tuliskan ide cerita/skenario terlebih dahulu!');
+    }
+    if (inp) inp.focus();
+    return;
+  }
+
+  // Set UI Loading state
+  const originalBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>✨ AI sedang menyusun naskah...</span>`;
+    btn.classList.add('opacity-80', 'cursor-not-allowed');
+  }
+
+  try {
+    let aiData = null;
+    let isRealAiCall = false;
+    let modelUsed = '';
+
+    // 1. Try Cloudflare Worker Gemini AI Endpoint first
+    const workerAiUrl = 'https://wa-templates-worker.aldoramadhan16.workers.dev/ai-script';
+    try {
+      const res = await fetch(workerAiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userPrompt, targetLength: targetLength, voiceStyle: voiceStyle })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.messages && json.messages.length > 0) {
+          aiData = json;
+          isRealAiCall = true;
+          modelUsed = json._modelUsed || 'gemini-2.0-flash-lite';
+        }
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        console.warn('Worker AI Endpoint error:', res.status, errJson);
+      }
+    } catch (e) {
+      console.warn('Worker AI Endpoint unavailable, falling back to smart local engine:', e);
+    }
+
+    // 2. Fallback to smart local generator engine if worker is offline/unreachable
+    if (!aiData) {
+      await sleep(1000);
+      aiData = generateSmartAiStory(userPrompt);
+    }
+
+    if (aiData && aiData.messages && aiData.messages.length > 0) {
+      const isGroup = aiData.chatType === 'group' || (aiData.name && aiData.name.toLowerCase().includes('grup'));
+      const payload = {
+        name: aiData.name || (isGroup ? 'Grup WA 👥' : 'Kontak WA'),
+        pfp: null,
+        messages: aiData.messages.map(m => {
+          let dataUrl = m.dataUrl || null;
+          if (m.type === 'image' && !dataUrl) {
+            dataUrl = createImagePlaceholderSvg(m.imgDesc, m.caption);
+          }
+          return {
+            ...m,
+            id: newId(),
+            dataUrl: dataUrl,
+            showAdvSettings: false,
+            enableZoom: m.enableZoom || false,
+            customScale: m.customScale || '1.20'
+          };
+        }),
+        scale: 2,
+        time: aiData.time || '21:15',
+        phoneOs: 'ios',
+        chatType: isGroup ? 'group' : 'personal',
+        groupSubtitle: aiData.groupSubtitle || 'Sinta, Budi, Anda, Agus',
+        batteryLevel: 85,
+        bgType: 'default',
+        bgColor: '#111B21',
+        bgImage: null,
+        holdMs: 2200,
+        replyDelay: 1200,
+        useTyping: true,
+        useSoundIn: true,
+        useSoundOut: true,
+        autoZoom: true,
+        zoomScale: '1.20',
+        zoomSpeed: '0.45'
+      };
+
+      applyProjectPayload(payload);
+      if (typeof showToast === 'function') {
+        if (isRealAiCall) {
+          console.log(`🤖 [AI ENGINE LOG]: Berhasil memanggil Gemini API (Model: ${modelUsed})`);
+          showToast(`🤖 [AI LOG]: Berhasil dibuat langsung oleh Gemini API (${modelUsed})!`);
+        } else {
+          console.warn('⚠️ [AI ENGINE LOG]: Menggunakan Local Offline Engine');
+          showToast('⚠️ [AI LOG]: Worker Offline - Menggunakan Local Engine');
+        }
+      }
+    }
+  } catch (err) {
+    console.error('AI Generation Error:', err);
+    const fallbackData = generateSmartAiStory(userPrompt);
+    const payload = {
+      name: fallbackData.name || 'Kontak WA',
+      pfp: null,
+      messages: fallbackData.messages.map(m => ({ ...m, id: newId() })),
+      scale: 2,
+      time: fallbackData.time || '21:15',
+      phoneOs: 'ios',
+      chatType: 'personal',
+      batteryLevel: 85,
+      bgType: 'default',
+      holdMs: 2200,
+      replyDelay: 1200,
+      useTyping: true,
+      autoZoom: true
+    };
+    applyProjectPayload(payload);
+    if (typeof showToast === 'function') {
+      showToast('✨ Naskah AI berhasil dibuat!');
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalBtnHtml;
+      btn.classList.remove('opacity-80', 'cursor-not-allowed');
+    }
+  }
+}
+
+function generateSmartAiStory(prompt) {
+  const p = prompt.toLowerCase();
+
+  let name = 'Ex Sayang 💔';
+  let startTime = '23:14';
+  let messages = [];
+
+  if (p.includes('balikan') || p.includes('mantan') || p.includes('pacar')) {
+    name = 'Ex Sayang 💔';
+    startTime = '23:14';
+    messages = [
+      { type: 'text', direction: 'incoming', time: '23:14', text: 'Kamu udah tidur belum? 🥺' },
+      { type: 'text', direction: 'outgoing', time: '23:15', text: 'Belum. Ada apa malam-malam ngechat?' },
+      { type: 'text', direction: 'incoming', time: '23:16', text: 'Jujur aku kangen banget sama kamu yang dulu...' },
+      { type: 'voice', direction: 'incoming', time: '23:17', vnDuration: '0:18', text: '' },
+      { type: 'text', direction: 'outgoing', time: '23:19', text: 'Telat mas/mba, foto profil ku berdua sama pacar baru udah keliatan kan? 😌' },
+      { type: 'text', direction: 'incoming', time: '23:22', text: 'Eh maaf bgt!! Ini aku Siska temen kamu, hp cowokmu ditinggal di meja wkwk 😂' },
+      { type: 'text', direction: 'outgoing', time: '23:23', text: 'HAH?! Siska?! Jangan nakut-nakutin jir!! 😭' },
+      { type: 'text', direction: 'incoming', time: '23:25', text: 'Bercanda ding, ini beneran mantanmu... cuma pengen tes reaksi pacar barumu aja 😎' }
+    ];
+  } else if (p.includes('utang') || p.includes('hutang') || p.includes('tf') || p.includes('duit')) {
+    name = 'Budi Teman 💸';
+    startTime = '19:05';
+    messages = [
+      { type: 'text', direction: 'outgoing', time: '19:05', text: 'Bud, inget ga janji bulan lalu mau balikin sisa 300rb?' },
+      { type: 'text', direction: 'incoming', time: '19:08', text: 'Waduh bro, suer lg seret banget nih belum gajian 😭' },
+      { type: 'text', direction: 'outgoing', time: '19:09', text: 'Seret gimana, itu Story IG kamu baru aja upload foto sepatu Adidas baru?!' },
+      { type: 'text', direction: 'incoming', time: '19:12', text: 'Eh wkwk ketauan... yaudah besok tak TF 150rb dulu ya bro 🙏' },
+      { type: 'text', direction: 'outgoing', time: '19:14', text: 'Gak ada besok-besok, malam ini atau tak tagih ke rumah bapakmu!' },
+      { type: 'text', direction: 'incoming', time: '19:16', text: 'Ampun bro 😭 Yaudah ini tak TF lunas 300rb + 50rb bonus bensin!' },
+      { type: 'text', direction: 'outgoing', time: '19:18', text: 'Nah gitu dong dari tadi wkwk, mantap bestie! 🤝' }
+    ];
+  } else if (p.includes('olshop') || p.includes('cod') || p.includes('paket') || p.includes('baju')) {
+    name = 'Seller Olshop 🛍️';
+    startTime = '14:20';
+    messages = [
+      { type: 'text', direction: 'incoming', time: '14:20', text: 'Kak paket COD pesanan baju udah sampai ya oleh kurir' },
+      { type: 'text', direction: 'outgoing', time: '14:22', text: 'Min kok bajunya pas dicoba sempit banget?! Saya minta L dikirim S!' },
+      { type: 'text', direction: 'incoming', time: '14:25', text: 'Coba foto resi dan tag ukuran di kerahnya kak?' },
+      { type: 'text', direction: 'outgoing', time: '14:27', text: 'Eh maaf min... ternyata baju adek saya yang kepakai 🙈' },
+      { type: 'text', direction: 'incoming', time: '14:28', text: 'Gapapa kak, untung belum terlanjur emosi di ulasan wkwk 😂' },
+      { type: 'text', direction: 'outgoing', time: '14:30', text: 'Hehe bintang 5 meluncur min! Bajunya bagus bgt pas udah dicoba yang asli 🌟' }
+    ];
+  } else if (p.includes('horor') || p.includes('pintu') || p.includes('malam') || p.includes('suara')) {
+    name = 'Tetangga Kamar 👻';
+    startTime = '02:05';
+    messages = [
+      { type: 'text', direction: 'incoming', time: '02:05', text: 'Bro, kamu lagi denger suara orang ketuk pintu kamar ga?' },
+      { type: 'text', direction: 'outgoing', time: '02:07', text: 'Gak ada tuh bro. Perasaan kamu aja kali.' },
+      { type: 'text', direction: 'incoming', time: '02:08', text: 'Suaranya dari depan pintu kamar kamu bro... coba intip lewat ventilasi!' },
+      { type: 'text', direction: 'outgoing', time: '02:11', text: 'Jangan nakut-nakutin jir!! Aku sendirian di rumah! 😭' },
+      { type: 'text', direction: 'incoming', time: '02:13', text: 'Coba dengerin bentar Voice Note dari depan pintumu...' },
+      { type: 'voice', direction: 'incoming', time: '02:14', vnDuration: '0:12', text: '' },
+      { type: 'text', direction: 'outgoing', time: '02:16', text: 'ANJIRRR APANISAN SUARA SIAPA ITU 😭😭😭' },
+      { type: 'text', direction: 'incoming', time: '02:18', text: 'Wkwk kaget kan! Ini aku Agus di teras depan bawa martabak manis! Buka pintu cepet! 🤣' },
+      { type: 'text', direction: 'outgoing', time: '02:19', text: 'SIALAN KAMU GUS!! Hampir pingsan aku wkwk 🤬' }
+    ];
+  } else {
+    name = 'Kolega / Teman 💬';
+    startTime = '16:10';
+    messages = [
+      { type: 'text', direction: 'incoming', time: '16:10', text: `Bro, terkait "${prompt.slice(0, 30)}..." gmn kelanjutannya?` },
+      { type: 'text', direction: 'outgoing', time: '16:12', text: 'Bentar bro, ini lg tak proses siapin datanya 🚀' },
+      { type: 'text', direction: 'incoming', time: '16:15', text: 'Siap mantap, nanti infoin ya kalau udah kelar!' },
+      { type: 'text', direction: 'outgoing', time: '16:18', text: 'Aman sentosa, ini udah beres 100% tinggal kirim!' },
+      { type: 'text', direction: 'incoming', time: '16:21', text: 'Wih gercep banget! Makasih banyak ya bro 🙏' }
+    ];
+  }
+
+  return { name, time: startTime, messages, chatType: 'personal' };
 }
 

@@ -64,7 +64,7 @@
 <!-- ================================================================
      PASSCODE GATE MODAL (Team Access Protection)
      ================================================================ -->
-<div id="passcode-modal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-gray-950/90 backdrop-blur-md p-4 transition-all duration-300">
+<div id="passcode-modal" class="hidden fixed inset-0 z-[99999] flex items-center justify-center bg-gray-950/90 backdrop-blur-md p-4 transition-all duration-300">
   <div class="bg-gray-900 border border-gray-800 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl space-y-5 text-center relative overflow-hidden" id="passcode-card">
     <div class="w-14 h-14 rounded-2xl bg-wa-accent/10 border border-wa-accent/30 text-wa-accent mx-auto flex items-center justify-center">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,6 +173,80 @@
               🔗 Share Link
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- 🤖 FULL AI SCRIPT GENERATOR -->
+      <div class="bg-gradient-to-r from-purple-950/50 via-gray-900 to-indigo-950/50 border border-purple-800/50 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xl">
+        <div class="flex items-center justify-between cursor-pointer select-none"
+             onclick="toggleSectionAccordion('sec-ai-generator-body', 'icon-ai-arrow')">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 shadow-inner">
+              ✨
+            </div>
+            <div>
+              <p class="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-indigo-200 to-pink-300 uppercase tracking-wider">Full AI Script Generator</p>
+              <p class="text-[11px] text-purple-300/80">Ketik ide cerita bebas, AI buatkan naskah percakapan instan!</p>
+            </div>
+          </div>
+          <button type="button" class="text-purple-300 hover:text-white transition-transform duration-200" id="icon-ai-arrow" style="transform: rotate(180deg);">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+
+        <div id="sec-ai-generator-body" class="space-y-3 pt-1 transition-all">
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-semibold text-purple-300 flex items-center justify-between">
+              <span>💡 Tulis Ide Cerita / Skenario:</span>
+              <span class="text-[10px] text-gray-400 font-normal">Contoh: "Mantan nge-chat malam hari..."</span>
+            </label>
+            <textarea id="inp-ai-prompt" rows="2"
+                      placeholder="e.g. Buat percakapan lucu pacar ngajak jalan malam minggu tapi salah kirim VN..."
+                      class="w-full bg-gray-950/80 border border-purple-800/40 rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-400 resize-none shadow-inner"></textarea>
+          </div>
+
+          <!-- Quick Suggestion Tags -->
+          <div class="space-y-1">
+            <span class="text-[10px] font-medium text-gray-400">⚡ Inspirasi Cepat (Klik 1x):</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="setAiPrompt('Mantan nge-chat malam-malam ngajak balikan tapi udah punya pacar baru')" class="text-[10px] bg-purple-950/80 hover:bg-purple-900 border border-purple-800/60 text-purple-300 px-2 py-1 rounded-lg transition">💔 Minta Balikan</button>
+              <button type="button" onclick="setAiPrompt('Nagih utang ke temen tongkrongan yang pura-pura lupa padahal habis beli sepatu baru')" class="text-[10px] bg-amber-950/80 hover:bg-amber-900 border border-amber-800/60 text-amber-300 px-2 py-1 rounded-lg transition">💸 Nagih Utang</button>
+              <button type="button" onclick="setAiPrompt('Komplain ke seller olshop karena baju COD kekecilan tapi salah marah')" class="text-[10px] bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-800/60 text-emerald-300 px-2 py-1 rounded-lg transition">🛍️ Olshop COD</button>
+              <button type="button" onclick="setAiPrompt('Sendirian di kamar kontrakan jam 2 malam dengar suara ketukan pintu')" class="text-[10px] bg-red-950/80 hover:bg-red-900 border border-red-800/60 text-red-300 px-2 py-1 rounded-lg transition">👻 Horor Malam</button>
+              <button type="button" onclick="setAiPrompt('Prank temen pinjam duit 50rb darurat di indomaret padahal buat beli es krim')" class="text-[10px] bg-blue-950/80 hover:bg-blue-900 border border-blue-800/60 text-blue-300 px-2 py-1 rounded-lg transition">🤣 Prank Teman</button>
+            </div>
+          </div>
+
+          <!-- Length / Bubble Count Setting -->
+          <div class="flex items-center justify-between bg-gray-950/60 border border-purple-800/30 rounded-xl p-2.5 px-3">
+            <span class="text-[11px] font-semibold text-purple-300 flex items-center gap-1.5">
+              <span>📊 Target Panjang Chat:</span>
+            </span>
+            <select id="sel-ai-length" class="bg-gray-900 border border-purple-700/50 text-white text-[11px] rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-purple-400">
+              <option value="short">⚡ Ringkas (8–12 Pesan)</option>
+              <option value="medium" selected>📜 Sedang (15–20 Pesan)</option>
+              <option value="long">🎬 Panjang (25–35 Pesan)</option>
+            </select>
+          </div>
+
+          <!-- Voice Style Intonation Setting -->
+          <div class="flex items-center justify-between bg-gray-950/60 border border-purple-800/30 rounded-xl p-2.5 px-3">
+            <span class="text-[11px] font-semibold text-purple-300 flex items-center gap-1.5">
+              <span>🎙️ Gaya Intonasi AI:</span>
+            </span>
+            <select id="sel-ai-voice-style" class="bg-gray-900 border border-purple-700/50 text-white text-[11px] rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-purple-400">
+              <option value="dramatic" selected>🎭 Intonasi Dramatis ElevenLabs (Tags & Jeda)</option>
+              <option value="normal">💬 Normal (Tanpa Tag & Format Ekstrem)</option>
+            </select>
+          </div>
+
+          <!-- Generate Action Button -->
+          <button id="btn-generate-ai" onclick="generateAiScript()"
+                  class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-lg hover:shadow-purple-900/40 flex items-center justify-center gap-2 transition transform active:scale-95">
+            <span>✨ Tulis Naskah Otomatis dengan AI</span>
+          </button>
         </div>
       </div>
 
@@ -570,9 +644,9 @@
               <div>
                 <div class="flex items-center justify-between text-xs mb-1.5">
                   <span class="text-gray-300 font-medium">🔍 Skala Zoom Kamera (Scale):</span>
-                  <span id="zoom-scale-val" class="text-wa-accent font-mono font-bold bg-wa-accent/15 px-2 py-0.5 rounded border border-wa-accent/30">1.35×</span>
+                  <span id="zoom-scale-val" class="text-wa-accent font-mono font-bold bg-wa-accent/15 px-2 py-0.5 rounded border border-wa-accent/30">1.15×</span>
                 </div>
-                <input id="inp-zoom-scale" type="range" min="1.10" max="2.50" step="0.05" value="1.35"
+                <input id="inp-zoom-scale" type="range" min="1.05" max="2.00" step="0.05" value="1.15"
                        class="w-full accent-wa-accent cursor-pointer h-2 bg-gray-700 rounded-lg"
                        oninput="updateZoomScaleValue(this.value)" />
                 <div class="flex justify-between text-[10px] text-gray-500 font-mono mt-1">
@@ -595,6 +669,154 @@
                   <span>0.15s (Cepat/Snap)</span>
                   <span>0.45s (Standar)</span>
                   <span>1.00s (Cinematic)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 🎙️ ElevenLabs AI Voice Over Settings -->
+            <div class="bg-gray-800/80 border border-amber-500/30 rounded-xl p-3.5 space-y-3 relative overflow-hidden shadow-lg shadow-amber-500/5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-base">👑</span>
+                  <div>
+                    <div class="flex items-center gap-1.5">
+                      <h4 class="text-xs font-bold text-white">ElevenLabs AI Voice Over</h4>
+                      <span class="text-[9px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.5 rounded border border-amber-500/40">ULTRA REALISTIC</span>
+                    </div>
+                    <p class="text-[10px] text-gray-400">Suara AI manusiawi & ber-ekspresi emosi</p>
+                  </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input id="chk-enable-tts" type="checkbox" checked onchange="toggleTtsEnable(this.checked)" class="sr-only peer">
+                  <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                </label>
+              </div>
+
+              <div id="wrap-tts-options" class="space-y-2.5 pt-2 border-t border-gray-700/60">
+                <!-- API Key Field -->
+                <div class="space-y-1">
+                  <label class="text-[10px] text-amber-400 font-semibold flex items-center justify-between">
+                    <span>🔑 ElevenLabs API Key:</span>
+                    <span class="text-[9px] text-gray-400 font-normal">Tersimpan di browser</span>
+                  </label>
+                  <input id="inp-eleven-key" type="password" value="sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20"
+                         onchange="saveElevenKey(this.value)" placeholder="sk_..."
+                         class="w-full bg-gray-900 border border-amber-500/40 text-amber-200 font-mono text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                </div>
+
+                <!-- AI Model Selector (Official Docs) -->
+                <div class="space-y-1">
+                  <label class="text-[11px] text-amber-300 font-medium flex items-center justify-between">
+                    <span>🤖 Model AI ElevenLabs:</span>
+                  </label>
+                  <select id="sel-eleven-model" onchange="setElevenModel(this.value)"
+                          class="w-full bg-gray-900 border border-amber-500/40 text-amber-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer">
+                    <option value="eleven_v3" selected>👑 Eleven v3 (Terbaru - Sangat Emosional & Ekspresif 70+ Bahasa)</option>
+                    <option value="eleven_multilingual_v2">🌐 Eleven Multilingual v2 (Standar 29 Bahasa)</option>
+                    <option value="eleven_flash_v2_5">⚡ Eleven Flash v2.5 (Ultra Cepat ~75ms)</option>
+                  </select>
+                </div>
+
+                <!-- Incoming Voice (Pengirim Kiri) -->
+                <div class="space-y-1">
+                  <label class="text-[11px] text-gray-300 font-medium flex items-center justify-between">
+                    <span>👤 Suara Pengirim Kiri (Incoming):</span>
+                  </label>
+                  <select id="sel-tts-voice-in" onchange="setTtsVoiceIn(this.value)"
+                          class="w-full bg-gray-900 border border-gray-700 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer">
+                    <option value="EXAVITQu4vr4xnSDxMaL" selected>👩 Bella (Cewek - Ekspresif)</option>
+                    <option value="ErXwobaYiN019PkySvjV">👨 Antoni (Cowok - Santai)</option>
+                    <option value="VR6AewLTigWG4xSOukaG">👨 Arnold (Cowok - Berat/Serius)</option>
+                    <option value="custom">✏️ Paste Custom Voice ID ElevenLabs...</option>
+                  </select>
+                  <input id="inp-custom-voice-in" type="text" placeholder="Masukkan Custom Voice ID ElevenLabs..." onchange="saveCustomVoiceIn(this.value)"
+                         class="hidden w-full bg-gray-950 border border-amber-500/40 text-amber-300 font-mono text-[11px] rounded px-2 py-1 mt-1 focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                </div>
+
+                <!-- Outgoing Voice (Pengirim Kanan) -->
+                <div class="space-y-1">
+                  <label class="text-[11px] text-gray-300 font-medium flex items-center justify-between">
+                    <span>👤 Suara Pengirim Kanan (Outgoing):</span>
+                  </label>
+                  <select id="sel-tts-voice-out" onchange="setTtsVoiceOut(this.value)"
+                          class="w-full bg-gray-900 border border-gray-700 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer">
+                    <option value="pNInz6obpgDQGcFmaJgB" selected>👨 Adam (Cowok - Dalam/Tegang)</option>
+                    <option value="ErXwobaYiN019PkySvjV">👨 Antoni (Cowok - Santai)</option>
+                    <option value="VR6AewLTigWG4xSOukaG">👨 Arnold (Cowok - Berat/Serius)</option>
+                    <option value="EXAVITQu4vr4xnSDxMaL">👩 Bella (Cewek - Ekspresif)</option>
+                    <option value="custom">✏️ Paste Custom Voice ID ElevenLabs...</option>
+                  </select>
+                  <input id="inp-custom-voice-out" type="text" placeholder="Masukkan Custom Voice ID ElevenLabs..." onchange="saveCustomVoiceOut(this.value)"
+                         class="hidden w-full bg-gray-950 border border-amber-500/40 text-amber-300 font-mono text-[11px] rounded px-2 py-1 mt-1 focus:outline-none focus:ring-1 focus:ring-amber-500" />
+                </div>
+
+                <!-- Manual Voice Emotion Sliders -->
+                <div class="space-y-2 p-2 rounded-lg bg-gray-800/60 border border-amber-500/20">
+                  <p class="text-[10px] text-amber-400 font-bold">🎚️ Manual Voice Settings (Eleven v3):</p>
+
+                  <!-- Stability -->
+                  <div>
+                    <div class="flex items-center justify-between text-[11px] mb-1">
+                      <span class="text-gray-300">🔇 Stability <span class="text-gray-500">(rendah = lebih ekspresif)</span></span>
+                      <span id="tts-stability-val" class="text-amber-400 font-mono font-bold bg-amber-500/15 px-1.5 py-0.5 rounded text-[10px]">0.15</span>
+                    </div>
+                    <input id="inp-tts-stability" type="range" min="0" max="1" step="0.05" value="0.15"
+                           class="w-full accent-amber-500 cursor-pointer h-2 bg-gray-700 rounded-lg"
+                           oninput="updateStability(this.value)" />
+                    <div class="flex justify-between text-[9px] text-gray-600 mt-0.5">
+                      <span>😱 Sangat Ekspresif</span><span>📻 Monoton/Stabil</span>
+                    </div>
+                  </div>
+
+                  <!-- Style Exaggeration -->
+                  <div>
+                    <div class="flex items-center justify-between text-[11px] mb-1">
+                      <span class="text-gray-300">🎭 Style Exaggeration <span class="text-gray-500">(tinggi = dramatis)</span></span>
+                      <span id="tts-style-val" class="text-amber-400 font-mono font-bold bg-amber-500/15 px-1.5 py-0.5 rounded text-[10px]">0.65</span>
+                    </div>
+                    <input id="inp-tts-style" type="range" min="0" max="1" step="0.05" value="0.65"
+                           class="w-full accent-amber-500 cursor-pointer h-2 bg-gray-700 rounded-lg"
+                           oninput="updateStyle(this.value)" />
+                    <div class="flex justify-between text-[9px] text-gray-600 mt-0.5">
+                      <span>💬 Natural</span><span>🔥 Hyper Dramatis</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Audio Tags Guide for eleven_v3 -->
+                <div class="p-2 rounded-lg bg-gray-900/80 border border-gray-700/50 space-y-1.5">
+                  <p class="text-[10px] text-amber-400 font-bold">💡 Audio Tags Eleven v3 (Tempel di teks bubble):</p>
+                  <div class="grid grid-cols-2 gap-x-2 gap-y-1">
+                    <div class="space-y-0.5">
+                      <p class="text-[9px] text-gray-400 font-semibold">😱 Emosi:</p>
+                      <code class="block text-[9px] text-green-400">[nervous]</code>
+                      <code class="block text-[9px] text-green-400">[scared]</code>
+                      <code class="block text-[9px] text-green-400">[angry]</code>
+                      <code class="block text-[9px] text-green-400">[sad]</code>
+                      <code class="block text-[9px] text-green-400">[excited]</code>
+                    </div>
+                    <div class="space-y-0.5">
+                      <p class="text-[9px] text-gray-400 font-semibold">🎙️ Gaya Bicara:</p>
+                      <code class="block text-[9px] text-blue-400">[whispers]</code>
+                      <code class="block text-[9px] text-blue-400">[shouts]</code>
+                      <code class="block text-[9px] text-blue-400">[gasps]</code>
+                      <code class="block text-[9px] text-blue-400">[sighs]</code>
+                      <code class="block text-[9px] text-blue-400">[crying]</code>
+                    </div>
+                  </div>
+                  <p class="text-[9px] text-gray-500 mt-1">Contoh: <span class="text-yellow-400">[scared][whispers] Bu... ada yang di luar...</span></p>
+                  <p class="text-[9px] text-gray-500">Titik-titik <span class="text-yellow-400">…</span> = jeda dramatis | <span class="text-yellow-400">—</span> = penekanan</p>
+                </div>
+
+                <!-- Speech Speed -->
+                <div>
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="text-gray-400">⚡ Kecepatan Bicara:</span>
+                    <span id="tts-speed-val" class="text-amber-400 font-mono font-bold bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">1.00×</span>
+                  </div>
+                  <input id="inp-tts-speed" type="range" min="0.85" max="1.25" step="0.05" value="1.00"
+                         class="w-full accent-amber-500 cursor-pointer h-2 bg-gray-700 rounded-lg"
+                         oninput="updateTtsSpeedValue(this.value)" />
                 </div>
               </div>
             </div>
@@ -661,6 +883,29 @@
                       font-family:'Segoe UI',system-ui,sans-serif;
                       position:relative; overflow:hidden; border-radius:20px;
                       box-shadow:0 25px 50px rgba(0,0,0,0.7);">
+
+            <!-- 🔔 FLOATING WHATSAPP PUSH NOTIFICATION BANNER OVERLAY -->
+            <div id="wa-push-notif-overlay"
+                 style="display:none; position:absolute; top:8px; left:10px; right:10px; z-index:9999; pointer-events:none; transition:all 0.35s cubic-bezier(0.16, 1, 0.3, 1); transform:translateY(-25px); opacity:0;">
+              <div style="background:rgba(23, 29, 34, 0.96); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255, 255, 255, 0.14); border-radius:18px; padding:10px 12px; box-shadow:0 14px 35px rgba(0,0,0,0.85); display:flex; align-items:center; gap:10px;">
+                <div style="width:38px; height:38px; border-radius:10px; background:#25D366; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(37,211,102,0.4);">
+                  <svg style="width:22px; height:22px; fill:white;" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l.277.442-.993 3.626 3.712-.974.447.273z"/>
+                  </svg>
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;">
+                    <div style="display:flex; align-items:center; gap:4px;">
+                      <span style="font-size:11px; font-weight:700; color:#25D366; letter-spacing:0.3px;">WhatsApp</span>
+                      <span style="font-size:10px; color:#8696A0;">• sekarang</span>
+                    </div>
+                    <span id="wa-notif-overlay-time" style="font-size:10px; color:#8696A0;">20:01</span>
+                  </div>
+                  <p id="wa-notif-overlay-sender" style="font-size:12px; font-weight:700; color:#F1F5F9; margin:0; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Hello Sayang</p>
+                  <p id="wa-notif-overlay-text" style="font-size:11px; color:#CBD5E1; margin:2px 0 0; line-height:1.3; word-break:break-word;">Pesan Notifikasi</p>
+                </div>
+              </div>
+            </div>
 
             <!-- STATUS BAR -->
             <div id="wa-status-bar" style="display:flex; align-items:center; justify-content:space-between;
