@@ -2712,6 +2712,7 @@ async function saveAsNewTemplate() {
 
   const trimmedName = tplName.trim();
   const payload = getProjectPayload();
+  await preRenderTtsAudioForCloud(payload);
   const cleanId = `${Date.now()}`;
 
   // 1. Save to Local Storage (works 100% offline)
@@ -2766,6 +2767,7 @@ async function saveCurrentTemplate() {
 
   _isNewBlankProject = false;
   const payload = getProjectPayload();
+  await preRenderTtsAudioForCloud(payload);
   const cleanId = currentVal.replace(/^(local_|cloud_)/, '');
 
   let tplName = state.name || 'Preset';
@@ -2939,11 +2941,136 @@ function showToast(msg) {
   }
 }
 
+async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB', apiKey = '', options = {}) {
+  if (!rawText) return null;
+  const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+  if (!cleanText) return null;
+
+  const DEFAULT_KEY = 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
+  const OLD_KEY = 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+
+  let keyToUse = apiKey;
+  if (!keyToUse || keyToUse === OLD_KEY) {
+    keyToUse = localStorage.getItem('wa_eleven_api_key');
+  }
+  if (!keyToUse || keyToUse === OLD_KEY) {
+    keyToUse = DEFAULT_KEY;
+  }
+
+  let targetVoice = (!voiceId || voiceId === 'custom' || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
+  const modelToUse = options.elevenModel || 'eleven_v3';
+  const stability  = options.ttsStability != null ? options.ttsStability : 0.15;
+  const style      = options.ttsStyle != null ? options.ttsStyle : 0.65;
+
+  const voiceSettings = {
+    stability:          stability,
+    similarity_boost:   0.85,
+    style:              style,
+    use_speaker_boost:  true
+  };
+
+  async function requestAudio(vId, kToUse) {
+    try {
+      const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${vId}`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': kToUse,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: cleanText,
+          model_id: modelToUse,
+          voice_settings: voiceSettings
+        })
+      });
+
+      if (res.status === 401 && kToUse !== DEFAULT_KEY) {
+        localStorage.setItem('wa_eleven_api_key', DEFAULT_KEY);
+        return requestAudio(vId, DEFAULT_KEY);
+      }
+
+      if (res.status === 402) {
+        return { status: 402, blob: null };
+      }
+
+      if (!res.ok) {
+        return { status: res.status, blob: null };
+      }
+
+      const blob = await res.blob();
+      return { status: 200, blob };
+    } catch (err) {
+      return { status: 500, blob: null };
+    }
+  }
+
+  let result = await requestAudio(targetVoice, keyToUse);
+
+  if (result.status === 402 && targetVoice !== 'EXAVITQu4vr4xnSDxMaL' && targetVoice !== 'pNInz6obpgDQGcFmaJgB') {
+    const fallbackVoice = 'EXAVITQu4vr4xnSDxMaL';
+    result = await requestAudio(fallbackVoice, keyToUse);
+  }
+
+  if (result.blob) {
+    return URL.createObjectURL(result.blob);
+  }
+
+  return null;
+}
+
+async function preRenderTtsAudioForCloud(payload) {
+  if (!payload || payload.enableTts === false || !payload.messages) return payload;
+
+  const messages = payload.messages;
+  const apiKey = payload.elevenKey || localStorage.getItem('wa_eleven_api_key') || 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
+  payload.ttsAudioMap = payload.ttsAudioMap || {};
+
+  for (let idx = 0; idx < messages.length; idx++) {
+    if (payload.ttsAudioMap[idx]) continue;
+
+    const msg = messages[idx];
+    let rawText = '';
+    if (msg.type === 'text') rawText = msg.text || '';
+    else if (msg.type === 'notification') rawText = `${msg.senderName || 'Notifikasi'}: ${msg.text || ''}`;
+    else if (msg.type === 'image' || msg.type === 'view_once') rawText = msg.caption || '';
+
+    const speakable = typeof stripAudioTags === 'function' ? stripAudioTags(rawText) : rawText;
+    if (!speakable) continue;
+
+    const isOut = msg.direction === 'outgoing';
+    const defaultInVoice  = 'EXAVITQu4vr4xnSDxMaL';
+    const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB';
+    const voiceId = isOut
+      ? (payload.ttsVoiceOut && payload.ttsVoiceOut !== 'google-mp3' && payload.ttsVoiceOut !== 'custom' ? payload.ttsVoiceOut : defaultOutVoice)
+      : (payload.ttsVoiceIn  && payload.ttsVoiceIn  !== 'google-mp3' && payload.ttsVoiceIn  !== 'custom' ? payload.ttsVoiceIn  : defaultInVoice);
+
+    try {
+      const blobUrl = await fetchElevenLabsAudioBlob(speakable, voiceId, apiKey, payload);
+      if (blobUrl) {
+        const res = await fetch(blobUrl);
+        const blob = await res.blob();
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        payload.ttsAudioMap[idx] = dataUrl;
+      }
+    } catch (e) {
+      console.warn('Pre-rendering audio error for msg #' + idx, e);
+    }
+  }
+
+  return payload;
+}
+
 async function copyShareLink(targetType = 'preview') {
   const currentVal = document.getElementById('tpl-select')?.value || 'auto';
   let cloudId = null;
 
   const payload = getProjectPayload();
+  await preRenderTtsAudioForCloud(payload);
 
   if (currentVal.startsWith('cloud_')) {
     cloudId = currentVal;

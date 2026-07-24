@@ -530,6 +530,18 @@ async function startAnimation() {
       const textToSpeak = speakableContent ? rawText.trim() : '';
 
       if (textToSpeak) {
+        // 1. Check if audio is ALREADY embedded in Cloud Payload (Data URL) or Message object!
+        if (msg.audioDataUrl) {
+          console.log(`⚡ [Cloud Embedded Audio] Reusing embedded voice for message #${idx + 1}`);
+          ttsAudioMap[idx] = msg.audioDataUrl;
+          continue;
+        }
+        if (previewState.ttsAudioMap && previewState.ttsAudioMap[idx]) {
+          console.log(`⚡ [Cloud Payload Audio] Reusing pre-rendered voice for message #${idx + 1}`);
+          ttsAudioMap[idx] = previewState.ttsAudioMap[idx];
+          continue;
+        }
+
         const isOut = msg.direction === 'outgoing';
         const defaultInVoice  = 'EXAVITQu4vr4xnSDxMaL'; // Bella (Female - 200 OK Free plan)
         const defaultOutVoice = 'pNInz6obpgDQGcFmaJgB'; // Adam (Male - 200 OK Free plan)
