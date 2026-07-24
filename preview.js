@@ -347,7 +347,17 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   const cleanText = rawText.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
   if (!cleanText) return null;
 
-  const keyToUse = apiKey || localStorage.getItem('wa_eleven_api_key') || 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
+  const DEFAULT_KEY = 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
+  const OLD_KEY = 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+
+  let keyToUse = apiKey;
+  if (!keyToUse || keyToUse === OLD_KEY) {
+    keyToUse = localStorage.getItem('wa_eleven_api_key');
+  }
+  if (!keyToUse || keyToUse === OLD_KEY) {
+    keyToUse = DEFAULT_KEY;
+  }
+
   let targetVoice = (!voiceId || voiceId === 'custom' || voiceId === 'google-mp3') ? 'EXAVITQu4vr4xnSDxMaL' : voiceId;
   const modelToUse = (previewState && previewState.elevenModel) ? previewState.elevenModel : 'eleven_v3';
 
@@ -364,12 +374,12 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
 
   console.log(`🎙️ [ElevenLabs] model=${modelToUse} stability=${stability} style=${style} voice=${targetVoice}`);
 
-  async function requestAudio(vId) {
+  async function requestAudio(vId, kToUse) {
     try {
       const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${vId}`, {
         method: 'POST',
         headers: {
-          'xi-api-key': keyToUse,
+          'xi-api-key': kToUse,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -378,6 +388,12 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
           voice_settings: voiceSettings
         })
       });
+
+      if (res.status === 401 && kToUse !== DEFAULT_KEY) {
+        console.warn(`⚠️ [ElevenLabs 401] Invalid API key in storage (${kToUse.substring(0, 8)}...). Auto-healing with new key...`);
+        localStorage.setItem('wa_eleven_api_key', DEFAULT_KEY);
+        return requestAudio(vId, DEFAULT_KEY);
+      }
 
       if (res.status === 402) {
         console.warn(`⚠️ [ElevenLabs 402] Free account cannot use library voice (${vId}). Auto-falling back...`);
@@ -398,13 +414,13 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
     }
   }
 
-  let result = await requestAudio(targetVoice);
+  let result = await requestAudio(targetVoice, keyToUse);
 
   // If 402 Payment Required (Free tier API key calling Library voices), fallback to default premade voice
   if (result.status === 402 && targetVoice !== 'EXAVITQu4vr4xnSDxMaL' && targetVoice !== 'pNInz6obpgDQGcFmaJgB') {
     const fallbackVoice = 'EXAVITQu4vr4xnSDxMaL';
     console.log(`🔄 Retrying with premade voice ${fallbackVoice}...`);
-    result = await requestAudio(fallbackVoice);
+    result = await requestAudio(fallbackVoice, keyToUse);
   }
 
   if (result.blob) {
@@ -479,7 +495,16 @@ async function startAnimation() {
   const ttsAudioCache = window.__ttsAudioCache || (window.__ttsAudioCache = {});
 
   if (enableTts) {
-    const apiKey = previewState.elevenKey || localStorage.getItem('wa_eleven_api_key') || 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
+    const DEFAULT_KEY = 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
+    const OLD_KEY = 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+
+    let apiKey = previewState.elevenKey;
+    if (!apiKey || apiKey === OLD_KEY) {
+      apiKey = localStorage.getItem('wa_eleven_api_key');
+    }
+    if (!apiKey || apiKey === OLD_KEY) {
+      apiKey = DEFAULT_KEY;
+    }
     const modelToUse = previewState.elevenModel || 'eleven_v3';
     const stability  = previewState.ttsStability != null ? previewState.ttsStability : 0.25;
     const style      = previewState.ttsStyle != null ? previewState.ttsStyle : 0.50;

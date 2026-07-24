@@ -3066,7 +3066,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Show Passcode Gate Modal only if worker explicitly rejects access
   showPasscodeModal();
   const loaded = loadDraftFromLocalStorage();
-  if (!loaded) renderDashboard();
+  // Auto-cleanse outdated API key in localStorage
+  const DEFAULT_KEY = 'sk_c51258c7ff945a2b4c807650eca86f5f74fb336e0f656f45';
+  const OLD_KEY = 'sk_aec3efa2efccb7f5155c04757341c942e1dccdb5fb7e9e20';
+  const storedKey = localStorage.getItem('wa_eleven_api_key');
+  if (!storedKey || storedKey === OLD_KEY) {
+    localStorage.setItem('wa_eleven_api_key', DEFAULT_KEY);
+  }
+  const keyInp = document.getElementById('inp-eleven-key');
+  if (keyInp && (!keyInp.value || keyInp.value === OLD_KEY)) {
+    keyInp.value = DEFAULT_KEY;
+  }
 });
 
 /* ============================================================
