@@ -486,9 +486,23 @@ async function startAnimation() {
 
     for (let idx = 0; idx < messages.length; idx++) {
       const msg = messages[idx];
-      const textToSpeak = msg.type === 'notification'
-        ? `${msg.senderName || 'Notifikasi'}: ${msg.text || ''}`
-        : (msg.text || msg.caption || '');
+      let rawText = '';
+
+      if (msg.type === 'text') {
+        rawText = msg.text || '';
+      } else if (msg.type === 'notification') {
+        rawText = `${msg.senderName || 'Notifikasi'}: ${msg.text || ''}`;
+      } else if (msg.type === 'image' || msg.type === 'view_once') {
+        // ONLY speak if image/GIF has an explicit caption!
+        rawText = msg.caption || '';
+      } else {
+        // Voice Notes, Transfer cards, Location, Contact, Deleted msgs skip TTS
+        rawText = '';
+      }
+
+      // Check if text has actual speakable words (after stripping tags)
+      const speakableContent = typeof stripAudioTags === 'function' ? stripAudioTags(rawText) : rawText;
+      const textToSpeak = speakableContent ? rawText.trim() : '';
 
       if (textToSpeak) {
         const isOut = msg.direction === 'outgoing';
