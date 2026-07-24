@@ -296,6 +296,7 @@ const notificationSound = new Audio('assets/notification.mp3');
 const outSound = new Audio('assets/sfx-out.mp3');
 
 function initAnimation() {
+  unlockIosAudio();
   document.getElementById('btn-start').style.display = 'none';
   document.getElementById('countdown-num').style.display = 'block';
   document.getElementById('countdown-label').style.display = 'block';
@@ -431,15 +432,89 @@ async function fetchElevenLabsAudioBlob(rawText, voiceId = 'pNInz6obpgDQGcFmaJgB
   return null;
 }
 
-function playBlobAudio(blobUrl, speedRate = 1.0) {
-  return new Promise((resolve) => {
-    if (!blobUrl) {
-      resolve();
-      return;
+// Web Audio Context for 100% iOS Safari & iPhone Silent Switch Compatibility
+let gAudioCtx = null;
+
+function unlockIosAudio() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!gAudioCtx && AudioCtx) {
+      gAudioCtx = new AudioCtx();
+    }
+    if (gAudioCtx && gAudioCtx.state === 'suspended') {
+      gAudioCtx.resume();
+    }
+    if (gAudioCtx) {
+      // Play a 0.001s silent buffer to permanently unlock iOS Web Audio engine
+      const buf = gAudioCtx.createBuffer(1, 1, 22050);
+      const src = gAudioCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(gAudioCtx.destination);
+      src.start(0);
+    }
+  } catch (e) {
+    console.warn('iOS Audio Context unlock attempt:', e);
+  }
+}
+
+// Auto-bind user gesture unlock for iOS Safari
+['click', 'touchstart', 'touchend', 'pointerdown'].forEach(evtType => {
+  window.addEventListener(evtType, unlockIosAudio, { passive: true, once: false });
+});
+
+async function playBlobAudio(blobUrlOrDataUrl, speedRate = 1.0) {
+  if (!blobUrlOrDataUrl) return Promise.resolve();
+  unlockIosAudio();
+
+  // Try Web Audio API first (Bypasses iOS Silent Switch & Autoplay Restrictions)
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!gAudioCtx && AudioCtx) {
+      gAudioCtx = new AudioCtx();
+    }
+    if (gAudioCtx && gAudioCtx.state === 'suspended') {
+      await gAudioCtx.resume();
     }
 
+    if (gAudioCtx) {
+      const res = await fetch(blobUrlOrDataUrl);
+      const arrayBuffer = await res.arrayBuffer();
+
+      const audioBuffer = await new Promise((resolve, reject) => {
+        gAudioCtx.decodeAudioData(arrayBuffer, resolve, reject);
+      });
+
+      return new Promise((resolve) => {
+        const source = gAudioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.playbackRate.value = speedRate;
+        source.connect(gAudioCtx.destination);
+
+        let finished = false;
+        const finish = () => {
+          if (!finished) {
+            finished = true;
+            resolve();
+          }
+        };
+
+        source.onended = finish;
+        source.start(0);
+
+        const durMs = Math.max(1200, Math.round((audioBuffer.duration / speedRate) * 1000));
+        setTimeout(finish, durMs + 400);
+      });
+    }
+  } catch (webAudioErr) {
+    console.warn('WebAudio decode failed, falling back to HTML5 Audio element:', webAudioErr);
+  }
+
+  // Fallback to HTML5 Audio Element
+  return new Promise((resolve) => {
     const audio = new Audio();
-    audio.src = blobUrl;
+    audio.setAttribute('playsinline', 'true');
+    audio.setAttribute('webkit-playsinline', 'true');
+    audio.src = blobUrlOrDataUrl;
     audio.playbackRate = speedRate;
 
     let finished = false;
@@ -459,7 +534,7 @@ function playBlobAudio(blobUrl, speedRate = 1.0) {
     };
 
     audio.play().catch(err => {
-      console.warn('Audio playback error:', err);
+      console.warn('HTML5 Audio play error:', err);
       finish();
     });
   });
