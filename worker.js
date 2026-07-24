@@ -75,16 +75,17 @@ export default {
    - DILARANG menyisipkan tag emosi kurung siku seperti [scared], [whispers], [laughing], dll.
    - DILARANG menggunakan format dramatis berlebihan seperti titik-titik berturut-turut banyak atau HURUF KAPITAL TERIAKAN.
    - Tulis teks percakapan biasa yang santai, alami, bercanda/serius sesuai tema, dan manusiawi.`
-          : `3. ELEVENLABS AUDIO EMOTION TAGS & FORMATTING (SESUAIKAN DENGAN GENRE):
+          : `3. ELEVENLABS AUDIO EMOTION TAGS & INTENSIFIKASI FORMATTING (SANGAT WAJIB & INTENS):
    - AI ElevenLabs v3 SANGAT PEKA terhadap simbol tanda baca, kapitalisasi, dan Audio Tag.
-   - Gunakan Audio Tag yang PAS dengan Genre:
-     * KOMEDI / LUCU / PRANK: [laughing], [excited], [gasp], [angry], [sighs], [quietly]. Contoh: [laughing] Wkwkwk bjir... lu seriusan?!
-     * ROMANTIS / BUCIN / SERIOUS: [whispers], [shy], [happy], [sighs], [quietly], [crying]. Contoh: [whispers] Aku... aku kangen banget sama kamu...
-     * HOROR / SUSPENSE / MISTERI: [scared][whispers], [panicked][shouting], [gasp][fearful], [crying], [trembling]. Contoh: [scared][whispers] B-bu... di luar kamar ada yang ketuk...
-   - TANDA BACA EKSPRESIF:
-     a) JEDA DENGAN TITIK-TITIK (... / ......): untuk jeda napas, ketakutan, rasa ragu, atau gombalan.
-     b) KAPITAL (ALL CAPS): untuk emosi puncak (teriakan kaget, ketawa ngakak, atau emosi tinggi).
-     c) STRIP (—): untuk percakapan yang terpotong mendadak.`;
+   - WAJIB SISIPKAN AUDIO TAG EMOSI DI SETIAP BUBBLE CHAT (terutama untuk Horor, Suspense, & Drama):
+     * KALO HOROR / SUSPENSE / MISTERI (WAJIB EKSTREM & MENCEKAM):
+       - WAJIB pasang Kombo Tag di AWAL setiap bubble: [scared][whispers], [panicked][shouting], [gasp][fearful], [crying][desperate], [trembling][quietly], [angry][shouting].
+       - WAJIB gunakan Jeda Napas Ketakutan (... / ......), Gagap (B-bu..., K-kamu...), Teriakan ALL CAPS (JANGAN BUKA!), & Cutoff (—).
+       - Contoh: { "type": "text", "direction": "outgoing", "time": "02:15", "text": "[scared][whispers] B-bu...... di luar kamar...... ada yang ketuk pintu......" }
+     * KALO KOMEDI / LUCU / PRANK:
+       - Gunakan tag: [laughing], [excited], [gasp], [angry], [sighs], [quietly]. Contoh: [laughing] Wkwkwk bjir... lu seriusan?!
+     * KALO ROMANTIS / BUCIN:
+       - Gunakan tag: [whispers], [shy], [happy], [sighs], [quietly], [crying]. Contoh: [whispers] Aku... aku kangen banget sama kamu...`;
 
         const systemInstruction = `Kamu adalah penulis naskah cerita pendek percakapan WhatsApp viral profesional (spesialis konten Komedi, Romantis/Bucin, Drama, Horor, dan Olshop/Daily TikTok/Reels/Shorts).
 
@@ -108,9 +109,9 @@ Aturan Penulisan Gaya Chat WhatsApp (SANGAT PENTING):
 
 2. FLEXIBEL ADAPTASI GENRE / TEMA (SESUAIKAN DENGAN IDE USER):
    - BACA DENGAN TELITI ide/skenario dari User dan buat cerita yang 100% SESUAI GENRE NYA:
+     * Kalo ide HOROR/SUSPENSE: Buat suasana seram mencekam, rasa takut luar biasa, intonasi emosi melimpah di setiap bubble, atau plot twist impostor (bisa gunakan notifikasi push pengirim asli).
      * Kalo ide KOMEDI/LUCU/PRANK: Buat cerita humor yang lucu, ada kebodohan konyol, salah paham kocak, atau ending yang bikin ngakak/tepok jidat. Bahasa santai & gaul!
      * Kalo ide ROMANTIS/BUCIN: Buat obrolan manis, cemburu lucu, kangen, atau momen romantis yang bikin senyum-senyum sendiri.
-     * Kalo ide HOROR/SUSPENSE: Buat suasana seram, ketakutan, atau plot twist impostor (bisa gunakan notifikasi push pengirim asli).
      * Kalo ide DAILY/OLSHOP/NAGIH UTANG: Buat obrolan realistis sehari-hari yang menghibur & relatable.
 
 ${dramaticRuleInstruction}
